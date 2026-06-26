@@ -37,22 +37,42 @@ export default function App() {
     const storeFromUrl = urlParams.get('store') || urlParams.get('store_id');
     const tokenFromUrl = urlParams.get('token');
 
-    let currentStore = localStorage.getItem('apes_store_id');
-    let currentToken = localStorage.getItem('apes_store_token');
+    let currentStore = null;
+    let currentToken = null;
+
+    try {
+      currentStore = localStorage.getItem('apes_store_id');
+      currentToken = localStorage.getItem('apes_store_token');
+    } catch (e) {
+      console.warn('LocalStorage no disponible (posible bloqueo de cookies de terceros en iframe).', e);
+    }
 
     // Si recibimos un token de la redirección OAuth
     if (installed === 'true' && storeFromUrl && tokenFromUrl) {
       currentStore = storeFromUrl;
       currentToken = tokenFromUrl;
-      localStorage.setItem('apes_store_id', currentStore);
-      localStorage.setItem('apes_store_token', currentToken);
+      try {
+        localStorage.setItem('apes_store_id', currentStore);
+        localStorage.setItem('apes_store_token', currentToken);
+      } catch (e) {
+        console.warn('No se pudo guardar en LocalStorage.', e);
+      }
       window.history.replaceState({}, document.title, '/');
     }
 
     // Si nos falta el token pero TiendaNube nos pasa el store_id (intentó abrir el iframe)
     if (!currentToken && storeFromUrl) {
       // Romper el iframe y redirigir a la instalación OAuth
-      window.top.location.href = `/api/auth/install?store_id=${storeFromUrl}`;
+      try {
+        if (window.top !== window.self) {
+          window.top.location.href = `/api/auth/install?store_id=${storeFromUrl}`;
+        } else {
+          window.location.href = `/api/auth/install?store_id=${storeFromUrl}`;
+        }
+      } catch (e) {
+        // Fallback por si window.top está bloqueado por cross-origin
+        window.location.href = `/api/auth/install?store_id=${storeFromUrl}`;
+      }
       return;
     }
 
