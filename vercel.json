@@ -5,7 +5,7 @@
       "destination": "https://api.tiendanube.com/v1/:path*"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ]
