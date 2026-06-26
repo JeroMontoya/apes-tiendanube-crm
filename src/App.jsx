@@ -34,23 +34,26 @@ export default function App() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const installed = urlParams.get('installed');
-    const storeFromUrl = urlParams.get('store');
+    const storeFromUrl = urlParams.get('store') || urlParams.get('store_id');
     const tokenFromUrl = urlParams.get('token');
 
     let currentStore = localStorage.getItem('apes_store_id');
     let currentToken = localStorage.getItem('apes_store_token');
 
-    // Si viene de OAuth (TiendaNube redirigió con store + token)
-    if (installed === 'true' && storeFromUrl) {
+    // Si recibimos un token de la redirección OAuth
+    if (installed === 'true' && storeFromUrl && tokenFromUrl) {
       currentStore = storeFromUrl;
+      currentToken = tokenFromUrl;
       localStorage.setItem('apes_store_id', currentStore);
-      
-      if (tokenFromUrl) {
-        currentToken = tokenFromUrl;
-        localStorage.setItem('apes_store_token', currentToken);
-      }
-      
+      localStorage.setItem('apes_store_token', currentToken);
       window.history.replaceState({}, document.title, '/');
+    }
+
+    // Si nos falta el token pero TiendaNube nos pasa el store_id (intentó abrir el iframe)
+    if (!currentToken && storeFromUrl) {
+      // Romper el iframe y redirigir a la instalación OAuth
+      window.top.location.href = `/api/auth/install?store_id=${storeFromUrl}`;
+      return;
     }
 
     if (currentStore && currentToken) {
