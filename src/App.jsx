@@ -30,6 +30,9 @@ export default function App() {
   const [storeId, setStoreId] = useState(null);
   const [lastSync, setLastSync] = useState(null);
 
+  const [needsAuth, setNeedsAuth] = useState(false);
+  const [authStoreId, setAuthStoreId] = useState(null);
+
   // ── 1. Detección de Credenciales (OAuth + LocalStorage) ────────────────
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -62,17 +65,8 @@ export default function App() {
 
     // Si nos falta el token pero TiendaNube nos pasa el store_id (intentó abrir el iframe)
     if (!currentToken && storeFromUrl) {
-      // Romper el iframe y redirigir a la instalación OAuth
-      try {
-        if (window.top !== window.self) {
-          window.top.location.href = `/api/auth/install?store_id=${storeFromUrl}`;
-        } else {
-          window.location.href = `/api/auth/install?store_id=${storeFromUrl}`;
-        }
-      } catch (e) {
-        // Fallback por si window.top está bloqueado por cross-origin
-        window.location.href = `/api/auth/install?store_id=${storeFromUrl}`;
-      }
+      setNeedsAuth(true);
+      setAuthStoreId(storeFromUrl);
       return;
     }
 
@@ -86,6 +80,23 @@ export default function App() {
       setLastSync(new Date());
     }
   }, [historicClients]);
+
+  if (needsAuth) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#0F1419', color: '#F5F0EB', fontFamily: 'Montserrat, sans-serif' }}>
+        <h2>APES CRM</h2>
+        <p>Necesitamos conectarnos con tu tienda para cargar los datos.</p>
+        <button 
+          onClick={() => {
+            window.top.location.href = `/api/auth/install?store_id=${authStoreId}`;
+          }}
+          style={{ padding: '12px 24px', backgroundColor: '#2D8B4E', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', marginTop: '20px', fontWeight: 'bold' }}
+        >
+          Conectar con TiendaNube
+        </button>
+      </div>
+    );
+  }
 
   // Auto-refresh polling (every 5 minutes)
   useEffect(() => {
