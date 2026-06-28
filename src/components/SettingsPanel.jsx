@@ -7,8 +7,10 @@ export default function SettingsPanel({ onConnect, connectionStatus }) {
 
   const handleConnect = (e) => {
     e.preventDefault();
-    if (storeId && token) {
-      onConnect({ storeId, token });
+    const cleanStoreId = storeId.trim();
+    const cleanToken = token.trim();
+    if (cleanStoreId && cleanToken) {
+      onConnect({ storeId: cleanStoreId, token: cleanToken });
     }
   };
 
