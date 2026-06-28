@@ -23,7 +23,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   
-  const [historicClients] = useState(historicClientsData);
+  const [historicClients, setHistoricClients] = useState([]);
   const [unifiedClients, setUnifiedClients] = useState([]);
   
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
@@ -32,6 +32,19 @@ export default function App() {
 
   const [needsAuth, setNeedsAuth] = useState(false);
   const [authStoreId, setAuthStoreId] = useState(null);
+
+  // ── 0. Inicialización de Nexo (Para evitar que TiendaNube mate el iframe) ────────────────
+  useEffect(() => {
+    try {
+      if (window.top !== window.self) {
+        connect(nexo).then(async () => {
+          await iAmReady();
+        }).catch(err => console.warn('Error inicializando Nexo SDK', err));
+      }
+    } catch (e) {
+      console.warn('No se pudo inicializar Nexo', e);
+    }
+  }, []);
 
   // ── 1. Detección de Credenciales (OAuth + LocalStorage) ────────────────
   useEffect(() => {
