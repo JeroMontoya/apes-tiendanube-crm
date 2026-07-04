@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-
+import { MapPin } from 'lucide-react';
 /**
  * GeoFunnel — Embudo Geográfico por Ciudad y Provincia
  * Shows where customers are buying from, grouped by province,
@@ -80,15 +80,14 @@ export default function GeoFunnel({ clients, onSelectClient }) {
 
   return (
     <div style={{
-      background: 'var(--surface)', border: '1px solid var(--border-subtle)', borderRadius: 16,
-      padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-      fontFamily: "'Montserrat', sans-serif",
+      padding: 32,
+      fontFamily: "'Inter', sans-serif",
     }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--on-surface)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-            🌎 Embudo Geográfico de Ventas
+            <MapPin size={20} color="#60a5fa" /> Embudo Geográfico de Ventas
           </h3>
           <p style={{ fontSize: 12, color: 'var(--on-surface-variant)', margin: '4px 0 0' }}>
             ¿De dónde compran tus clientes? — {totalClients} clientes, {formatARS(totalRevenue)} revenue
@@ -96,20 +95,19 @@ export default function GeoFunnel({ clients, onSelectClient }) {
         </div>
 
         {/* Toggle Province/City */}
-        <div style={{ display: 'flex', background: 'var(--surface-container)', borderRadius: 8, padding: 3 }}>
+        <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: 3, border: '1px solid rgba(255,255,255,0.05)' }}>
           {[
-            { id: 'province', label: '🏛️ Provincias' },
-            { id: 'city', label: '🏙️ Ciudades' },
+            { id: 'province', label: 'Provincias' },
+            { id: 'city', label: 'Ciudades' },
           ].map(opt => (
             <button
               key={opt.id}
               onClick={() => { setViewMode(opt.id); setExpandedKey(null); }}
               style={{
                 padding: '6px 14px', borderRadius: 6, border: 'none', cursor: 'pointer',
-                fontSize: 12, fontWeight: viewMode === opt.id ? 600 : 400,
-                background: viewMode === opt.id ? 'var(--surface)' : 'transparent',
-                color: viewMode === opt.id ? 'var(--on-surface)' : 'var(--on-surface-variant)',
-                boxShadow: viewMode === opt.id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                fontSize: 12, fontWeight: viewMode === opt.id ? 600 : 500,
+                background: viewMode === opt.id ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
+                color: viewMode === opt.id ? '#60a5fa' : 'var(--on-surface-variant)',
                 transition: 'all 0.2s', fontFamily: 'inherit',
               }}
             >
@@ -148,11 +146,11 @@ export default function GeoFunnel({ clients, onSelectClient }) {
                 display: 'grid', gridTemplateColumns: '180px 1fr 80px 120px 90px',
                 padding: '12px', alignItems: 'center', cursor: 'pointer',
                 borderBottom: '1px solid var(--surface-container)',
-                background: isExpanded ? '#F8FAFF' : 'transparent',
+                background: isExpanded ? 'var(--surface-container)' : 'transparent',
                 transition: 'background 0.2s',
               }}
-              onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = '#FAFAFA'; }}
-              onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.background = isExpanded ? '#F8FAFF' : 'transparent'; }}
+              onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = 'var(--surface-container-high)'; }}
+              onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.background = isExpanded ? 'var(--surface-container)' : 'transparent'; }}
             >
               {/* Name */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -193,7 +191,7 @@ export default function GeoFunnel({ clients, onSelectClient }) {
             {/* Expanded Section */}
             {isExpanded && (
               <div style={{
-                background: '#F8FAFF', borderBottom: '1px solid var(--border-subtle)',
+                background: 'var(--surface-container)', borderBottom: '1px solid var(--border-subtle)',
                 padding: '12px 20px 16px',
               }}>
                 {/* If province view, show city breakdown */}

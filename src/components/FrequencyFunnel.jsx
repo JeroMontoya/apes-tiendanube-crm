@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { Repeat } from 'lucide-react';
 
 /**
  * FrequencyFunnel — Embudo de Frecuencia de Compra
@@ -55,14 +56,13 @@ export default function FrequencyFunnel({ clients, onSelectClient }) {
 
   return (
     <div style={{
-      background: 'var(--surface)', border: '1px solid var(--border-subtle)', borderRadius: 16,
-      padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-      fontFamily: "'Montserrat', sans-serif",
+      padding: 32, 
+      fontFamily: "'Inter', sans-serif",
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
           <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--on-surface)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-            🔄 Embudo de Frecuencia de Compra
+            <Repeat size={20} color="#60a5fa" /> Embudo de Frecuencia de Compra
           </h3>
           <p style={{ fontSize: 12, color: 'var(--on-surface-variant)', margin: '4px 0 0' }}>Distribución de clientes por número de compras realizadas</p>
         </div>
@@ -94,10 +94,10 @@ export default function FrequencyFunnel({ clients, onSelectClient }) {
               display: 'grid', gridTemplateColumns: '140px 1fr 80px 120px 100px 100px',
               padding: '14px 12px', alignItems: 'center', cursor: 'pointer',
               borderBottom: '1px solid var(--surface-container)',
-              background: expandedTier === tier.key ? '#F8FAFF' : 'transparent',
+              background: expandedTier === tier.key ? 'var(--surface-container)' : 'transparent',
               transition: 'background 0.2s',
             }}
-            onMouseEnter={e => { if (expandedTier !== tier.key) e.currentTarget.style.background = '#FAFAFA'; }}
+            onMouseEnter={e => { if (expandedTier !== tier.key) e.currentTarget.style.background = 'var(--surface-container-high)'; }}
             onMouseLeave={e => { if (expandedTier !== tier.key) e.currentTarget.style.background = 'transparent'; }}
           >
             {/* Segment Label */}
@@ -142,7 +142,7 @@ export default function FrequencyFunnel({ clients, onSelectClient }) {
           {/* Expanded Client List */}
           {expandedTier === tier.key && tier.clients.length > 0 && (
             <div style={{
-              background: '#F8FAFF', borderBottom: '1px solid var(--border-subtle)',
+              background: 'var(--surface-container)', borderBottom: '1px solid var(--border-subtle)',
               padding: '12px 20px 16px',
             }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--on-surface-variant)', textTransform: 'uppercase', marginBottom: 8 }}>

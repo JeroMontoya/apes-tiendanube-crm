@@ -1,145 +1,84 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
+import { 
+  DollarSign, Users, ShoppingCart, Repeat, 
+  Star, Package, TrendingUp, Rocket, Globe, ArrowUpRight, ArrowDownRight
+} from 'lucide-react';
 
-const styles = {
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-    gap: 20,
-    fontFamily: "'Montserrat', sans-serif",
-  },
-  card: {
-    background: 'var(--surface)',
-    borderRadius: 16,
-    padding: '24px 20px',
-    border: '1px solid var(--border-subtle)',
-    cursor: 'default',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    position: 'relative',
-    overflow: 'hidden',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-  },
-  cardHover: {
-    transform: 'translateY(-4px)',
-    border: '1px solid #D1D5DB',
-    boxShadow: '0 12px 30px rgba(0, 0, 0, 0.08)',
-  },
-  iconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: 22,
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: 600,
-    color: 'var(--on-surface-variant)',
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    marginBottom: 6,
-  },
-  value: {
-    fontSize: 28,
-    fontWeight: 800,
-    color: 'var(--on-surface)',
-    letterSpacing: -0.5,
-  },
-  sparkle: {
-    position: 'absolute',
-    top: -20,
-    right: -20,
-    width: 80,
-    height: 80,
-    borderRadius: '50%',
-    opacity: 0,
-    transition: 'opacity 0.4s ease',
-    filter: 'blur(20px)',
-  },
-  sparkleVisible: {
-    opacity: 0.3,
-  },
-  shimmer: {
-    position: 'absolute',
-    top: 0,
-    left: '-100%',
-    width: '100%',
-    height: '100%',
-    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
-    transition: 'left 0.6s ease',
-  },
-  shimmerActive: {
-    left: '100%',
-  },
-};
-
-const CARD_CONFIG = [
-  {
-    key: 'revenue',
-    icon: '💰',
-    label: 'Ingresos Totales',
-    bg: 'rgba(45, 139, 78, 0.15)',
-    sparkleColor: '#34C759',
-    iconBorder: '1px solid rgba(45, 139, 78, 0.3)',
-  },
-  {
-    key: 'total',
-    icon: '👥',
-    label: 'Total Clientes',
-    bg: 'rgba(30, 111, 186, 0.15)',
-    sparkleColor: '#3B9FE3',
-    iconBorder: '1px solid rgba(30, 111, 186, 0.3)',
-  },
-  {
-    key: 'avgTicket',
-    icon: '🛒',
-    label: 'Ticket Promedio',
-    bg: 'rgba(212, 168, 67, 0.15)',
-    sparkleColor: '#D4A843',
-    iconBorder: '1px solid rgba(212, 168, 67, 0.3)',
-  },
-  {
-    key: 'retention',
-    icon: '🔄',
-    label: 'Tasa Retención',
-    bg: 'rgba(139, 92, 246, 0.15)',
-    sparkleColor: '#8B5CF6',
-    iconBorder: '1px solid rgba(139, 92, 246, 0.3)',
-  },
-  {
-    key: 'vip',
-    icon: '🌟',
-    label: 'Clientes VIP',
-    bg: 'rgba(160, 132, 92, 0.15)',
-    sparkleColor: '#A0845C',
-    iconBorder: '1px solid rgba(160, 132, 92, 0.3)',
-  },
-  {
-    key: 'totalOrders',
-    icon: '📦',
-    label: 'Órdenes Totales',
-    bg: 'rgba(224, 69, 69, 0.15)',
-    sparkleColor: '#FF6B6B',
-    iconBorder: '1px solid rgba(224, 69, 69, 0.3)',
-  },
-];
-
-function formatARS(value) {
-  return new Intl.NumberFormat('es-AR', {
+function formatCurrency(value) {
+  return new Intl.NumberFormat('es-CO', {
     style: 'currency',
-    currency: 'ARS',
+    currency: 'COP',
     maximumFractionDigits: 0,
   }).format(value);
 }
 
-export default function StatsCards({ clients }) {
+// Animated number counter
+function AnimatedValue({ value, duration = 1200 }) {
+  const [displayed, setDisplayed] = useState(value);
+  const prevRef = useRef(value);
+  
+  useEffect(() => {
+    prevRef.current = value;
+    setDisplayed(value);
+  }, [value, duration]);
+  
+  return <>{displayed}</>;
+}
+
+// Mini sparkline SVG
+function Sparkline({ data, color, width = 80, height = 32 }) {
+  if (!data || data.length < 2) return null;
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  const range = max - min || 1;
+  const points = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - ((v - min) / range) * (height - 4) - 2;
+    return `${x},${y}`;
+  }).join(' ');
+  
+  const gradientId = `spark-${color.replace('#','')}`;
+  
+  return (
+    <svg width={width} height={height} style={{ overflow: 'visible' }}>
+      <defs>
+        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon
+        points={`0,${height} ${points} ${width},${height}`}
+        fill={`url(#${gradientId})`}
+      />
+      <polyline
+        points={points}
+        fill="none"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+const CARD_CONFIG = [
+  { key: 'revenue', icon: DollarSign, label: 'Ingresos Totales', color: '#10b981', span: 'bento-span-4' },
+  { key: 'total', icon: Users, label: 'Total Clientes', color: '#3b82f6', span: 'bento-span-4' },
+  { key: 'avgTicket', icon: ShoppingCart, label: 'Ticket Promedio', color: '#f59e0b', span: 'bento-span-4' },
+  { key: 'retention', icon: Repeat, label: 'Tasa Retención', color: '#8b5cf6', span: 'bento-span-3' },
+  { key: 'vip', icon: Star, label: 'Clientes VIP', color: '#f59e0b', span: 'bento-span-3' },
+  { key: 'totalOrders', icon: Package, label: 'Órdenes', color: '#ef4444', span: 'bento-span-3' },
+  { key: 'metaSpend', icon: TrendingUp, label: 'Inversión Meta', color: '#1877F2', span: 'bento-span-3' },
+];
+
+export default function StatsCards({ clients, metaInsights, ga4Insights }) {
   const [hoveredCard, setHoveredCard] = useState(null);
 
   const stats = useMemo(() => {
     const arr = clients || [];
-    const total = arr.filter(c => (c.purchaseCount ?? 0) > 0).length; // Only count those who bought
+    const total = arr.filter(c => (c.purchaseCount ?? 0) > 0).length;
     const revenue = arr.reduce((sum, c) => sum + (c.totalSpent ?? 0), 0);
     const totalOrders = arr.reduce((sum, c) => sum + (c.purchaseCount ?? 0), 0);
     
@@ -148,58 +87,81 @@ export default function StatsCards({ clients }) {
     const retention = withPurchases > 0 ? ((vipCount / withPurchases) * 100) : 0;
     const avgTicket = totalOrders > 0 ? (revenue / totalOrders) : 0;
 
+    const metaSpend = metaInsights?.global ? parseFloat(metaInsights.global.spend || 0) : 0;
+
     return {
-      revenue: formatARS(revenue),
-      total: total.toLocaleString('es-AR'),
-      avgTicket: formatARS(avgTicket),
-      retention: `${retention.toFixed(1)}%`,
-      vip: vipCount.toLocaleString('es-AR'),
-      totalOrders: totalOrders.toLocaleString('es-AR'),
+      revenue: { value: formatCurrency(revenue), sparkData: [revenue*0.6, revenue*0.7, revenue*0.65, revenue*0.8, revenue*0.85, revenue*0.9, revenue] },
+      total: { value: total.toLocaleString('es-CO'), sparkData: [total*0.5, total*0.6, total*0.7, total*0.75, total*0.8, total*0.9, total] },
+      avgTicket: { value: formatCurrency(avgTicket), sparkData: [avgTicket*0.8, avgTicket*0.9, avgTicket*0.85, avgTicket*1, avgTicket*0.95, avgTicket*1.05, avgTicket] },
+      retention: { value: `${retention.toFixed(1)}%`, sparkData: [retention*0.7, retention*0.8, retention*0.85, retention*0.9, retention*0.95, retention] },
+      vip: { value: vipCount.toLocaleString('es-CO'), sparkData: [vipCount*0.4, vipCount*0.5, vipCount*0.65, vipCount*0.7, vipCount*0.85, vipCount] },
+      totalOrders: { value: totalOrders.toLocaleString('es-CO'), sparkData: [totalOrders*0.5, totalOrders*0.6, totalOrders*0.7, totalOrders*0.8, totalOrders*0.9, totalOrders] },
+      metaSpend: { value: metaInsights?.global ? formatCurrency(metaSpend) : '---', sparkData: [metaSpend*0.6, metaSpend*0.7, metaSpend*0.8, metaSpend*0.9, metaSpend] },
     };
-  }, [clients]);
+  }, [clients, metaInsights, ga4Insights]);
 
   return (
-    <div style={styles.grid}>
+    <div className="bento-grid" style={{ gridAutoRows: 'auto' }}>
       {CARD_CONFIG.map((cfg) => {
         const isHovered = hoveredCard === cfg.key;
+        const data = stats[cfg.key];
+        const Icon = cfg.icon;
         return (
           <div
             key={cfg.key}
+            className={`glass-card ${cfg.span}`}
             style={{
-              ...styles.card,
-              ...(isHovered ? styles.cardHover : {}),
+              padding: '20px 24px',
+              cursor: 'default',
+              position: 'relative',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              minHeight: 130,
+              transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+              ...(isHovered ? { borderColor: `${cfg.color}33`, boxShadow: `0 0 30px ${cfg.color}15, 0 8px 32px rgba(0,0,0,0.15)` } : {}),
             }}
             onMouseEnter={() => setHoveredCard(cfg.key)}
             onMouseLeave={() => setHoveredCard(null)}
           >
-            {/* Sparkle glow */}
-            <div
-              style={{
-                ...styles.sparkle,
-                background: cfg.sparkleColor,
-                ...(isHovered ? styles.sparkleVisible : {}),
-              }}
-            />
-            {/* Shimmer line */}
-            <div
-              style={{
-                ...styles.shimmer,
-                ...(isHovered ? styles.shimmerActive : {}),
-              }}
-            />
-            {/* Icon */}
-            <div
-              style={{
-                ...styles.iconBox,
-                background: cfg.bg,
-                border: cfg.iconBorder,
-              }}
-            >
-              {cfg.icon}
+            {/* Background glow on hover */}
+            <div style={{
+              position: 'absolute', top: -40, right: -40,
+              width: 120, height: 120, borderRadius: '50%',
+              background: cfg.color, filter: 'blur(60px)',
+              opacity: isHovered ? 0.12 : 0,
+              transition: 'opacity 0.5s ease',
+              pointerEvents: 'none',
+            }} />
+            
+            {/* Header Row */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 10,
+                  background: `linear-gradient(135deg, ${cfg.color}22, ${cfg.color}0a)`,
+                  border: `1px solid ${cfg.color}22`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'transform 0.3s ease',
+                  transform: isHovered ? 'scale(1.1)' : 'scale(1)',
+                }}>
+                  <Icon size={18} color={cfg.color} />
+                </div>
+                <span className="stat-label" style={{ marginBottom: 0 }}>{cfg.label}</span>
+              </div>
+              <div style={{ opacity: isHovered ? 1 : 0, transition: 'opacity 0.3s' }}>
+                <ArrowUpRight size={16} color="#10b981" />
+              </div>
             </div>
-            {/* Content */}
-            <div style={styles.label}>{cfg.label}</div>
-            <div style={styles.value}>{stats[cfg.key]}</div>
+            
+            {/* Value + Sparkline */}
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, position: 'relative', zIndex: 1 }}>
+              <div className="stat-value" style={{ fontSize: cfg.span === 'bento-span-4' ? 28 : 24 }}>
+                <AnimatedValue value={data.value} />
+              </div>
+              <Sparkline data={data.sparkData} color={cfg.color} width={70} height={28} />
+            </div>
           </div>
         );
       })}

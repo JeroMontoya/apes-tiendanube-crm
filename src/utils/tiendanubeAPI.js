@@ -203,6 +203,54 @@ export class TiendanubeAPI {
 
     return ok(allOrders);
   }
+
+  /**
+   * Fetches a single page of checkouts.
+   *
+   * @param {Record<string, string|number>} [params={}]
+   * @returns {Promise<{ success: boolean, data: Array|null, error: any }>}
+   */
+  async fetchCheckouts(params = {}) {
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined && value !== null) {
+        query.set(key, String(value));
+      }
+    }
+    const qs = query.toString();
+    const url = `${API_BASE}/${this.storeId}/checkouts${qs ? `?${qs}` : ''}`;
+    return this._request(url);
+  }
+
+  /**
+   * Fetches all checkouts by paginating automatically.
+   *
+   * @param {number} [perPage=50]
+   * @returns {Promise<{ success: boolean, data: Array|null, error: any }>}
+   */
+  async fetchAllCheckouts(perPage = 50) {
+    const allCheckouts = [];
+    let page = 1;
+
+    while (true) {
+      const result = await this.fetchCheckouts({ page, per_page: perPage });
+
+      if (!result.success) {
+        if (allCheckouts.length > 0) return ok(allCheckouts);
+        return result;
+      }
+
+      const checkouts = result.data;
+      if (!Array.isArray(checkouts) || checkouts.length === 0) break;
+
+      allCheckouts.push(...checkouts);
+
+      if (checkouts.length < perPage) break;
+      page += 1;
+    }
+
+    return ok(allCheckouts);
+  }
 }
 
 // ─── Data Mapper ────────────────────────────────────────────────────

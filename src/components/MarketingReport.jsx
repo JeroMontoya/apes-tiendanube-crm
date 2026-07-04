@@ -138,15 +138,8 @@ function KpiCard({ title, value, delta, sparkData, sparkColor, info }) {
 // ═══════════════════════════════════════════════════════════
 //  MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════
-export default function MarketingReport({ clients }) {
-  // ─── State: Fechas ────────────────────────────────────
-  const defaultRange = getPresetRange('este_mes');
-  const [dateFrom, setDateFrom] = useState(defaultRange.from);
-  const [dateTo, setDateTo] = useState(defaultRange.to);
-  const [compareMode, setCompareMode] = useState('anterior'); // 'ninguna', 'anterior', 'custom'
-  const [compFrom, setCompFrom] = useState('');
-  const [compTo, setCompTo] = useState('');
-  const [activePreset, setActivePreset] = useState('este_mes');
+export default function MarketingReport({ rawClients, dateRange }) {
+  const clients = rawClients || [];
 
   // ─── State: Inputs manuales persistidos ───────────────
   const [manualMetrics, setManualMetrics] = useState(() => {
@@ -173,34 +166,19 @@ export default function MarketingReport({ clients }) {
     setManualMetrics(prev => ({ ...prev, [key]: Number(val) || 0 }));
   };
 
-  // ─── Presets handler ──────────────────────────────────
-  const applyPreset = (preset) => {
-    setActivePreset(preset);
-    if (preset !== 'personalizado') {
-      const r = getPresetRange(preset);
-      setDateFrom(r.from);
-      setDateTo(r.to);
-    }
-  };
-
   // ─── COMPUTE ──────────────────────────────────────────
   const report = useMemo(() => {
-    const dFrom = new Date(dateFrom);
-    const dTo = new Date(dateTo);
-    dTo.setHours(23, 59, 59);
+    const dFrom = new Date(dateRange.startDate);
+    dFrom.setHours(0, 0, 0, 0);
+    const dTo = new Date(dateRange.endDate);
+    dTo.setHours(23, 59, 59, 999);
 
-    // Periodo anterior (para comparación)
-    let pFrom = null, pTo = null;
-    if (compareMode === 'anterior') {
-      const prev = getPreviousPeriod(dateFrom, dateTo);
-      pFrom = new Date(prev.from);
-      pTo = new Date(prev.to);
-      pTo.setHours(23, 59, 59);
-    } else if (compareMode === 'custom' && compFrom && compTo) {
-      pFrom = new Date(compFrom);
-      pTo = new Date(compTo);
-      pTo.setHours(23, 59, 59);
-    }
+    // Periodo anterior automático
+    const prev = getPreviousPeriod(dateRange.startDate, dateRange.endDate);
+    const pFrom = new Date(prev.from);
+    pFrom.setHours(0, 0, 0, 0);
+    const pTo = new Date(prev.to);
+    pTo.setHours(23, 59, 59, 999);
 
     let currRevenue = 0, prevRevenue = 0;
     let currSales = 0, prevSales = 0;
@@ -384,11 +362,11 @@ export default function MarketingReport({ clients }) {
       visitasAVentas, visitasACarritos, checkoutsAVentas,
       gananciaLibre, roas,
       scatterData,
-      deltaRevenue: compareMode !== 'ninguna' ? calcDelta(currRevenue, prevRevenue) : null,
-      deltaSales: compareMode !== 'ninguna' ? calcDelta(currSales, prevSales) : null,
-      deltaTicket: compareMode !== 'ninguna' ? calcDelta(ticketPromedio, prevTicket) : null,
+      deltaRevenue: calcDelta(currRevenue, prevRevenue),
+      deltaSales: calcDelta(currSales, prevSales),
+      deltaTicket: calcDelta(ticketPromedio, prevTicket),
     };
-  }, [clients, dateFrom, dateTo, compareMode, compFrom, compTo, manualMetrics]);
+  }, [clients, dateRange, manualMetrics]);
 
   // ─── Styles ───────────────────────────────────────────
   const cardStyle = {
@@ -408,71 +386,6 @@ export default function MarketingReport({ clients }) {
   // ═══════════════════════════════════════════════════════
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-
-      {/* ── HEADER + DATE PICKER ─────────────────────── */}
-      <div style={{ ...cardStyle, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end' }}>
-        <div style={{ flex: '1 1 200px' }}>
-          <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Visión General</h2>
-          <p style={{ fontSize: 13, color: BRAND_GRAY, margin: '4px 0 0' }}>
-            Mostrando datos según <strong>fecha de creación de la orden</strong>
-          </p>
-        </div>
-
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-          {/* Presets */}
-          {[
-            { id: 'hoy', label: 'Hoy' }, { id: 'ayer', label: 'Ayer' },
-            { id: '7dias', label: '7D' }, { id: '30dias', label: '30D' },
-            { id: 'este_mes', label: 'Este Mes' }, { id: 'mes_pasado', label: 'Mes Ant.' },
-            { id: 'este_ano', label: 'Este Año' }, { id: 'personalizado', label: 'Custom' },
-          ].map(p => (
-            <button key={p.id} onClick={() => applyPreset(p.id)} style={{
-              padding: '6px 12px', borderRadius: 6, fontSize: 12, fontWeight: 500,
-              border: `1px solid ${activePreset === p.id ? BRAND_BLUE : BORDER}`,
-              background: activePreset === p.id ? 'var(--primary-container)' : 'transparent',
-              color: activePreset === p.id ? BRAND_BLUE : 'var(--on-surface-variant)', cursor: 'pointer',
-            }}>
-              {p.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Date inputs */}
-        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
-          <div>
-            <label style={labelStyle}>Desde</label>
-            <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setActivePreset('personalizado'); }} style={inputStyle} />
-          </div>
-          <div>
-            <label style={labelStyle}>Hasta</label>
-            <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setActivePreset('personalizado'); }} style={inputStyle} />
-          </div>
-          <div>
-            <label style={labelStyle}>Comparación</label>
-            <select value={compareMode} onChange={(e) => setCompareMode(e.target.value)} style={{ ...inputStyle, width: 160 }}>
-              <option value="ninguna">Ninguna</option>
-              <option value="anterior">Periodo anterior</option>
-              <option value="custom">Personalizado</option>
-            </select>
-          </div>
-          {compareMode === 'custom' && (
-            <>
-              <div>
-                <label style={labelStyle}>Comp. Desde</label>
-                <input type="date" value={compFrom} onChange={(e) => setCompFrom(e.target.value)} style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Comp. Hasta</label>
-                <input type="date" value={compTo} onChange={(e) => setCompTo(e.target.value)} style={inputStyle} />
-              </div>
-            </>
-          )}
-        </div>
-
-        <span style={{ fontSize: 12, color: BRAND_GRAY }}>
-          Última actualización: {new Date().toLocaleDateString('es-AR')} - {new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
-        </span>
-      </div>
 
       {/* ── ROW 1: KPIs PRINCIPALES ──────────────────── */}
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>

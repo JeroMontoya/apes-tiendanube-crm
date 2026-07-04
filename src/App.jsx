@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from './lib/supabase';
+import { Award } from 'lucide-react';
 
 import Sidebar from './components/Sidebar';
 import StatsCards from './components/StatsCards';
@@ -11,18 +13,34 @@ import ClientDetailModal from './components/ClientDetailModal';
 import MarketingReport from './components/MarketingReport';
 import FrequencyFunnel from './components/FrequencyFunnel';
 import GeoFunnel from './components/GeoFunnel';
+import AuthScreen from './components/AuthScreen';
+import CampaignPipeline from './components/CampaignPipeline';
+import MetaAdsPanel from './components/MetaAdsPanel';
+import GA4Panel from './components/GA4Panel';
+import PQRPanel from './components/PQRPanel';
+import GoalTrackerBanner from './components/GoalTrackerBanner';
+import ActiveCampaignsWidget from './components/ActiveCampaignsWidget';
+import EventCalendar from './components/EventCalendar';
 
 // Data & Logic
 import historicClientsData from './data/mockHistoricClients';
 import mockTiendanubeOrders from './data/mockTiendanubeOrders';
 import { unifyClients } from './utils/unifyClients';
 import { TiendanubeAPI, mapTiendanubeDataToUnified } from './utils/tiendanubeAPI';
+import { loadFromCache, saveToCache } from './data/cache';
+import { MetaAPI } from './api/MetaAPI';
+import { GA4API } from './api/GA4API';
+
+import GlobalDatePicker, { calculateDates } from './components/GlobalDatePicker';
 
 export default function App() {
+  const [session, setSession] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
   const [activeView, setActiveView] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
-  
+
   const [historicClients, setHistoricClients] = useState([]);
   const [unifiedClients, setUnifiedClients] = useState([]);
   
@@ -30,10 +48,42 @@ export default function App() {
   const [storeId, setStoreId] = useState(null);
   const [lastSync, setLastSync] = useState(null);
 
+  const [metaInsights, setMetaInsights] = useState(null);
+  const [ga4Insights, setGa4Insights] = useState(null);
+  const [workspaceData, setWorkspaceData] = useState(null);
+
   const [needsAuth, setNeedsAuth] = useState(false);
   const [authStoreId, setAuthStoreId] = useState(null);
 
-  // ── 0. Inicialización de Nexo (Para evitar que TiendaNube mate el iframe) ────────────────
+  // Global Date State
+  const initialDates = calculateDates('30d');
+  const [dateRange, setDateRange] = useState({
+    preset: '30d',
+    metaPreset: 'last_30d',
+    startDate: initialDates.start,
+    endDate: initialDates.end
+  });
+  
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [isFetchingInsights, setIsFetchingInsights] = useState(false);
+
+  // ── -1. Auth Check (Supabase) ──────────────────────────
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setAuthLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // ── 0. Inicialización de Nexo ────────────────
   useEffect(() => {
     try {
       if (window.top !== window.self) {
@@ -46,53 +96,237 @@ export default function App() {
     }
   }, []);
 
-  // ── 1. Detección de Credenciales (OAuth + LocalStorage) ────────────────
+  // ── 1. Carga de Caché y Sincronización ────────────────
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const installed = urlParams.get('installed');
-    const storeFromUrl = urlParams.get('store') || urlParams.get('store_id');
-    const tokenFromUrl = urlParams.get('token');
+    if (authLoading || !session) return;
 
-    let currentStore = null;
-    let currentToken = null;
-
-    try {
-      currentStore = localStorage.getItem('apes_store_id');
-      currentToken = localStorage.getItem('apes_store_token');
-    } catch (e) {
-      console.warn('LocalStorage no disponible (posible bloqueo de cookies de terceros en iframe).', e);
-    }
-
-    // Si recibimos un token de la redirección OAuth
-    if (installed === 'true' && storeFromUrl && tokenFromUrl) {
-      currentStore = storeFromUrl;
-      currentToken = tokenFromUrl;
+    const loadData = async () => {
       try {
-        localStorage.setItem('apes_store_id', currentStore);
-        localStorage.setItem('apes_store_token', currentToken);
-      } catch (e) {
-        console.warn('No se pudo guardar en LocalStorage.', e);
+        const cachedClients = await loadFromCache('unified_clients');
+        const cachedSync = await loadFromCache('last_sync');
+        if (cachedClients && cachedClients.length > 0) {
+          setUnifiedClients(cachedClients);
+          if (cachedSync) setLastSync(new Date(cachedSync));
+          setConnectionStatus('connected');
+        }
+      } catch (err) {
+        console.warn('No se pudo cargar desde caché', err);
       }
-      window.history.replaceState({}, document.title, '/');
-    }
 
-    // Si nos falta el token pero TiendaNube nos pasa el store_id (intentó abrir el iframe)
-    if (!currentToken && storeFromUrl) {
-      setNeedsAuth(true);
-      setAuthStoreId(storeFromUrl);
-      return;
-    }
+      setIsSyncing(true);
 
-    if (currentStore && currentToken) {
-      setStoreId(currentStore);
-      fetchRealData(currentStore, currentToken);
-    } else {
-      // Sin tienda o token: usar mock data en modo demo
-      const initialUnified = unifyClients([], mockTiendanubeOrders);
-      setUnifiedClients(initialUnified);
-      setLastSync(new Date());
+      const { data: workspace } = await supabase
+        .from('workspaces')
+        .select('tiendanube_store_id, tiendanube_access_token, meta_ad_account_id, meta_access_token, ga4_property_id, ga4_credentials_json')
+        .eq('user_id', session.user.id)
+        .single();
+
+      setWorkspaceData(workspace);
+
+      let currentStore = workspace?.tiendanube_store_id;
+      let currentToken = workspace?.tiendanube_access_token;
+
+      if (!currentToken) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const installed = urlParams.get('installed');
+        const storeFromUrl = urlParams.get('store') || urlParams.get('store_id');
+        const tokenFromUrl = urlParams.get('token');
+        
+        if (installed === 'true' && storeFromUrl && tokenFromUrl) {
+           currentStore = storeFromUrl;
+           currentToken = tokenFromUrl;
+           await supabase.from('workspaces').upsert({
+             user_id: session.user.id,
+             tiendanube_store_id: currentStore,
+             tiendanube_access_token: currentToken
+           });
+           window.history.replaceState({}, document.title, '/');
+        } else if (storeFromUrl) {
+           setNeedsAuth(true);
+           setAuthStoreId(storeFromUrl);
+           setIsSyncing(false);
+           return;
+        }
+      }
+
+      if (currentStore && currentToken) {
+        setStoreId(currentStore);
+        await fetchRealData(currentStore, currentToken);
+      } else {
+        if (unifiedClients.length === 0) {
+          const initialUnified = unifyClients([], mockTiendanubeOrders);
+          setUnifiedClients(initialUnified);
+        }
+      }
+
+      setIsSyncing(false);
+    };
+
+    loadData();
+  }, [session, authLoading]);
+
+  // ── Fetch Insights when dateRange or workspace changes ────────────────
+  useEffect(() => {
+    if (!workspaceData) return;
+
+    const fetchInsights = async () => {
+      setIsFetchingInsights(true);
+
+      if (workspaceData.meta_ad_account_id && workspaceData.meta_access_token) {
+        const metaApi = new MetaAPI(workspaceData.meta_ad_account_id, workspaceData.meta_access_token);
+        
+        let metaDatePreset = dateRange.metaPreset;
+        // if custom, Meta requires time_range={'since':'...','until':'...'} instead of preset
+        // For simplicity, I'll pass preset for now. In MetaAPI I will handle custom.
+        metaApi.getInsights(dateRange).then(res => {
+          if (res) setMetaInsights(res);
+        }).catch(err => console.error('[DEBUG] Meta Error:', err));
+      }
+
+      if (workspaceData.ga4_property_id && workspaceData.ga4_credentials_json) {
+        const ga4Api = new GA4API(workspaceData.ga4_credentials_json, workspaceData.ga4_property_id);
+        ga4Api.getInsights(dateRange.startDate, dateRange.endDate).then(res => {
+          if (res) setGa4Insights(res);
+        }).catch(err => console.error('[DEBUG] GA4 Error:', err));
+      }
+
+      setIsFetchingInsights(false);
+    };
+
+    fetchInsights();
+  }, [dateRange, workspaceData]);
+
+  // Auto-refresh polling
+  useEffect(() => {
+    if (!storeId || connectionStatus !== 'connected' || !session) return;
+    const interval = setInterval(async () => {
+       const { data } = await supabase.from('workspaces').select('tiendanube_access_token').eq('user_id', session.user.id).single();
+       if(data?.tiendanube_access_token) {
+         fetchRealData(storeId, data.tiendanube_access_token);
+       }
+    }, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [storeId, connectionStatus, session]);
+
+  const fetchRealData = async (sid, token) => {
+    setConnectionStatus('connecting');
+    const api = new TiendanubeAPI(sid, token);
+    
+    try {
+      const [customersRes, ordersRes] = await Promise.all([
+        api.fetchCustomers(),
+        api.fetchAllOrders()
+      ]);
+
+      if (customersRes.success && ordersRes.success) {
+        const mappedOrders = mapTiendanubeDataToUnified(customersRes.data, ordersRes.data);
+        const newUnified = unifyClients([], mappedOrders);
+        
+        setUnifiedClients(newUnified);
+        setConnectionStatus('connected');
+        
+        const syncDate = new Date();
+        setLastSync(syncDate);
+
+        await saveToCache('unified_clients', newUnified);
+        await saveToCache('last_sync', syncDate.toISOString());
+
+      } else {
+        throw new Error('Error al obtener datos mediante el API');
+      }
+    } catch (err) {
+      console.error('Fetch real data failed:', err);
+      if (unifiedClients.length === 0) {
+        const initialUnified = unifyClients([], mockTiendanubeOrders);
+        setUnifiedClients(initialUnified);
+      }
+      setConnectionStatus('disconnected');
     }
-  }, [historicClients]);
+  };
+
+  const handleConnect = async ({ storeId: sid, token }) => {
+    setConnectionStatus('connecting');
+    const api = new TiendanubeAPI(sid, token);
+    
+    try {
+      const test = await api.testConnection();
+      if (!test.success) {
+        alert(`Error de conexión: ${test.error?.message || 'Token o Store ID inválido'}`);
+        setConnectionStatus('disconnected');
+        return;
+      }
+
+      const [customersRes, ordersRes] = await Promise.all([
+        api.fetchCustomers(),
+        api.fetchAllOrders()
+      ]);
+
+      if (customersRes.success && ordersRes.success) {
+        const mappedOrders = mapTiendanubeDataToUnified(customersRes.data, ordersRes.data);
+        const newUnified = unifyClients([], mappedOrders);
+        setUnifiedClients(newUnified);
+        setConnectionStatus('connected');
+        setStoreId(sid);
+        setLastSync(new Date());
+        
+        await saveToCache('unified_clients', newUnified);
+        await saveToCache('last_sync', new Date().toISOString());
+        
+        alert('¡Sincronización completada con éxito!');
+        setActiveView('dashboard');
+      } else {
+        throw new Error('Error al obtener datos');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error al sincronizar con TiendaNube.');
+      setConnectionStatus('disconnected');
+    }
+  };
+
+  // ── Filter Clients locally based on Date Picker ──────────────────────
+  const filteredClients = React.useMemo(() => {
+    if (!unifiedClients || unifiedClients.length === 0) return [];
+    
+    const start = new Date(dateRange.startDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(dateRange.endDate);
+    end.setHours(23, 59, 59, 999);
+
+    // Deep clone and filter orders for each client
+    return unifiedClients.map(client => {
+      if (!client.purchases) return client;
+      
+      const filteredPurchases = client.purchases.filter(purchase => {
+        if (!purchase.date) return false;
+        const purchaseDate = new Date(purchase.date);
+        return purchaseDate >= start && purchaseDate <= end;
+      });
+
+      // Recalculate metrics based on filtered orders
+      const totalSpent = filteredPurchases.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+      
+      return {
+        ...client,
+        purchases: filteredPurchases,
+        purchaseCount: filteredPurchases.length,
+        totalSpent: totalSpent
+      };
+    }).filter(client => client.purchaseCount > 0);
+  }, [unifiedClients, dateRange]);
+
+
+  if (authLoading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#091c35', color: 'white' }}>
+        <h2>Cargando...</h2>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <AuthScreen onAuth={(s) => setSession(s)} />;
+  }
 
   if (needsAuth) {
     return (
@@ -111,122 +345,118 @@ export default function App() {
     );
   }
 
-  // Auto-refresh polling (every 5 minutes)
-  useEffect(() => {
-    const currentToken = localStorage.getItem('apes_store_token');
-    if (!storeId || !currentToken || connectionStatus !== 'connected') return;
-    const interval = setInterval(() => {
-      fetchRealData(storeId, currentToken);
-    }, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [storeId, connectionStatus]);
-
-  // ── 2. Fetch via TiendanubeAPI (Serverless Edge Proxy) ────────────────────────
-  const fetchRealData = async (sid, token) => {
-    setConnectionStatus('connecting');
-    const api = new TiendanubeAPI(sid, token);
-    
-    try {
-      const [customersRes, ordersRes] = await Promise.all([
-        api.fetchCustomers(),
-        api.fetchAllOrders()
-      ]);
-
-      if (customersRes.success && ordersRes.success) {
-        const mappedOrders = mapTiendanubeDataToUnified(customersRes.data, ordersRes.data);
-        const newUnified = unifyClients([], mappedOrders);
-        
-        setUnifiedClients(newUnified);
-        setConnectionStatus('connected');
-        setLastSync(new Date());
-      } else {
-        throw new Error('Error al obtener datos mediante el API');
-      }
-    } catch (err) {
-      console.error('Fetch real data failed, falling back to demo:', err);
-      // Fallback: usar mock data
-      const initialUnified = unifyClients([], mockTiendanubeOrders);
-      setUnifiedClients(initialUnified);
-      setConnectionStatus('disconnected');
-    }
-  };
-
-  // ── 3. Conectar vía Settings ──────────────────────────
-  const handleConnect = async ({ storeId: sid, token }) => {
-    setConnectionStatus('connecting');
-    const api = new TiendanubeAPI(sid, token);
-    
-    try {
-      const test = await api.testConnection();
-      if (!test.success) {
-        alert('Error: Verifica tu Token y Store ID');
-        setConnectionStatus('disconnected');
-        return;
-      }
-
-      const [customersRes, ordersRes] = await Promise.all([
-        api.fetchCustomers(),
-        api.fetchAllOrders()
-      ]);
-
-      if (customersRes.success && ordersRes.success) {
-        const mappedOrders = mapTiendanubeDataToUnified(customersRes.data, ordersRes.data);
-        const newUnified = unifyClients([], mappedOrders);
-        setUnifiedClients(newUnified);
-        setConnectionStatus('connected');
-        setStoreId(sid);
-        setLastSync(new Date());
-        
-        // Guardar las credenciales en local storage
-        localStorage.setItem('apes_store_id', sid);
-        localStorage.setItem('apes_store_token', token);
-        
-        alert('¡Sincronización completada con éxito!');
-        setActiveView('dashboard');
-      } else {
-        throw new Error('Error al obtener datos');
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Error al sincronizar con TiendaNube.');
-      setConnectionStatus('disconnected');
-    }
-  };
-
-  // ── 4. Render Views ───────────────────────────────────
   const renderView = () => {
     switch(activeView) {
       case 'dashboard':
         return (
           <>
-            <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            {/* Hero Header */}
+            <div className="section-header">
               <div>
-                <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: 'var(--on-surface)' }}>Centro de Comando</h1>
-                <p style={{ fontSize: 13, color: 'var(--on-surface-variant)', margin: '4px 0 0' }}>Métricas ejecutivas y funnel de conversión.</p>
+                <h1 style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  Centro de Comando
+                  <span className="live-dot" />
+                </h1>
+                <p>Panel de control operativo en tiempo real</p>
               </div>
               {lastSync && (
-                <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', background: 'var(--surface-container-low)', padding: '4px 10px', borderRadius: 20, border: '1px solid var(--border-subtle)' }}>
+                <div style={{ 
+                  fontSize: 12, color: 'var(--on-surface-variant)', 
+                  background: 'rgba(255,255,255,0.05)', 
+                  padding: '6px 14px', borderRadius: 20, 
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  fontWeight: 500
+                }}>
+                  <span className="live-dot" style={{ width: 6, height: 6 }} />
                   Última sinc: {lastSync.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
                 </div>
               )}
             </div>
-            
-            <StatsCards clients={unifiedClients} />
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 450px), 1fr))', gap: 24, marginTop: 24 }}>
-              <FrequencyFunnel clients={unifiedClients} onSelectClient={setSelectedClient} />
-              <GeoFunnel clients={unifiedClients} onSelectClient={setSelectedClient} />
-            </div>
 
-            <div className="glass-card" style={{ padding: '0', marginTop: 24 }}>
-              <div style={{ padding: '20px 24px 0 24px' }}>
-                <h3 style={{ fontSize: 16, fontWeight: 600 }}>🏆 Top Clientes Recientes</h3>
+            {/* Goal Banner - Full Width */}
+            <GoalTrackerBanner clients={filteredClients} dateRange={dateRange} />
+
+            {/* Bento Metrics Grid */}
+            <StatsCards clients={filteredClients} metaInsights={metaInsights} ga4Insights={ga4Insights} />
+
+            {/* Lower Bento: Funnels + Campaigns + Top Clients */}
+            <div className="bento-grid" style={{ marginTop: 16, gridAutoRows: 'minmax(200px, auto)' }}>
+              {/* Frequency Funnel - takes 5 cols */}
+              <div className="glass-card bento-span-5 bento-row-2" style={{ minHeight: 400, padding: 0, overflow: 'hidden' }}>
+                <FrequencyFunnel clients={filteredClients} onSelectClient={setSelectedClient} />
               </div>
-              <MasterTable 
-                clients={unifiedClients.slice(0, 5)} 
-                onSelectClient={setSelectedClient} 
-              />
+              
+              {/* Active Campaigns Widget - takes 4 cols */}
+              <div className="glass-card bento-span-4 bento-row-2" style={{ minHeight: 400, padding: 0, overflow: 'hidden' }}>
+                <ActiveCampaignsWidget workspace={workspaceData} onRefreshMeta={() => { if (workspaceData?.meta_ad_account_id && workspaceData?.meta_access_token) { const m = new (MetaAPI)(workspaceData.meta_ad_account_id, workspaceData.meta_access_token); m.getInsights(dateRange).then(r => { if (r) setMetaInsights(r); }); }}} />
+              </div>
+              
+              {/* Top Clients - takes 3 cols */}
+              <div className="glass-card bento-span-3 bento-row-2" style={{ padding: 0, display: 'flex', flexDirection: 'column', minHeight: 400 }}>
+                <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--on-surface)' }}>
+                    <Award size={18} color="#f59e0b" /> Top Clientes
+                  </h3>
+                </div>
+                  {filteredClients.slice(0, 8).map((client, i) => (
+                    <div 
+                      key={client.id} 
+                      className="top-client-item"
+                      onClick={() => setSelectedClient(client)}
+                      style={{ 
+                        padding: '14px 24px', 
+                        borderBottom: '1px solid rgba(255,255,255,0.04)', 
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                      }}
+                    >
+                      <div style={{
+                        width: 32, height: 32, borderRadius: 8,
+                        background: `hsl(${(i * 47) % 360}, 60%, 25%)`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 13, fontWeight: 700, color: '#fff',
+                        flexShrink: 0,
+                      }}>
+                        {client.name?.charAt(0)?.toUpperCase()}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--on-surface)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{client.name}</div>
+                        <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
+                          <span>{client.ordersCount || client.purchaseCount} compras</span>
+                          <span style={{ color: '#10b981', fontWeight: 600 }}>
+                            {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(client.totalSpent)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Geo Funnel - full width bottom */}
+              <div className="glass-card bento-span-12" style={{ padding: 0, overflow: 'hidden' }}>
+                <GeoFunnel clients={filteredClients} onSelectClient={setSelectedClient} />
+              </div>
+          </>
+        );
+      case 'calendario':
+        return (
+          <>
+            <div className="section-header">
+              <div>
+                <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 12, color: 'var(--on-surface)' }}>
+                  Calendario de Eventos
+                </h1>
+                <p style={{ margin: '4px 0 0', color: 'var(--on-surface-variant)', fontSize: 14 }}>
+                  Planificación de campañas, promociones y actividades
+                </p>
+              </div>
             </div>
+            <EventCalendar />
           </>
         );
       case 'clientes':
@@ -237,7 +467,7 @@ export default function App() {
               <p style={{ fontSize: 13, color: 'var(--on-surface-variant)', margin: '4px 0 0' }}>Historial cruzado unificado automáticamente.</p>
             </div>
             <div className="glass-card" style={{ padding: '0' }}>
-              <MasterTable clients={unifiedClients} onSelectClient={setSelectedClient} />
+              <MasterTable clients={filteredClients} onSelectClient={setSelectedClient} />
             </div>
           </>
         );
@@ -248,7 +478,7 @@ export default function App() {
               <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: 'var(--on-surface)' }}>Árbol de Gestión</h1>
               <p style={{ fontSize: 13, color: 'var(--on-surface-variant)', margin: '4px 0 0' }}>Clasificación automática del funnel de ventas.</p>
             </div>
-            <ClassificationTree clients={unifiedClients} />
+            <ClassificationTree clients={filteredClients} />
           </>
         );
       case 'analitica':
@@ -258,15 +488,23 @@ export default function App() {
               <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: 'var(--on-surface)' }}>El Cerebro (Analítica)</h1>
               <p style={{ fontSize: 13, color: 'var(--on-surface-variant)', margin: '4px 0 0' }}>Inteligencia de negocio en tiempo real.</p>
             </div>
-            <AnalyticsPanel clients={unifiedClients} />
+            <AnalyticsPanel clients={filteredClients} />
           </>
         );
       case 'marketing':
-        return <MarketingReport clients={unifiedClients} />;
+        return <MarketingReport rawClients={unifiedClients} dateRange={dateRange} />;
+      case 'meta_ads':
+        return <MetaAdsPanel metaInsights={metaInsights} workspace={workspaceData} dateRange={dateRange} onRefreshMeta={() => { if (workspaceData?.meta_ad_account_id && workspaceData?.meta_access_token) { const m = new MetaAPI(workspaceData.meta_ad_account_id, workspaceData.meta_access_token); m.getInsights(dateRange).then(r => { if (r) setMetaInsights(r); }); }}} />;
+      case 'ga4':
+        return <GA4Panel ga4Insights={ga4Insights} />;
+      case 'pipeline':
+        return <CampaignPipeline session={session} unifiedClients={filteredClients} />;
+      case 'pqr':
+        return <PQRPanel session={session} />;
       case 'configuracion':
-        return <SettingsPanel onConnect={handleConnect} connectionStatus={connectionStatus} />;
+        return <SettingsPanel onConnect={handleConnect} connectionStatus={connectionStatus} session={session} />;
       case 'exportar':
-        return <ExportPanel clients={unifiedClients} />;
+        return <ExportPanel clients={filteredClients} />;
       default:
         return <div>Vista no encontrada</div>;
     }
@@ -282,7 +520,17 @@ export default function App() {
       />
       
       <main className="main-content">
-        {renderView()}
+        {!['configuracion', 'exportar', 'pqr'].includes(activeView) && (
+          <GlobalDatePicker dateRange={dateRange} setDateRange={setDateRange} />
+        )}
+        
+        {isFetchingInsights ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
+            <div style={{ color: 'var(--primary)', fontWeight: 'bold' }}>Sincronizando datos del periodo...</div>
+          </div>
+        ) : (
+          renderView()
+        )}
       </main>
 
       {selectedClient && (
