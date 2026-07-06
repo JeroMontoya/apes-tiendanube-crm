@@ -76,14 +76,6 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme }) 
                 key={item.id}
                 onClick={() => handleNavigate(item.id)}
                 className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  outline: 'none',
-                  width: '100%',
-                  fontFamily: 'inherit',
-                  textAlign: 'left'
-                }}
               >
                 <span className="nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Icon size={18} />
@@ -97,29 +89,13 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme }) 
         <div style={{ padding: '0 12px', marginTop: 'auto', marginBottom: '16px' }}>
           <button 
             onClick={toggleTheme}
-            style={{
-              background: 'var(--surface)',
-              border: '1px solid var(--border-subtle)',
-              outline: 'none',
-              width: '100%',
-              fontFamily: 'inherit',
-              textAlign: 'left',
-              display: 'flex',
-              alignItems: 'center',
-              padding: '10px 12px',
-              borderRadius: 'var(--radius-sm)',
-              color: 'var(--on-surface)',
-              cursor: 'pointer',
-              gap: '12px',
-              transition: 'background var(--transition-fast)'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.background = 'var(--surface-container-high)'}
-            onMouseOut={(e) => e.currentTarget.style.background = 'var(--surface)'}
+            className="sidebar-nav-item"
+            style={{ width: '100%', justifyContent: 'flex-start' }}
           >
-            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+            <span className="nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
             </span>
-            <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>
+            <span>
               Modo {theme === 'dark' ? 'Oscuro' : 'Claro'}
             </span>
           </button>
