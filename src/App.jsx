@@ -41,6 +41,22 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
 
+  // Theme State
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved) return saved;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
   const [historicClients, setHistoricClients] = useState([]);
   const [unifiedClients, setUnifiedClients] = useState([]);
   
@@ -512,11 +528,12 @@ export default function App() {
 
   return (
     <div className="app-layout">
+      {/* Sidebar Navigation */}
       <Sidebar 
         activeView={activeView} 
         onNavigate={(view) => { setActiveView(view); setSidebarOpen(false); }} 
-        isOpen={sidebarOpen}
-        onToggle={() => setSidebarOpen(!sidebarOpen)}
+        theme={theme}
+        toggleTheme={toggleTheme}
       />
       
       <main className="main-content">

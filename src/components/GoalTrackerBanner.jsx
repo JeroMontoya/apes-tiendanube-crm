@@ -26,9 +26,9 @@ const GoalTrackerBanner = ({ clients, dateRange }) => {
       display: 'flex', 
       flexDirection: 'column', 
       gap: 20,
-      background: 'linear-gradient(135deg, #0f172a, #1e1b4b)',
+      background: 'linear-gradient(135deg, var(--surface-container), var(--primary-container))',
       borderRadius: 'var(--radius-lg)',
-      color: '#fff',
+      color: 'var(--on-surface)',
       boxShadow: '0 20px 40px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
       position: 'relative',
       overflow: 'hidden'

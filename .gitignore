@@ -28,3 +28,6 @@ dist-ssr
 .env.*
 server/.env
 check_headers.cjs
+
+.vercel
+.env*

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   LayoutDashboard, Users, Target, Brain, TrendingUp,
   Megaphone, Globe, KanbanSquare, PackageSearch,
-  Settings, Download, Menu, X, Zap, Calendar
+  Settings, Download, Menu, X, Zap, Calendar, Sun, Moon
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -20,7 +20,7 @@ const NAV_ITEMS = [
   { id: 'exportar', icon: Download, label: 'Exportar' },
 ];
 
-export default function Sidebar({ activeView, onNavigate }) {
+export default function Sidebar({ activeView, onNavigate, theme, toggleTheme }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
 
@@ -93,6 +93,37 @@ export default function Sidebar({ activeView, onNavigate }) {
             );
           })}
         </nav>
+
+        <div style={{ padding: '0 12px', marginTop: 'auto', marginBottom: '16px' }}>
+          <button 
+            onClick={toggleTheme}
+            style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--border-subtle)',
+              outline: 'none',
+              width: '100%',
+              fontFamily: 'inherit',
+              textAlign: 'left',
+              display: 'flex',
+              alignItems: 'center',
+              padding: '10px 12px',
+              borderRadius: 'var(--radius-sm)',
+              color: 'var(--on-surface)',
+              cursor: 'pointer',
+              gap: '12px',
+              transition: 'background var(--transition-fast)'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = 'var(--surface-container-high)'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'var(--surface)'}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+              {theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
+            </span>
+            <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>
+              Modo {theme === 'dark' ? 'Oscuro' : 'Claro'}
+            </span>
+          </button>
+        </div>
 
         {/* Footer */}
         <div className="sidebar-footer">

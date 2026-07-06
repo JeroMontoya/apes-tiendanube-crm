@@ -108,7 +108,7 @@ export default function AnalyticsPanel({ clients }) {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div style={{ background: '#FFF', border: '1px solid var(--border-subtle)', padding: '12px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border-subtle)', padding: '12px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
           <p style={{ margin: 0, fontWeight: 600, color: 'var(--on-surface)', fontSize: 13, marginBottom: 4 }}>{label || payload[0].name}</p>
           <p style={{ margin: 0, color: 'var(--on-surface-variant)', fontSize: 13 }}>
             {payload[0].name === 'total' || payload[0].name === 'spent' || payload[0].name === 'totalSales'

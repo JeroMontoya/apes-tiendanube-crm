@@ -81,7 +81,7 @@ export default function AuthScreen({ onAuth }) {
       justifyContent: 'center',
       minHeight: '100vh',
       padding: 'var(--space-md)',
-      background: 'linear-gradient(135deg, #091c35 0%, #0a2647 50%, #003d9b 100%)',
+      background: 'linear-gradient(135deg, var(--background) 0%, var(--surface-container-low) 50%, var(--surface-container) 100%)',
       position: 'relative',
       overflow: 'hidden',
     },

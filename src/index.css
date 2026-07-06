@@ -77,29 +77,29 @@
   --warning-container: #78350f;
   --on-warning-container: #fde68a;
 
-  /* Surfaces & Backgrounds (Premium Dark Mode) */
-  --background: #0f172a; /* Slate 900 */
-  --on-background: #f8fafc;
+  /* Surfaces & Backgrounds (Light Mode) */
+  --background: #f8fafc; /* Slate 50 */
+  --on-background: #0f172a; /* Slate 900 */
   
-  --surface: #1e293b; /* Slate 800 */
-  --surface-dim: #0f172a;
-  --surface-bright: #334155;
-  --surface-container-lowest: #020617; /* Slate 950 */
-  --surface-container-low: #0f172a;
-  --surface-container: #1e293b;
-  --surface-container-high: #334155;
-  --surface-container-highest: #475569;
+  --surface: #ffffff; /* White */
+  --surface-dim: #f1f5f9; /* Slate 100 */
+  --surface-bright: #ffffff;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f8fafc;
+  --surface-container: #f1f5f9;
+  --surface-container-high: #e2e8f0;
+  --surface-container-highest: #cbd5e1;
   
-  --on-surface: #f8fafc;
-  --on-surface-variant: #94a3b8; /* Slate 400 */
-  --inverse-surface: #f1f5f9;
-  --inverse-on-surface: #0f172a;
+  --on-surface: #0f172a;
+  --on-surface-variant: #475569; /* Slate 600 */
+  --inverse-surface: #1e293b;
+  --inverse-on-surface: #f8fafc;
 
   /* Borders & Outlines */
-  --outline: #64748b;
-  --outline-variant: #334155;
-  --border-subtle: rgba(255, 255, 255, 0.05);
-  --border-medium: rgba(255, 255, 255, 0.1);
+  --outline: #94a3b8;
+  --outline-variant: #e2e8f0;
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-medium: rgba(0, 0, 0, 0.15);
 
   /* Gradients */
   --gradient-primary: linear-gradient(135deg, #3b82f6, #8b5cf6);
@@ -107,8 +107,8 @@
   --gradient-warning: linear-gradient(135deg, #f59e0b, #d97706);
 
   /* Glassmorphism */
-  --glass-bg: rgba(30, 41, 59, 0.4);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.08);
   --glass-blur: blur(24px);
 
   /* Spacing (Base 4px) */
@@ -139,6 +139,36 @@
   /* Sidebar */
   --sidebar-width: 240px;
 }
+
+[data-theme="dark"] {
+    /* Surfaces & Backgrounds (Premium Dark Mode) */
+    --background: #0f172a; /* Slate 900 */
+    --on-background: #f8fafc;
+    
+    --surface: #1e293b; /* Slate 800 */
+    --surface-dim: #0f172a;
+    --surface-bright: #334155;
+    --surface-container-lowest: #020617; /* Slate 950 */
+    --surface-container-low: #0f172a;
+    --surface-container: #1e293b;
+    --surface-container-high: #334155;
+    --surface-container-highest: #475569;
+    
+    --on-surface: #f8fafc;
+    --on-surface-variant: #94a3b8; /* Slate 400 */
+    --inverse-surface: #f1f5f9;
+    --inverse-on-surface: #0f172a;
+
+    /* Borders & Outlines */
+    --outline: #64748b;
+    --outline-variant: #334155;
+    --border-subtle: rgba(255, 255, 255, 0.05);
+    --border-medium: rgba(255, 255, 255, 0.1);
+
+    /* Glassmorphism */
+    --glass-bg: rgba(30, 41, 59, 0.4);
+    --glass-border: rgba(255, 255, 255, 0.08);
+  }
 
 /* --- Global Reset & Base --- */
 *,
