@@ -19,6 +19,63 @@ const getFirstDayOfMonth = (year, month) => {
   return day === 0 ? 6 : day - 1; 
 };
 
+// Generador dinámico de Fechas Comerciales Importantes en Colombia
+const getColombianEvents = (year) => {
+  // Helpers para encontrar días específicos (ej: segundo domingo de mayo)
+  const getNthDayOfMonth = (year, month, dayOfWeek, n) => {
+    let date = new Date(year, month, 1);
+    let count = 0;
+    while (date.getMonth() === month) {
+      if (date.getDay() === dayOfWeek) {
+        count++;
+        if (count === n) return date;
+      }
+      date.setDate(date.getDate() + 1);
+    }
+    return date;
+  };
+
+  const getLastDayOfMonth = (year, month, dayOfWeek) => {
+    let date = new Date(year, month + 1, 0); // Último día del mes
+    while (date.getMonth() === month) {
+      if (date.getDay() === dayOfWeek) return date;
+      date.setDate(date.getDate() - 1);
+    }
+    return date;
+  };
+
+  // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+  const diaDeLaMadre = getNthDayOfMonth(year, 4, 0, 2); // Mayo = 4
+  const diaDelPadre = getNthDayOfMonth(year, 5, 0, 3); // Junio = 5
+  const amorYAmistad = getNthDayOfMonth(year, 8, 6, 3); // Septiembre = 8
+  const diaDelNino = getLastDayOfMonth(year, 3, 6); // Abril = 3
+  const blackFriday = getNthDayOfMonth(year, 10, 5, 4); // Noviembre = 10 (4to o último viernes)
+  
+  // Si el 4to viernes no es el último, revisamos. Para simplificar, Black Friday suele ser el día después de Thanksgiving (4to Jueves).
+  const thanksgiving = getNthDayOfMonth(year, 10, 4, 4);
+  const realBlackFriday = new Date(thanksgiving);
+  realBlackFriday.setDate(realBlackFriday.getDate() + 1);
+  
+  const cyberMonday = new Date(realBlackFriday);
+  cyberMonday.setDate(cyberMonday.getDate() + 3);
+
+  const formatDate = (date) => date.toISOString().split('T')[0];
+
+  return [
+    { id: `co-mujer-${year}`, title: 'Día de la Mujer', category: 'HOLIDAY', startDate: `${year}-03-08`, endDate: `${year}-03-08`, description: 'Temporada alta. Ideal para campañas enfocadas en mujeres.' },
+    { id: `co-nino-${year}`, title: 'Día de la Niñez', category: 'HOLIDAY', startDate: formatDate(diaDelNino), endDate: formatDate(diaDelNino), description: 'Último sábado de abril.' },
+    { id: `co-madre-${year}`, title: 'Día de la Madre', category: 'HOLIDAY', startDate: formatDate(diaDeLaMadre), endDate: formatDate(diaDeLaMadre), description: 'Segundo domingo de mayo. Segunda fecha comercial más importante del año.' },
+    { id: `co-padre-${year}`, title: 'Día del Padre', category: 'HOLIDAY', startDate: formatDate(diaDelPadre), endDate: formatDate(diaDelPadre), description: 'Tercer domingo de junio.' },
+    { id: `co-amor-${year}`, title: 'Amor y Amistad', category: 'HOLIDAY', startDate: formatDate(amorYAmistad), endDate: formatDate(amorYAmistad), description: 'Tercer sábado de septiembre. Gran volumen de regalos.' },
+    { id: `co-halloween-${year}`, title: 'Halloween', category: 'HOLIDAY', startDate: `${year}-10-31`, endDate: `${year}-10-31`, description: 'Temporada de disfraces y dulces.' },
+    { id: `co-bf-${year}`, title: 'Black Friday', category: 'CAMPAIGN', startDate: formatDate(realBlackFriday), endDate: formatDate(realBlackFriday), description: 'El evento global de descuentos más importante.' },
+    { id: `co-cm-${year}`, title: 'Cyber Lunes', category: 'CAMPAIGN', startDate: formatDate(cyberMonday), endDate: formatDate(cyberMonday), description: 'Día de descuentos enfocado 100% online.' },
+    { id: `co-navidad-${year}`, title: 'Navidad', category: 'HOLIDAY', startDate: `${year}-12-24`, endDate: `${year}-12-25`, description: 'Pico máximo de ventas del año. Las campañas deben iniciar desde Noviembre.' },
+    { id: `co-primas1-${year}`, title: 'Temporada de Primas (Mitad de año)', category: 'PROMO', startDate: `${year}-06-15`, endDate: `${year}-06-30`, description: 'Pago de primas legales en Colombia. Mayor poder adquisitivo.' },
+    { id: `co-primas2-${year}`, title: 'Temporada de Primas (Fin de año)', category: 'PROMO', startDate: `${year}-12-01`, endDate: `${year}-12-20`, description: 'Pago de primas navideñas.' },
+  ];
+};
+
 export default function EventCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   
@@ -42,12 +99,17 @@ export default function EventCalendar() {
     }
   ]);
 
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  // Combine custom events with Colombian dates dynamically
+  const allEvents = React.useMemo(() => {
+    return [...events, ...getColombianEvents(year), ...getColombianEvents(year - 1), ...getColombianEvents(year + 1)];
+  }, [events, year]);
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [editingEvent, setEditingEvent] = useState(null);
-
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
 
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfMonth(year, month);
@@ -65,16 +127,17 @@ export default function EventCalendar() {
     blanks.push(<div key={`blank-${i}`} className="calendar-cell empty"></div>);
   }
 
+  const getEventsForDate = (day) => {
+    const dStr = new Date(year, month, day, 12, 0, 0).toISOString().split('T')[0];
+    return allEvents.filter(ev => dStr >= ev.startDate && dStr <= ev.endDate);
+  };
+
   const daysInMonthCells = [];
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = new Date(year, month, d).toISOString().split('T')[0];
     
     // Find events that span across this day
-    const dayEvents = events.filter(ev => {
-      const eStart = ev.startDate;
-      const eEnd = ev.endDate || ev.startDate;
-      return dateStr >= eStart && dateStr <= eEnd;
-    });
+    const dayEvents = getEventsForDate(d);
 
     const isToday = dateStr === new Date().toISOString().split('T')[0];
 
