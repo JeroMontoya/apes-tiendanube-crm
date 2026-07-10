@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useTeam, PERMISSION_DEFS, PERMISSION_CATEGORIES } from '../contexts/TeamContext';
 import {
   UserPlus, Users, Shield, X, Check, Trash2, Edit3, LogOut,
