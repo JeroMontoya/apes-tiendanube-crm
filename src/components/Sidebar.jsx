@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTeam } from '../contexts/TeamContext';
 import {
   LayoutDashboard, Users, Target, Brain, TrendingUp,
   Megaphone, Globe, KanbanSquare, PackageSearch,
@@ -21,6 +22,7 @@ const ALL_NAV_ITEMS = [
   { id: 'ventas_view', icon: DollarSign, label: 'Ventas', roles: ['admin', 'ventas'] },
   { id: 'pqr', icon: PackageSearch, label: 'PQR & Soporte', roles: ['admin', 'taller', 'ventas', 'atencion_cliente'] },
   { id: 'equipo', icon: Users, label: 'Equipo', roles: ['admin'] },
+  { id: 'permisos', icon: Shield, label: 'Permisos', roles: ['admin'] },
   { id: 'actividad', icon: Clock, label: 'Actividad', roles: ['admin'] },
   { id: 'rendimiento', icon: BarChart3, label: 'Rendimiento', roles: ['admin'] },
   { id: 'configuracion', icon: Settings, label: 'Configuración', roles: ['admin'] },
@@ -30,6 +32,8 @@ const ALL_NAV_ITEMS = [
 export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, currentMember, ROLE_LABELS, ROLE_COLORS, ROLE_ICONS }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+  const teamCtx = useTeam();
+  const hasPermission = teamCtx?.hasPermission || (() => true);
 
   const handleNavigate = (id) => {
     onNavigate(id);
@@ -37,7 +41,7 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
   };
 
   const visibleItems = currentMember
-    ? ALL_NAV_ITEMS.filter(item => item.roles.includes(currentMember.role))
+    ? ALL_NAV_ITEMS.filter(item => hasPermission(`view_${item.id}`) || item.roles.includes(currentMember.role))
     : ALL_NAV_ITEMS;
 
   return (

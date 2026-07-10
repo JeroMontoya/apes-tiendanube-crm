@@ -36,6 +36,7 @@ import ActivityLog from './components/ActivityLog';
 import ProductivityDashboard from './components/ProductivityDashboard';
 import SalesView from './components/SalesView';
 import { TeamManager, TeamMemberBadge } from './components/TeamPanel';
+import PermissionManager from './components/PermissionManager';
 
 // Data & Logic
 import historicClientsData from './data/mockHistoricClients';
@@ -733,6 +734,8 @@ function AppViewRenderer({
       return <SalesView products={tiendanubeProducts} clients={filteredClients} />;
     case 'equipo':
       return <TeamManager />;
+    case 'permisos':
+      return <PermissionManager />;
     case 'actividad':
       return <ActivityLog />;
     case 'rendimiento':
