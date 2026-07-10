@@ -35,8 +35,8 @@ import WorkshopPage from './components/WorkshopPage';
 import ActivityLog from './components/ActivityLog';
 import ProductivityDashboard from './components/ProductivityDashboard';
 import SalesView from './components/SalesView';
-import { TeamManager, TeamMemberBadge } from './components/TeamPanel';
-import PermissionManager from './components/PermissionManager';
+import TeamPanel from './components/TeamPanel';
+import { TeamMemberBadge } from './components/TeamPanel';
 
 // Data & Logic
 import historicClientsData from './data/mockHistoricClients';
@@ -733,9 +733,7 @@ function AppViewRenderer({
     case 'ventas_view':
       return <SalesView products={tiendanubeProducts} clients={filteredClients} />;
     case 'equipo':
-      return <TeamManager />;
-    case 'permisos':
-      return <PermissionManager />;
+      return <TeamPanel />;
     case 'actividad':
       return <ActivityLog />;
     case 'rendimiento':

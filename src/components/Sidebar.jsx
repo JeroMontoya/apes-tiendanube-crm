@@ -22,7 +22,6 @@ const ALL_NAV_ITEMS = [
   { id: 'ventas_view', icon: DollarSign, label: 'Ventas', roles: ['admin', 'ventas'] },
   { id: 'pqr', icon: PackageSearch, label: 'PQR & Soporte', roles: ['admin', 'taller', 'ventas', 'atencion_cliente'] },
   { id: 'equipo', icon: Users, label: 'Equipo', roles: ['admin'] },
-  { id: 'permisos', icon: Shield, label: 'Permisos', roles: ['admin'] },
   { id: 'actividad', icon: Clock, label: 'Actividad', roles: ['admin'] },
   { id: 'rendimiento', icon: BarChart3, label: 'Rendimiento', roles: ['admin'] },
   { id: 'configuracion', icon: Settings, label: 'Configuración', roles: ['admin'] },
