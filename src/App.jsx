@@ -40,8 +40,8 @@ import TeamPanel from './components/TeamPanel';
 import { TeamMemberBadge } from './components/TeamPanel';
 
 // Data & Logic
-import historicClientsData from './data/mockHistoricClients';
-import mockTiendanubeOrders from './data/mockTiendanubeOrders';
+
+
 import { unifyClients } from './utils/unifyClients';
 import { TiendanubeAPI, mapTiendanubeDataToUnified } from './utils/tiendanubeAPI';
 import { loadFromCache, saveToCache } from './data/cache';
@@ -165,19 +165,10 @@ export default function App() {
 
     const loadData = async () => {
       try {
-        const cachedClients = await loadFromCache('unified_clients');
-        const cachedSync = await loadFromCache('last_sync');
         const cachedProducts = await loadFromCache('tiendanube_products');
-        
         if (cachedProducts) setTiendanubeProducts(cachedProducts);
-
-        if (cachedClients && cachedClients.length > 0) {
-          setUnifiedClients(cachedClients);
-          if (cachedSync) setLastSync(new Date(cachedSync));
-          setConnectionStatus('connected');
-        }
       } catch (err) {
-        console.warn('No se pudo cargar desde caché', err);
+        console.warn('No se pudo cargar productos desde caché', err);
       }
 
       setIsSyncing(true);
@@ -240,13 +231,8 @@ export default function App() {
       if (currentStore && currentToken) {
         setStoreId(currentStore);
         await fetchRealData(currentStore, currentToken);
-      } else {
-        if (unifiedClients.length === 0) {
-          const initialUnified = unifyClients([], mockTiendanubeOrders);
-          setRawOrders(mockTiendanubeOrders);
-          setUnifiedClients(initialUnified);
-        }
       }
+      // No credentials → empty state, never mock data
 
       setIsSyncing(false);
     };
@@ -331,11 +317,6 @@ export default function App() {
       }
     } catch (err) {
       console.error('Fetch real data failed:', err);
-      if (unifiedClients.length === 0) {
-        const initialUnified = unifyClients([], mockTiendanubeOrders);
-        setRawOrders(mockTiendanubeOrders);
-        setUnifiedClients(initialUnified);
-      }
       setConnectionStatus('disconnected');
     }
   };
