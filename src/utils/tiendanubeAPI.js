@@ -12,7 +12,7 @@
 
 // ─── Constants ──────────────────────────────────────────────────────
 
-const API_BASE = '/api/tiendanube';
+const API_BASE = '/api/tn-proxy';
 const USER_AGENT = 'APES CRM (contact@apesdigital.com)';
 const RATE_LIMIT_MS = 500; // 1000 / 2 = 500 ms between requests
 
@@ -95,8 +95,20 @@ export class TiendanubeAPI {
     }
     this._lastRequestAt = Date.now();
 
+    // ── Convert /api/tn-proxy/{storeId}/path → /api/tn-proxy?tnpath={storeId}/path&...
+    let proxyUrl = url;
+    if (url.startsWith(API_BASE + '/')) {
+      const afterBase = url.slice(API_BASE.length + 1);
+      const qIdx = afterBase.indexOf('?');
+      const pathPart = qIdx >= 0 ? afterBase.slice(0, qIdx) : afterBase;
+      const queryPart = qIdx >= 0 ? afterBase.slice(qIdx + 1) : '';
+      const params = new URLSearchParams(queryPart);
+      params.set('tnpath', pathPart);
+      proxyUrl = `${API_BASE}?${params.toString()}`;
+    }
+
     try {
-      const response = await fetch(url, {
+      const response = await fetch(proxyUrl, {
         ...init,
         headers: { ...this._headers(), ...(init.headers || {}) },
       });
