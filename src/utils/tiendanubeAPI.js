@@ -74,7 +74,7 @@ export class TiendanubeAPI {
    */
   _headers() {
     return {
-      'Authorization': `bearer ${this.accessToken}`,
+      'Authentication': `bearer ${this.accessToken}`,
       'User-Agent': USER_AGENT,
       'Content-Type': 'application/json',
     };
