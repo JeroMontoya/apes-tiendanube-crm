@@ -109,7 +109,7 @@ export default function AIInsightsWidget({ clients, storeId }) {
             </ul>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="copy-templates-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
             <div style={{ background: 'var(--surface-container)', padding: 16, borderRadius: 12, position: 'relative' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                 <h4 style={{ margin: 0, fontSize: 13, color: 'var(--on-surface)' }}>Email Abandono</h4>

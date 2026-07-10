@@ -490,6 +490,12 @@ a:hover {
   animation: pulseGlow 2s ease-in-out infinite;
 }
 
+/* --- Logo Pulse Animation --- */
+@keyframes logoPulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(139,92,246,0.4), 0 0 40px rgba(139,92,246,0.15); }
+  50% { box-shadow: 0 4px 24px rgba(139,92,246,0.5), 0 0 60px rgba(139,92,246,0.25); }
+}
+
 /* --- Section Header --- */
 .section-header {
   display: flex;
@@ -1981,6 +1987,23 @@ a:hover {
 
   /* Charts grid single column */
   .charts-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Copy templates grid single column */
+  .copy-templates-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* AI Insights and Churn Radar mobile fixes */
+  .glass-card h3 {
+    font-size: 15px !important;
+  }
+
+  /* Tree, export, report grids single column */
+  .tree-grid,
+  .export-grid,
+  .report-grid-2 {
     grid-template-columns: 1fr !important;
   }
 }

@@ -154,71 +154,80 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
             />
           )}
 
-          <aside className={`sidebar ${mobileOpen ? 'open' : ''}`}>
+          <aside className={`sidebar ${mobileOpen ? 'open' : ''}`} style={{
+            background: 'rgba(15, 20, 30, 0.85)',
+            backdropFilter: 'blur(24px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+            borderRight: '1px solid rgba(255,255,255,0.06)',
+            boxShadow: '4px 0 24px rgba(0,0,0,0.2)',
+          }}>
             {/* ── Logo ── */}
             <div className="sidebar-logo" style={{ padding: '20px 16px 16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{
-                  width: 38, height: 38, borderRadius: 12,
-                  background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                  width: 40, height: 40, borderRadius: 14,
+                  background: 'linear-gradient(135deg, #6366f1, #a855f7, #ec4899)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 4px 16px rgba(99,102,241,0.35)',
+                  boxShadow: '0 4px 20px rgba(139,92,246,0.4), 0 0 40px rgba(139,92,246,0.15)',
                   flexShrink: 0,
+                  animation: 'logoPulse 3s ease-in-out infinite',
                 }}>
-                  <Zap size={20} color="#fff" />
+                  <Zap size={20} color="#fff" strokeWidth={2.5} />
                 </div>
                 <div className="brand-text">
-                  <h1 style={{ fontSize: '1.25rem', margin: 0, fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--on-surface)' }}>APES</h1>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--on-surface-variant)', letterSpacing: '0.5px', textTransform: 'uppercase' }}>CRM & Analytics</div>
+                  <h1 style={{ fontSize: '1.3rem', margin: 0, fontWeight: 900, letterSpacing: '-0.04em', background: 'linear-gradient(135deg, #c4b5fd, #f0abfc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>APES</h1>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>CRM & Analytics</div>
                 </div>
               </div>
             </div>
 
             {/* ── Current Member Badge ── */}
             {currentMember && (
-              <div className="member-badge-wrapper" style={{ padding: '0 14px', marginBottom: 14 }}>
+              <div className="member-badge-wrapper" style={{ padding: '0 12px', marginBottom: 12 }}>
                 <div className="member-info" style={{
                   display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
-                  borderRadius: 12, background: `${ROLE_COLORS[currentMember.role]}08`,
-                  border: `1px solid ${ROLE_COLORS[currentMember.role]}18`,
+                  borderRadius: 14, background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  backdropFilter: 'blur(10px)',
                 }}>
                   <div style={{
-                    width: 32, height: 32, borderRadius: 10,
-                    background: `linear-gradient(135deg, ${ROLE_COLORS[currentMember.role]}20, ${ROLE_COLORS[currentMember.role]}08)`,
+                    width: 34, height: 34, borderRadius: 12,
+                    background: `linear-gradient(135deg, ${ROLE_COLORS[currentMember.role]}40, ${ROLE_COLORS[currentMember.role]}15)`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 14, flexShrink: 0,
+                    fontSize: 15, flexShrink: 0,
+                    boxShadow: `0 2px 12px ${ROLE_COLORS[currentMember.role]}25`,
                   }}>
                     {ROLE_ICONS[currentMember.role]}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: ROLE_COLORS[currentMember.role], whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentMember.name}</div>
-                    <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', fontWeight: 500 }}>{ROLE_LABELS[currentMember.role]}</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>{ROLE_LABELS[currentMember.role]}</div>
                   </div>
                 </div>
               </div>
             )}
 
             {/* ── Navigation Groups ── */}
-            <nav className="sidebar-nav" style={{ flex: 1, overflowY: 'auto', padding: '0 10px' }}>
+            <nav className="sidebar-nav" style={{ flex: 1, overflowY: 'auto', padding: '4px 10px' }}>
               {filteredGroups.map((group, groupIdx) => {
                 const isCollapsed = collapsed[group.id];
                 return (
-                  <div key={group.id} style={{ marginBottom: groupIdx < filteredGroups.length - 1 ? 6 : 0 }}>
+                  <div key={group.id} style={{ marginBottom: groupIdx < filteredGroups.length - 1 ? 8 : 0 }}>
                     {group.label && (
                       <div
                         className="nav-group-toggle"
                         onClick={() => toggleGroup(group.id)}
                         style={{
                           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                          padding: '8px 8px 4px', cursor: 'pointer', borderRadius: 6,
-                          transition: 'background 0.15s',
+                          padding: '8px 10px 4px', cursor: 'pointer', borderRadius: 8,
+                          transition: 'all 0.2s',
                         }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                       >
                         <span className="nav-group-label" style={{
-                          fontSize: 10, fontWeight: 700, color: 'var(--on-surface-variant)',
-                          textTransform: 'uppercase', letterSpacing: '0.8px',
+                          fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.3)',
+                          textTransform: 'uppercase', letterSpacing: '1.2px',
                           display: 'flex', alignItems: 'center', gap: 4,
                         }}>
                           {isCollapsed ? <ChevronRight size={10} /> : <ChevronDown size={10} />}
@@ -226,8 +235,8 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
                         </span>
                         {group.items.length > 1 && (
                           <span className="nav-group-count" style={{
-                            fontSize: 9, fontWeight: 700, color: 'var(--on-surface-variant)',
-                            background: 'rgba(255,255,255,0.05)', padding: '1px 6px', borderRadius: 4,
+                            fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.25)',
+                            background: 'rgba(255,255,255,0.06)', padding: '2px 7px', borderRadius: 6,
                           }}>
                             {group.items.length}
                           </span>
@@ -236,7 +245,7 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
                     )}
 
                     {(!group.label || !isCollapsed) && (
-                      <div style={{ marginTop: group.label ? 2 : 0 }}>
+                      <div style={{ marginTop: group.label ? 4 : 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
                         {group.items.map(item => {
                           const active = isActive(item.id);
                           const Icon = item.icon;
@@ -247,43 +256,49 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
                               onClick={() => handleNavigate(item.id)}
                               style={{
                                 width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-                                padding: '9px 12px', borderRadius: 10, border: 'none', cursor: 'pointer',
-                                marginBottom: 2,
+                                padding: '10px 12px', borderRadius: 12, border: 'none', cursor: 'pointer',
                                 background: active
-                                  ? 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(99,102,241,0.1))'
+                                  ? 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(99,102,241,0.12))'
                                   : 'transparent',
-                                color: active ? '#8b5cf6' : 'var(--on-surface-variant)',
+                                color: active ? '#c4b5fd' : 'rgba(255,255,255,0.5)',
                                 fontSize: 13, fontWeight: active ? 700 : 500,
-                                textAlign: 'left', transition: 'all 0.12s',
+                                textAlign: 'left', transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                                 position: 'relative',
+                                boxShadow: active ? '0 2px 12px rgba(139,92,246,0.15)' : 'none',
                               }}
                               onMouseEnter={e => {
                                 if (!active) {
-                                  e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-                                  e.currentTarget.style.color = 'var(--on-surface)';
+                                  e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+                                  e.currentTarget.style.color = 'rgba(255,255,255,0.85)';
+                                  e.currentTarget.style.transform = 'translateX(4px)';
                                 }
                               }}
                               onMouseLeave={e => {
                                 if (!active) {
                                   e.currentTarget.style.background = 'transparent';
-                                  e.currentTarget.style.color = 'var(--on-surface-variant)';
+                                  e.currentTarget.style.color = 'rgba(255,255,255,0.5)';
+                                  e.currentTarget.style.transform = 'translateX(0)';
                                 }
                               }}
                             >
                               {active && (
                                 <div style={{
                                   position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
-                                  width: 3, height: 18, borderRadius: 2,
-                                  background: 'linear-gradient(180deg, #8b5cf6, #6366f1)',
+                                  width: 3, height: 20, borderRadius: 2,
+                                  background: 'linear-gradient(180deg, #a855f7, #6366f1)',
+                                  boxShadow: '0 0 8px rgba(139,92,246,0.5)',
                                 }} />
                               )}
                               <span style={{
-                                width: 28, height: 28, borderRadius: 8,
-                                background: active ? 'rgba(139,92,246,0.12)' : 'rgba(255,255,255,0.04)',
+                                width: 30, height: 30, borderRadius: 10,
+                                background: active
+                                  ? 'linear-gradient(135deg, rgba(139,92,246,0.25), rgba(99,102,241,0.15))'
+                                  : 'rgba(255,255,255,0.05)',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                                transition: 'background 0.12s',
+                                transition: 'all 0.2s',
+                                boxShadow: active ? '0 0 12px rgba(139,92,246,0.2)' : 'none',
                               }}>
-                                <Icon size={16} />
+                                <Icon size={15} strokeWidth={active ? 2.2 : 1.8} />
                               </span>
                               <span>{item.label}</span>
                             </button>
@@ -293,7 +308,7 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
                     )}
 
                     {groupIdx < filteredGroups.length - 1 && (
-                      <div style={{ height: 1, background: 'rgba(255,255,255,0.04)', margin: '8px 8px' }} />
+                      <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)', margin: '8px 12px' }} />
                     )}
                   </div>
                 );
@@ -301,37 +316,37 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
             </nav>
 
             {/* ── Theme Toggle ── */}
-            <div className="theme-toggle-row" style={{ padding: '10px 14px' }}>
-              <div style={{ height: 1, background: 'rgba(255,255,255,0.04)', marginBottom: 10 }} />
+            <div className="theme-toggle-row" style={{ padding: '8px 12px' }}>
+              <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)', marginBottom: 8 }} />
               <button
                 onClick={toggleTheme}
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '9px 12px', borderRadius: 10, border: 'none', cursor: 'pointer',
-                  background: 'transparent', color: 'var(--on-surface-variant)',
+                  padding: '10px 12px', borderRadius: 12, border: 'none', cursor: 'pointer',
+                  background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.5)',
                   fontSize: 13, fontWeight: 500, textAlign: 'left',
-                  transition: 'all 0.12s',
+                  transition: 'all 0.2s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}
               >
                 <span style={{
-                  width: 28, height: 28, borderRadius: 8, background: 'rgba(255,255,255,0.04)',
+                  width: 30, height: 30, borderRadius: 10, background: 'rgba(255,255,255,0.06)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}>
-                  {theme === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
+                  {theme === 'dark' ? <Moon size={15} /> : <Sun size={15} />}
                 </span>
-                <span>Modo {theme === 'dark' ? 'Oscuro' : 'Claro'}</span>
+                <span>{theme === 'dark' ? 'Modo Oscuro' : 'Modo Claro'}</span>
               </button>
             </div>
 
             {/* ── Footer ── */}
-            <div className="sidebar-footer" style={{ padding: '12px 16px 16px', textAlign: 'center' }}>
+            <div className="sidebar-footer" style={{ padding: '10px 12px 14px', textAlign: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 4 }}>
                 <span className="live-dot" />
-                <span style={{ fontSize: 10, color: 'var(--on-surface-variant)', fontWeight: 600 }}>Sistema Activo</span>
+                <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', fontWeight: 600, letterSpacing: '0.5px' }}>Sistema Activo</span>
               </div>
-              <p style={{ margin: 0, fontSize: 10, color: 'var(--on-surface-variant)', opacity: 0.5, fontWeight: 500 }}>APES DIGITAL v4.0</p>
+              <p style={{ margin: 0, fontSize: 9, color: 'rgba(255,255,255,0.15)', fontWeight: 500, letterSpacing: '0.5px' }}>APES DIGITAL v4.0</p>
             </div>
           </aside>
         </>
