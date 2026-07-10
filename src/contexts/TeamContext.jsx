@@ -175,6 +175,77 @@ export function TeamProvider({ children, session }) {
     const init = async () => {
       setLoading(true);
       await Promise.all([loadMembers(), loadActivity()]);
+
+      // Auto-identify current member from Supabase session
+      if (session?.user?.id) {
+        const { data: myMember } = await supabase
+          .from('team_members')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .eq('is_active', true)
+          .single();
+
+        if (myMember) {
+          setCurrentMember(myMember);
+          localStorage.setItem('current_team_member', myMember.id);
+        } else if (!allMembers.length) {
+          // No members exist yet — auto-create this user as admin
+          const { data: newAdmin } = await supabase
+            .from('team_members')
+            .insert({
+              name: session.user.email?.split('@')[0] || 'Admin',
+              email: session.user.email || '',
+              role: 'admin',
+              user_id: session.user.id,
+              is_active: true,
+            })
+            .select()
+            .single();
+          if (newAdmin) {
+            setCurrentMember(newAdmin);
+            setAllMembers([newAdmin]);
+            localStorage.setItem('current_team_member', newAdmin.id);
+          }
+        } else {
+          // Members exist but none has this user's auth ID — this user is the admin
+          // Find the admin-level member closest to their email, or create one
+          const adminMember = allMembers.find(m =>
+            m.role === 'admin' && m.email === session.user.email
+          ) || allMembers.find(m => m.role === 'admin');
+
+          if (adminMember) {
+            // Link this member to the current auth user
+            const { data: linked } = await supabase
+              .from('team_members')
+              .update({ user_id: session.user.id })
+              .eq('id', adminMember.id)
+              .select()
+              .single();
+            if (linked) {
+              setCurrentMember(linked);
+              localStorage.setItem('current_team_member', linked.id);
+            }
+          } else {
+            // No admin found — create one linked to this auth user
+            const { data: newAdmin } = await supabase
+              .from('team_members')
+              .insert({
+                name: session.user.email?.split('@')[0] || 'Admin',
+                email: session.user.email || '',
+                role: 'admin',
+                user_id: session.user.id,
+                is_active: true,
+              })
+              .select()
+              .single();
+            if (newAdmin) {
+              setCurrentMember(newAdmin);
+              localStorage.setItem('current_team_member', newAdmin.id);
+            }
+          }
+        }
+      }
+
       setLoading(false);
     };
     if (session) init();
@@ -206,7 +277,7 @@ export function TeamProvider({ children, session }) {
   const createMember = async (name, email, role) => {
     const { data, error } = await supabase
       .from('team_members')
-      .insert({ name, email, role, user_id: session?.user?.id })
+      .insert({ name, email, role })
       .select()
       .single();
     if (!error && data) {
@@ -287,17 +358,24 @@ export function TeamProvider({ children, session }) {
   };
 
   const switchMember = (member) => {
+    // Only allow switching if the target member belongs to this Supabase user
+    if (member.user_id !== session?.user?.id) {
+      console.warn('Cannot switch to another user\'s member record');
+      return;
+    }
     setCurrentMember(member);
     localStorage.setItem('current_team_member', member?.id || '');
   };
 
-  // Restore last selected member
+  // Restore last selected member — ONLY if it belongs to the same Supabase user
   useEffect(() => {
     if (allMembers.length > 0 && !currentMember) {
       const savedId = localStorage.getItem('current_team_member');
       if (savedId) {
         const found = allMembers.find(m => m.id === savedId);
-        if (found) setCurrentMember(found);
+        if (found && found.user_id === session?.user?.id) {
+          setCurrentMember(found);
+        }
       }
     }
   }, [allMembers]);
@@ -325,6 +403,10 @@ export function TeamProvider({ children, session }) {
     switchMember,
     loadMembers,
     loadActivity,
+    logout: async () => {
+      localStorage.removeItem('current_team_member');
+      await supabase.auth.signOut();
+    },
   };
 
   return (

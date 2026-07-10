@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useTeam } from '../contexts/TeamContext';
 
 export default function SettingsPanel({ onConnect, connectionStatus, session }) {
-  const { currentMember } = useTeam();
+  const { currentMember, logout } = useTeam();
   const isAdmin = currentMember?.role === 'admin';
   
   const [storeId, setStoreId] = useState('');
@@ -520,7 +520,7 @@ export default function SettingsPanel({ onConnect, connectionStatus, session }) 
         <button 
           type="button"
           onClick={async () => {
-            await supabase.auth.signOut();
+            await logout();
             window.location.reload();
           }}
           style={{

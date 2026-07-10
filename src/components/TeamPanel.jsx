@@ -161,15 +161,15 @@ export default function TeamPanel() {
                   const role = ROLES.find(r => r.value === m.role) || ROLES[0];
                   const RoleIcon = role.icon;
                   const permCount = m.permissions?.length > 0 ? m.permissions.length : (ROLE_DEFAULTS[m.role] || []).length;
+                  const isMe = currentMember?.id === m.id;
                   return (
-                    <div key={m.id} onClick={() => switchMember(m)} style={{
-                      padding: '14px 16px', borderRadius: 14, cursor: 'pointer',
-                      background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+                    <div key={m.id} style={{
+                      padding: '14px 16px', borderRadius: 14, cursor: 'default',
+                      background: isMe ? `${role.color}10` : 'rgba(255,255,255,0.03)',
+                      border: isMe ? `2px solid ${role.color}50` : '1px solid rgba(255,255,255,0.06)',
                       display: 'flex', alignItems: 'center', gap: 14, transition: 'all 0.15s',
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.background = `${role.color}08`; e.currentTarget.style.borderColor = `${role.color}30`; e.currentTarget.style.transform = 'translateX(4px)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.transform = 'translateX(0)'; }}
-                    >
+                      position: 'relative',
+                    }}>
                       <div style={{
                         width: 44, height: 44, borderRadius: 12,
                         background: `linear-gradient(135deg, ${role.color}20, ${role.color}08)`,
@@ -179,7 +179,15 @@ export default function TeamPanel() {
                         <RoleIcon size={20} color={role.color} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--on-surface)' }}>{m.name}</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                          {m.name}
+                          {isMe && (
+                            <span style={{
+                              fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
+                              background: `${role.color}25`, color: role.color, letterSpacing: '0.5px',
+                            }}>TÚ</span>
+                          )}
+                        </div>
                         <div style={{ fontSize: 11, color: role.color, marginTop: 2 }}>{role.label}</div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -187,7 +195,6 @@ export default function TeamPanel() {
                           fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 6,
                           background: 'rgba(255,255,255,0.05)', color: 'var(--on-surface-variant)',
                         }}>{permCount} permisos</span>
-                        <ArrowRight size={14} color="var(--on-surface-variant)" style={{ opacity: 0.3 }} />
                       </div>
                     </div>
                   );
@@ -1034,7 +1041,7 @@ const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, bord
 // TEAM MEMBER BADGE (Header)
 // ═══════════════════════════════════════════════════════════════════
 export function TeamMemberBadge() {
-  const { currentMember, allMembers, selectMember } = useTeam();
+  const { currentMember, logout } = useTeam();
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -1068,26 +1075,18 @@ export function TeamMemberBadge() {
           background: 'rgba(15,15,25,0.97)', border: '1px solid rgba(255,255,255,0.1)',
           borderRadius: 12, padding: 8, boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
         }}>
-          {allMembers.map(member => (
-            <button key={member.id} onClick={() => { selectMember(member); setOpen(false); }}
-              style={{
-                width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px',
-                borderRadius: 8, border: 'none', background: currentMember.id === member.id ? 'rgba(16,185,129,0.12)' : 'transparent',
-                color: 'var(--on-surface)', cursor: 'pointer', textAlign: 'left',
-                borderLeft: currentMember.id === member.id ? '2px solid #10b981' : '2px solid transparent'
-              }}>
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: ROLE_COLORS[member.role] + '18',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>
-                {ROLE_ICONS[member.role]}
-              </div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>{member.name.split(' ')[0]}</div>
-                <div style={{ fontSize: 10, opacity: 0.5 }}>{member.role === 'admin' ? 'Admin' : member.role === 'ventas' ? 'Ventas' : member.role === 'taller' ? 'Taller' : 'Servicio'}</div>
-              </div>
-            </button>
-          ))}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', marginBottom: 4 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 10, background: ROLE_COLORS[currentMember.role] + '20',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
+              {ROLE_ICONS[currentMember.role]}
+            </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--on-surface)' }}>{currentMember.name}</div>
+              <div style={{ fontSize: 10, color: ROLE_COLORS[currentMember.role] }}>{currentMember.email}</div>
+            </div>
+          </div>
           <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '6px 0' }} />
-          <button onClick={() => { selectMember(null); setOpen(false); }} style={{
+          <button onClick={() => { setOpen(false); logout?.(); }} style={{
             width: '100%', padding: '8px 10px', borderRadius: 8, border: 'none',
             background: 'rgba(239,68,68,0.08)', color: '#ef4444', cursor: 'pointer', fontSize: 12, fontWeight: 600
           }}>
