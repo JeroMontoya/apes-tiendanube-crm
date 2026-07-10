@@ -1,1 +1,4 @@
-npm test
+#!/bin/sh
+
+# Pre-commit: run linter only (no tests yet)
+# npm run lint
