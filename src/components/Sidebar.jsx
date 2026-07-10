@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTeam } from '../contexts/TeamContext';
 import {
   LayoutDashboard, Users, Target, Brain, TrendingUp,
-  Megaphone, Globe, KanbanSquare, PackageSearch,
+  Megaphone, Globe, KanbanSquare, PackageSearch, ShoppingCart,
   Settings, Download, Menu, X, Zap, Calendar, Sun, Moon, Warehouse,
   Hammer, BarChart3, Clock, ChevronDown, ChevronRight
 } from 'lucide-react';
@@ -40,6 +40,7 @@ const NAV_GROUPS = [
     label: 'Gestión de Clientes',
     items: [
       { id: 'clientes', icon: Users, label: 'Clientes', roles: ['admin', 'ventas', 'atencion_cliente'] },
+      { id: 'ventas_view', icon: ShoppingCart, label: 'Seguimiento Ventas', roles: ['admin', 'ventas', 'atencion_cliente'] },
       { id: 'pipeline', icon: KanbanSquare, label: 'Pipeline CRM', roles: ['admin', 'ventas'] },
       { id: 'pqr', icon: PackageSearch, label: 'PQR & Soporte', roles: ['admin', 'taller', 'ventas', 'atencion_cliente'] },
     ],

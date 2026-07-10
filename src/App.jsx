@@ -28,6 +28,7 @@ import StockAlertWidget from './components/StockAlertWidget';
 import AIInsightsWidget from './components/AIInsightsWidget';
 import ChurnRadar from './components/ChurnRadar';
 import RecentActivityFeed from './components/RecentActivityFeed';
+import OrdersTracking from './components/OrdersTracking';
 
 // Team System
 import { TeamProvider, useTeam } from './contexts/TeamContext';
@@ -665,6 +666,8 @@ function AppViewRenderer({
           </div>
         </>
       );
+    case 'ventas_view':
+      return <OrdersTracking rawOrders={rawOrders} />;
     case 'segmentos':
       return (
         <>
