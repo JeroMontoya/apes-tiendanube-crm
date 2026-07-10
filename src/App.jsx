@@ -34,7 +34,7 @@ import { TeamProvider, useTeam } from './contexts/TeamContext';
 import WorkshopPage from './components/WorkshopPage';
 import ActivityLog from './components/ActivityLog';
 import ProductivityDashboard from './components/ProductivityDashboard';
-import SalesView from './components/SalesView';
+
 import TeamPanel from './components/TeamPanel';
 import { TeamMemberBadge } from './components/TeamPanel';
 
@@ -486,7 +486,7 @@ function AppContent({
       
       <main className="main-content">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-          {!['configuracion', 'exportar', 'pqr', 'inventario', 'taller', 'ventas_view', 'equipo', 'actividad', 'rendimiento'].includes(activeView) && (
+          {!['configuracion', 'exportar', 'pqr', 'inventario', 'taller', 'equipo', 'actividad', 'rendimiento'].includes(activeView) && (
             <div style={{ flex: 1 }}>
               <GlobalDatePicker dateRange={dateRange} setDateRange={setDateRange} />
             </div>
@@ -730,8 +730,6 @@ function AppViewRenderer({
           onRefreshStock={refreshStock}
         />
       );
-    case 'ventas_view':
-      return <SalesView products={tiendanubeProducts} clients={filteredClients} />;
     case 'equipo':
       return <TeamPanel />;
     case 'actividad':

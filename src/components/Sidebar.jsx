@@ -19,7 +19,6 @@ const ALL_NAV_ITEMS = [
   { id: 'pipeline', icon: KanbanSquare, label: 'Pipeline CRM', roles: ['admin', 'ventas'] },
   { id: 'inventario', icon: Warehouse, label: 'Inventario', roles: ['admin', 'taller', 'ventas', 'atencion_cliente'] },
   { id: 'taller', icon: Hammer, label: 'Panel Taller', roles: ['admin', 'taller'] },
-  { id: 'ventas_view', icon: DollarSign, label: 'Ventas', roles: ['admin', 'ventas'] },
   { id: 'pqr', icon: PackageSearch, label: 'PQR & Soporte', roles: ['admin', 'taller', 'ventas', 'atencion_cliente'] },
   { id: 'equipo', icon: Users, label: 'Equipo', roles: ['admin'] },
   { id: 'actividad', icon: Clock, label: 'Actividad', roles: ['admin'] },
