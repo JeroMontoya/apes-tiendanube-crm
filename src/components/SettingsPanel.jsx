@@ -109,22 +109,33 @@ export default function SettingsPanel({ onConnect, connectionStatus, session }) 
       };
 
       if (isAdmin) {
-        // Save to shared system_config
-        const { error } = await supabase
+        // Try saving to shared system_config first
+        const { error: sysErr } = await supabase
           .from('system_config')
           .upsert({ id: 'main', ...configData, updated_at: new Date().toISOString() }, { onConflict: 'id' });
 
-        if (error) throw error;
+        if (sysErr) {
+          // system_config table may not exist yet — fall back to user workspace
+          console.warn('system_config not available, saving to user workspace:', sysErr.message);
+          const { auto_sync_enabled, sync_interval_seconds, ...workspaceFields } = configData;
+          const { error } = await supabase
+            .from('workspaces')
+            .upsert({ user_id: session.user.id, ...workspaceFields }, { onConflict: 'user_id' });
+          if (error) throw error;
+          setSaveMessage('⚠️ Guardado en tu workspace. Ejecuta la migración 009 para compartir con el equipo.');
+        } else {
+          setSaveMessage('✅ Credenciales guardadas. Todos los miembros del equipo ahora tienen acceso.');
+        }
       } else {
-        // Non-admin: save to personal workspace only
+        // Non-admin: save to personal workspace only (without sync fields)
+        const { auto_sync_enabled, sync_interval_seconds, ...workspaceFields } = configData;
         const { error } = await supabase
           .from('workspaces')
-          .upsert({ user_id: session.user.id, ...configData }, { onConflict: 'user_id' });
+          .upsert({ user_id: session.user.id, ...workspaceFields }, { onConflict: 'user_id' });
 
         if (error) throw error;
+        setSaveMessage('✅ Credenciales guardadas en tu workspace personal.');
       }
-
-      setSaveMessage('✅ Credenciales guardadas. Todos los miembros del equipo ahora tienen acceso.');
 
       if (storeId.trim() && token.trim()) {
         onConnect({ storeId: storeId.trim(), token: token.trim() });
