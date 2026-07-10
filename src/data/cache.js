@@ -32,3 +32,12 @@ export const clearCache = async () => {
     console.error('Error limpiando caché:', err);
   }
 };
+
+export const clearStaleCache = async () => {
+  try {
+    await localforage.removeItem('unified_clients');
+    await localforage.removeItem('last_sync');
+  } catch (err) {
+    console.error('Error limpiando caché stale:', err);
+  }
+};

@@ -44,7 +44,7 @@ import { TeamMemberBadge } from './components/TeamPanel';
 
 import { unifyClients } from './utils/unifyClients';
 import { TiendanubeAPI, mapTiendanubeDataToUnified } from './utils/tiendanubeAPI';
-import { loadFromCache, saveToCache, clearCache } from './data/cache';
+import { loadFromCache, saveToCache, clearStaleCache } from './data/cache';
 import { MetaAPI } from './api/MetaAPI';
 import { GA4API } from './api/GA4API';
 
@@ -165,8 +165,8 @@ export default function App() {
 
     const loadData = async () => {
       try {
-        // Force-clear stale localforage that may contain mock/phantom data from previous sessions
-        await clearCache();
+        // Remove stale cached clients/orders that may contain mock data
+        await clearStaleCache();
       } catch (_) {}
       try {
         const cachedProducts = await loadFromCache('tiendanube_products');

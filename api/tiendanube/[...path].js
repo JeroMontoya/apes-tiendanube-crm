@@ -1,79 +1,65 @@
 import { createClient } from '@supabase/supabase-js';
 
 // ---------------------------------------------------------------------------
-// Supabase admin client (service role — never exposed to the browser)
+// Supabase admin client (only works if SUPABASE_SERVICE_ROLE_KEY is set)
 // ---------------------------------------------------------------------------
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://kxhdslhgvuvpoxgffssv.supabase.co';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+const hasAdminClient = !!(process.env.SUPABASE_SERVICE_ROLE_KEY && supabaseUrl);
+const supabase = hasAdminClient ? createClient(supabaseUrl, supabaseKey) : null;
 
 // ---------------------------------------------------------------------------
-// CORS helper
+// CORS
 // ---------------------------------------------------------------------------
-const CORS_HEADERS = {
+const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
-function setCors(res) {
-  Object.entries(CORS_HEADERS).forEach(([k, v]) => res.setHeader(k, v));
-}
-
 // ---------------------------------------------------------------------------
 // Handler — /api/tiendanube/[...path] → https://api.tiendanube.com/v1/*
 // ---------------------------------------------------------------------------
 export default async function handler(req, res) {
-  setCors(res);
+  Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
   if (req.method === 'OPTIONS') return res.status(204).end();
 
   try {
     let tiendanubeToken = null;
-    let storeId = null;
 
-    // ---------------------------------------------------------------
-    // 1. Try to get token from system_config (shared across all users)
-    // ---------------------------------------------------------------
-    const { data: sysConfig } = await supabase
-      .from('system_config')
-      .select('tiendanube_access_token, tiendanube_store_id')
-      .eq('id', 'main')
-      .single();
+    // ── Path A: Read credentials from database (secure, server-side only) ──
+    if (supabase) {
+      const { data: sysConfig } = await supabase
+        .from('system_config')
+        .select('tiendanube_access_token')
+        .eq('id', 'main')
+        .single();
 
-    if (sysConfig?.tiendanube_access_token) {
-      tiendanubeToken = sysConfig.tiendanube_access_token;
-      storeId = sysConfig.tiendanube_store_id;
-    }
+      tiendanubeToken = sysConfig?.tiendanube_access_token || null;
 
-    // ---------------------------------------------------------------
-    // 2. Fall back to user's workspace
-    // ---------------------------------------------------------------
-    if (!tiendanubeToken) {
-      const bearerToken = req.headers.authorization?.replace('Bearer ', '');
-      if (bearerToken) {
-        const { data: { user } } = await supabase.auth.getUser(bearerToken);
-        if (user) {
-          const { data: workspace } = await supabase
-            .from('workspaces')
-            .select('tiendanube_access_token, tiendanube_store_id')
-            .eq('user_id', user.id)
-            .single();
-          if (workspace?.tiendanube_access_token) {
-            tiendanubeToken = workspace.tiendanube_access_token;
-            storeId = workspace.tiendanube_store_id;
-          }
-        }
+      if (!tiendanubeToken) {
+        const { data: ws } = await supabase
+          .from('workspaces')
+          .select('tiendanube_access_token')
+          .not('tiendanube_access_token', 'is', null)
+          .limit(1)
+          .single();
+        tiendanubeToken = ws?.tiendanube_access_token || null;
       }
     }
 
+    // ── Path B: Forward client's token directly (fallback) ──
     if (!tiendanubeToken) {
-      return res.status(400).json({ error: 'TiendaNube not configured. Admin must set credentials in Settings.' });
+      const authHeader = req.headers.authorization || req.headers.Authentication || '';
+      tiendanubeToken = authHeader.replace(/^Bearer\s+/i, '').trim();
     }
 
-    // ---------------------------------------------------------------
-    // 3. Build upstream URL
-    // ---------------------------------------------------------------
+    if (!tiendanubeToken) {
+      return res.status(400).json({ error: 'No TiendaNube token available.' });
+    }
+
+    // ── Build upstream URL ──
     const pathSegments = req.query.path || [];
     const upstreamPath = Array.isArray(pathSegments) ? pathSegments.join('/') : pathSegments;
     const url = new URL(`https://api.tiendanube.com/v1/${upstreamPath}`);
@@ -81,9 +67,7 @@ export default async function handler(req, res) {
       if (key !== 'path') url.searchParams.append(key, value);
     });
 
-    // ---------------------------------------------------------------
-    // 4. Forward to TiendaNube
-    // ---------------------------------------------------------------
+    // ── Forward to TiendaNube ──
     const upstreamRes = await fetch(url.toString(), {
       method: req.method,
       headers: {
