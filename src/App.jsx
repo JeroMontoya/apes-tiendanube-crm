@@ -102,14 +102,15 @@ export default function App() {
   const [isRefreshingStock, setIsRefreshingStock] = useState(false);
 
   const refreshStock = async () => {
-    console.log('[StockRefresh] storeId:', storeId, 'session:', !!session);
-    if (!storeId || !session) return;
+    console.log('[StockRefresh] storeId:', storeId);
+    if (!storeId) return;
     setIsRefreshingStock(true);
     try {
-      const { data } = await supabase.from('workspaces').select('tiendanube_access_token').eq('user_id', session.user.id).single();
-      console.log('[StockRefresh] token found:', !!data?.tiendanube_access_token);
-      if (!data?.tiendanube_access_token) return;
-      const api = new TiendanubeAPI(storeId, data.tiendanube_access_token);
+      const { data: sysCfg } = await supabase.from('system_config').select('tiendanube_access_token').eq('id', 'main').single();
+      const token = sysCfg?.tiendanube_access_token || workspaceData?.tiendanube_access_token;
+      console.log('[StockRefresh] token found:', !!token);
+      if (!token) return;
+      const api = new TiendanubeAPI(storeId, token);
       const productsRes = await api.fetchAllProducts();
       console.log('[StockRefresh] API result:', productsRes.success, 'products:', productsRes.data?.length || 0);
         if (productsRes.success) {
@@ -181,11 +182,32 @@ export default function App() {
 
       setIsSyncing(true);
 
-      const { data: workspace } = await supabase
+      // 1. Try shared system_config first (all team members use same credentials)
+      const { data: systemConfig } = await supabase
+        .from('system_config')
+        .select('*')
+        .eq('id', 'main')
+        .single();
+
+      // 2. Fall back to per-user workspace for backward compatibility
+      const { data: userWorkspace } = await supabase
         .from('workspaces')
         .select('tiendanube_store_id, tiendanube_access_token, meta_ad_account_id, meta_access_token, ga4_property_id, ga4_credentials_json, n8n_webhook_url')
         .eq('user_id', session.user.id)
         .single();
+
+      // Merge: system_config takes priority, user workspace fills gaps
+      const workspace = {
+        tiendanube_store_id: systemConfig?.tiendanube_store_id || userWorkspace?.tiendanube_store_id,
+        tiendanube_access_token: systemConfig?.tiendanube_access_token || userWorkspace?.tiendanube_access_token,
+        meta_ad_account_id: systemConfig?.meta_ad_account_id || userWorkspace?.meta_ad_account_id,
+        meta_access_token: systemConfig?.meta_access_token || userWorkspace?.meta_access_token,
+        ga4_property_id: systemConfig?.ga4_property_id || userWorkspace?.ga4_property_id,
+        ga4_credentials_json: systemConfig?.ga4_credentials_json || userWorkspace?.ga4_credentials_json,
+        n8n_webhook_url: systemConfig?.n8n_webhook_url || userWorkspace?.n8n_webhook_url,
+        auto_sync_enabled: systemConfig?.auto_sync_enabled !== false,
+        sync_interval_seconds: systemConfig?.sync_interval_seconds || 90,
+      };
 
       setWorkspaceData(workspace);
 
@@ -265,15 +287,13 @@ export default function App() {
 
   // Auto-refresh polling
   useEffect(() => {
-    if (!storeId || connectionStatus !== 'connected' || !session) return;
-    const interval = setInterval(async () => {
-       const { data } = await supabase.from('workspaces').select('tiendanube_access_token').eq('user_id', session.user.id).single();
-       if(data?.tiendanube_access_token) {
-         fetchRealData(storeId, data.tiendanube_access_token);
-       }
-    }, 5 * 60 * 1000);
+    if (!storeId || connectionStatus !== 'connected' || !workspaceData?.tiendanube_access_token) return;
+    const intervalMs = (workspaceData.sync_interval_seconds || 90) * 1000;
+    const interval = setInterval(() => {
+      fetchRealData(storeId, workspaceData.tiendanube_access_token);
+    }, intervalMs);
     return () => clearInterval(interval);
-  }, [storeId, connectionStatus, session]);
+  }, [storeId, connectionStatus, workspaceData]);
 
   const fetchRealData = async (sid, token) => {
     setConnectionStatus('connecting');
@@ -707,10 +727,11 @@ function AppViewRenderer({
           lastSync={lastSync}
           isConnected={connectionStatus === 'connected' || tiendanubeProducts.length > 0}
           onUpdateStock={async (productId, variantId, newStock) => {
-            if (!storeId || !session) return;
-            const { data } = await supabase.from('workspaces').select('tiendanube_access_token').eq('user_id', session.user.id).single();
-            if (!data?.tiendanube_access_token) return;
-            const api = new TiendanubeAPI(storeId, data.tiendanube_access_token);
+            if (!storeId) return;
+            const { data: sysCfg } = await supabase.from('system_config').select('tiendanube_access_token').eq('id', 'main').single();
+            const token = sysCfg?.tiendanube_access_token || workspaceData?.tiendanube_access_token;
+            if (!token) return;
+            const api = new TiendanubeAPI(storeId, token);
             await api.updateVariantStock(productId, variantId, newStock);
           }}
         />
@@ -726,10 +747,11 @@ function AppViewRenderer({
           storeId={storeId}
           session={session}
           onUpdateStock={async (productId, variantId, newStock) => {
-            if (!storeId || !session) return;
-            const { data } = await supabase.from('workspaces').select('tiendanube_access_token').eq('user_id', session.user.id).single();
-            if (!data?.tiendanube_access_token) return;
-            const api = new TiendanubeAPI(storeId, data.tiendanube_access_token);
+            if (!storeId) return;
+            const { data: sysCfg } = await supabase.from('system_config').select('tiendanube_access_token').eq('id', 'main').single();
+            const token = sysCfg?.tiendanube_access_token || workspaceData?.tiendanube_access_token;
+            if (!token) return;
+            const api = new TiendanubeAPI(storeId, token);
             await api.updateVariantStock(productId, variantId, newStock);
           }}
           onRefreshStock={refreshStock}

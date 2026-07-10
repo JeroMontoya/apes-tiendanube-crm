@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { useTeam } from '../contexts/TeamContext';
 
 export default function SettingsPanel({ onConnect, connectionStatus, session }) {
+  const { currentMember } = useTeam();
+  const isAdmin = currentMember?.role === 'admin';
+  
   const [storeId, setStoreId] = useState('');
   const [token, setToken] = useState('');
   const [showToken, setShowToken] = useState(false);
@@ -18,40 +22,64 @@ export default function SettingsPanel({ onConnect, connectionStatus, session }) 
   // n8n
   const [n8nWebhookUrl, setN8nWebhookUrl] = useState('');
 
+  // Auto-sync settings
+  const [autoSyncEnabled, setAutoSyncEnabled] = useState(true);
+  const [syncInterval, setSyncInterval] = useState(90);
+
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // ── Load existing credentials from Supabase on mount ──
+  // ── Load existing credentials from system_config (shared) ──
   useEffect(() => {
-    loadWorkspace();
+    loadSystemConfig();
   }, []);
 
-  const loadWorkspace = async () => {
+  const loadSystemConfig = async () => {
     try {
-      const { data, error } = await supabase
-        .from('workspaces')
+      // Try system_config first (shared across all team members)
+      const { data: sysConfig } = await supabase
+        .from('system_config')
         .select('*')
-        .eq('user_id', session.user.id)
+        .eq('id', 'main')
         .single();
 
-      if (data) {
-        setStoreId(data.tiendanube_store_id || '');
-        setToken(data.tiendanube_access_token || '');
-        setMetaAdAccountId(data.meta_ad_account_id || '');
-        setMetaAccessToken(data.meta_access_token || '');
-        setGa4PropertyId(data.ga4_property_id || '');
-        setGa4Credentials(data.ga4_credentials_json ? JSON.stringify(data.ga4_credentials_json, null, 2) : '');
-        setN8nWebhookUrl(data.n8n_webhook_url || '');
+      if (sysConfig) {
+        setStoreId(sysConfig.tiendanube_store_id || '');
+        setToken(sysConfig.tiendanube_access_token || '');
+        setMetaAdAccountId(sysConfig.meta_ad_account_id || '');
+        setMetaAccessToken(sysConfig.meta_access_token || '');
+        setGa4PropertyId(sysConfig.ga4_property_id || '');
+        setGa4Credentials(sysConfig.ga4_credentials_json ? JSON.stringify(sysConfig.ga4_credentials_json, null, 2) : '');
+        setN8nWebhookUrl(sysConfig.n8n_webhook_url || '');
+        setAutoSyncEnabled(sysConfig.auto_sync_enabled !== false);
+        setSyncInterval(sysConfig.sync_interval_seconds || 90);
+      } else {
+        // Fall back to per-user workspace
+        const { data: userWorkspace } = await supabase
+          .from('workspaces')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .single();
+
+        if (userWorkspace) {
+          setStoreId(userWorkspace.tiendanube_store_id || '');
+          setToken(userWorkspace.tiendanube_access_token || '');
+          setMetaAdAccountId(userWorkspace.meta_ad_account_id || '');
+          setMetaAccessToken(userWorkspace.meta_access_token || '');
+          setGa4PropertyId(userWorkspace.ga4_property_id || '');
+          setGa4Credentials(userWorkspace.ga4_credentials_json ? JSON.stringify(userWorkspace.ga4_credentials_json, null, 2) : '');
+          setN8nWebhookUrl(userWorkspace.n8n_webhook_url || '');
+        }
       }
     } catch (err) {
-      console.warn('No workspace found yet, user will create one on save.');
+      console.warn('No system config found yet.');
     } finally {
       setLoading(false);
     }
   };
 
-  // ── Save all credentials to Supabase ──
+  // ── Save credentials to system_config (shared) for admins ──
   const handleSaveAll = async () => {
     setSaving(true);
     setSaveMessage('');
@@ -68,8 +96,7 @@ export default function SettingsPanel({ onConnect, connectionStatus, session }) 
         }
       }
 
-      const workspaceData = {
-        user_id: session.user.id,
+      const configData = {
         tiendanube_store_id: storeId.trim() || null,
         tiendanube_access_token: token.trim() || null,
         meta_ad_account_id: metaAdAccountId.trim() || null,
@@ -77,22 +104,33 @@ export default function SettingsPanel({ onConnect, connectionStatus, session }) 
         ga4_property_id: ga4PropertyId.trim() || null,
         ga4_credentials_json: ga4Json,
         n8n_webhook_url: n8nWebhookUrl.trim() || null,
+        auto_sync_enabled: autoSyncEnabled,
+        sync_interval_seconds: syncInterval,
       };
 
-      const { error } = await supabase
-        .from('workspaces')
-        .upsert(workspaceData, { onConflict: 'user_id' });
+      if (isAdmin) {
+        // Save to shared system_config
+        const { error } = await supabase
+          .from('system_config')
+          .upsert({ id: 'main', ...configData, updated_at: new Date().toISOString() }, { onConflict: 'id' });
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Non-admin: save to personal workspace only
+        const { error } = await supabase
+          .from('workspaces')
+          .upsert({ user_id: session.user.id, ...configData }, { onConflict: 'user_id' });
 
-      setSaveMessage('✅ Credenciales guardadas de forma segura en Supabase.');
+        if (error) throw error;
+      }
 
-      // If TiendaNube credentials exist, trigger sync
+      setSaveMessage('✅ Credenciales guardadas. Todos los miembros del equipo ahora tienen acceso.');
+
       if (storeId.trim() && token.trim()) {
         onConnect({ storeId: storeId.trim(), token: token.trim() });
       }
     } catch (err) {
-      console.error('Error saving workspace:', err);
+      console.error('Error saving config:', err);
       setSaveMessage(`❌ Error al guardar: ${err.message}`);
     } finally {
       setSaving(false);
@@ -329,6 +367,76 @@ export default function SettingsPanel({ onConnect, connectionStatus, session }) 
           </div>
 
         </div>
+
+        {/* ── Auto-Sync Settings ── */}
+        {isAdmin && (
+          <div style={{ marginBottom: 0 }}>
+            <div style={sectionHeaderStyle}>
+              <h3 style={{ margin: 0 }}>
+                <span>🔄 Sincronización Automática</span>
+              </h3>
+              <span className="badge" style={{ background: 'rgba(16,185,129,0.2)', color: '#10b981' }}>
+                Tiempo Real
+              </span>
+            </div>
+
+            <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: 20 }}>
+              Configura cómo se actualizan los datos para todos los miembros del equipo.
+            </p>
+
+            <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+              <label style={{ 
+                display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
+                padding: '12px 16px', borderRadius: 10, flex: 1,
+                background: autoSyncEnabled ? 'rgba(16,185,129,0.08)' : 'rgba(255,255,255,0.03)',
+                border: `1px solid ${autoSyncEnabled ? 'rgba(16,185,129,0.3)' : 'var(--border-subtle)'}`,
+                transition: 'all 0.2s',
+              }}>
+                <input
+                  type="checkbox"
+                  checked={autoSyncEnabled}
+                  onChange={(e) => setAutoSyncEnabled(e.target.checked)}
+                  style={{ accentColor: '#10b981', width: 18, height: 18 }}
+                />
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: 14 }}>Sincronización automática</div>
+                  <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginTop: 2 }}>
+                    Actualiza datos de Tiendanube, Meta Ads y GA4 periódicamente
+                  </div>
+                </div>
+              </label>
+
+              <div style={{ 
+                padding: '12px 16px', borderRadius: 10, flex: 1,
+                background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-subtle)',
+              }}>
+                <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8 }}>
+                  Intervalo de sincronización
+                </label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {[30, 60, 90, 120, 300].map(secs => (
+                    <button
+                      key={secs}
+                      type="button"
+                      onClick={() => setSyncInterval(secs)}
+                      style={{
+                        padding: '6px 12px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                        fontSize: 12, fontWeight: 600, transition: 'all 0.2s',
+                        background: syncInterval === secs ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
+                        color: syncInterval === secs ? '#fff' : 'var(--on-surface-variant)',
+                      }}
+                    >
+                      {secs < 60 ? `${secs}s` : `${secs / 60}m`}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', marginTop: 6 }}>
+                  Recomendado: 90 segundos para balance entre actualización y consumo de API
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── Save Button ── */}
         <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 16 }}>

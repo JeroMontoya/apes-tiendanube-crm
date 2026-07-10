@@ -95,7 +95,13 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
   };
 
   const getAPI = async () => {
-    if (!storeId || !session) return null;
+    if (!storeId) return null;
+    // Try system_config first (shared), then fall back to user workspace
+    const { data: sysConfig } = await supabase.from('system_config').select('tiendanube_access_token').eq('id', 'main').single();
+    const token = sysConfig?.tiendanube_access_token;
+    if (token) return new TiendanubeAPI(storeId, token);
+    // Fallback to user workspace
+    if (!session) return null;
     const { data } = await supabase.from('workspaces').select('tiendanube_access_token').eq('user_id', session.user.id).single();
     if (!data?.tiendanube_access_token) return null;
     return new TiendanubeAPI(storeId, data.tiendanube_access_token);
