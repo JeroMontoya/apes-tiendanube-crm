@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   ShoppingCart, Search, Package, CreditCard, Truck, CheckCircle2,
   Clock, XCircle, AlertTriangle, ChevronDown, ChevronRight, Filter,
-  ArrowUpDown, User, Calendar, DollarSign, BoxSelect, Receipt, RotateCcw
+  ArrowUpDown, User, Calendar, DollarSign, BoxSelect, Receipt, RotateCcw,
+  RefreshCw
 } from 'lucide-react';
 
 const PAYMENT_STATUS = {
@@ -71,14 +72,41 @@ const SHIPPING_STATUS = {
   cancelled: { label: 'Cancelado', color: '#ef4444', bg: 'rgba(239,68,68,0.12)', icon: XCircle },
 };
 
-export default function OrdersTracking({ rawOrders }) {
+export default function OrdersTracking({ rawOrders, lastSync, refreshOrders, storeId, workspaceData }) {
   const [search, setSearch] = useState('');
   const [filterTab, setFilterTab] = useState('all');
   const [sortCol, setSortCol] = useState('created_at');
   const [sortDir, setSortDir] = useState('desc');
   const [page, setPage] = useState(0);
   const [expandedOrder, setExpandedOrder] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const intervalRef = useRef(null);
   const PAGE_SIZE = 12;
+
+  // Auto-refresh every 90 seconds
+  useEffect(() => {
+    if (autoRefresh && storeId && workspaceData?.tiendanube_access_token) {
+      intervalRef.current = setInterval(() => {
+        handleRefresh(true);
+      }, 90 * 1000);
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [autoRefresh, storeId, workspaceData]);
+
+  const handleRefresh = async (silent = false) => {
+    if (!storeId || !workspaceData?.tiendanube_access_token) return;
+    if (!silent) setIsRefreshing(true);
+    try {
+      await refreshOrders(storeId, workspaceData.tiendanube_access_token);
+    } catch (e) {
+      console.error('Refresh failed:', e);
+    } finally {
+      if (!silent) setIsRefreshing(false);
+    }
+  };
 
   const orders = useMemo(() => {
     if (!rawOrders || !Array.isArray(rawOrders)) return [];
@@ -155,7 +183,38 @@ export default function OrdersTracking({ rawOrders }) {
           </h1>
           <p style={{ margin: '4px 0 0', color: 'var(--on-surface-variant)', fontSize: 13 }}>
             Historial completo de pedidos con estado de pago y envío
+            {lastSync && (
+              <span style={{ marginLeft: 8, opacity: 0.7 }}>
+                · Última sync: {lastSync.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
           </p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--on-surface-variant)', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={autoRefresh}
+              onChange={(e) => setAutoRefresh(e.target.checked)}
+              style={{ accentColor: 'var(--primary)' }}
+            />
+            Auto-sync
+          </label>
+          <button
+            onClick={() => handleRefresh(false)}
+            disabled={isRefreshing || !storeId}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
+              borderRadius: 8, border: '1px solid var(--glass-border)',
+              background: isRefreshing ? 'rgba(59,130,246,0.1)' : 'rgba(255,255,255,0.05)',
+              color: isRefreshing ? '#3b82f6' : 'var(--on-surface)',
+              cursor: isRefreshing ? 'wait' : 'pointer', fontSize: 12, fontWeight: 600,
+              transition: 'all 0.2s',
+            }}
+          >
+            <RefreshCw size={14} style={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }} />
+            {isRefreshing ? 'Sincronizando...' : 'Actualizar'}
+          </button>
         </div>
       </div>
 
@@ -469,6 +528,9 @@ export default function OrdersTracking({ rawOrders }) {
           </div>
         )}
       </div>
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 }

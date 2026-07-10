@@ -457,6 +457,7 @@ export default function App() {
         setDateRange={setDateRange}
         filteredClients={filteredClients}
         handleConnect={handleConnect}
+        fetchRealData={fetchRealData}
       />
     </TeamProvider>
   );
@@ -467,7 +468,7 @@ function AppContent({
   selectedClient, setSelectedClient, historicClients, unifiedClients, rawOrders,
   tiendanubeProducts, connectionStatus, storeId, lastSync, metaInsights, ga4Insights,
   workspaceData, isRefreshingStock, refreshStock, isSyncing, isFetchingInsights,
-  session, dateRange, setDateRange, filteredClients, handleConnect,
+  session, dateRange, setDateRange, filteredClients, handleConnect, fetchRealData,
 }) {
   const { currentMember, ROLE_LABELS, ROLE_COLORS, ROLE_ICONS } = useTeam();
 
@@ -521,6 +522,7 @@ function AppContent({
               historicClients={historicClients}
               unifiedClients={unifiedClients}
               setSelectedClient={setSelectedClient}
+              fetchRealData={fetchRealData}
             />
           </div>
         )}
@@ -537,7 +539,7 @@ function AppViewRenderer({
   activeView, filteredClients, tiendanubeProducts, rawOrders, session, storeId,
   workspaceData, isRefreshingStock, refreshStock, metaInsights, ga4Insights,
   connectionStatus, lastSync, handleConnect, dateRange, historicClients,
-  unifiedClients, setSelectedClient,
+  unifiedClients, setSelectedClient, fetchRealData,
 }) {
   switch(activeView) {
     case 'dashboard':
@@ -667,7 +669,7 @@ function AppViewRenderer({
         </>
       );
     case 'ventas_view':
-      return <OrdersTracking rawOrders={rawOrders} />;
+      return <OrdersTracking rawOrders={rawOrders} lastSync={lastSync} refreshOrders={fetchRealData} storeId={storeId} workspaceData={workspaceData} />;
     case 'segmentos':
       return (
         <>
