@@ -74,7 +74,7 @@ export class TiendanubeAPI {
    */
   _headers() {
     return {
-      Authentication: `bearer ${this.accessToken}`,
+      'Authorization': `bearer ${this.accessToken}`,
       'User-Agent': USER_AGENT,
       'Content-Type': 'application/json',
     };
@@ -410,6 +410,7 @@ export function mapTiendanubeDataToUnified(customers = [], orders = []) {
       number: order.number || order.id,
       state: order.status || order.state || 'open',
       payment_status: order.payment_status || 'pending',
+      fulfillment_status: order.fulfillment_status || null,
       coupon: order.coupon || order.discount_coupon || [],
       contact_name: order.contact_name,
       contact_email: order.contact_email,

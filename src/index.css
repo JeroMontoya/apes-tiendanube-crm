@@ -496,6 +496,32 @@ a:hover {
   50% { box-shadow: 0 4px 24px rgba(139,92,246,0.5), 0 0 60px rgba(139,92,246,0.25); }
 }
 
+/* --- Floating Orb Animations --- */
+@keyframes orbPulse {
+  0%, 100% {
+    box-shadow: 0 8px 32px rgba(139,92,246,0.5), 0 0 60px rgba(139,92,246,0.2), 0 0 0 3px rgba(139,92,246,0.15);
+  }
+  50% {
+    box-shadow: 0 8px 40px rgba(139,92,246,0.65), 0 0 80px rgba(139,92,246,0.3), 0 0 0 6px rgba(139,92,246,0.1);
+  }
+}
+
+@keyframes orbItemIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* --- Section Header --- */
 .section-header {
   display: flex;
@@ -2008,78 +2034,13 @@ a:hover {
   }
 }
 
-/* --- Mobile Bottom Nav Bar --- */
+/* --- Mobile Navigation (now handled by FloatingOrbNav component) --- */
 .mobile-bottom-nav {
   display: none;
 }
 
 @media (max-width: 768px) {
-  .mobile-bottom-nav {
-    display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 150;
-    height: 64px;
-    background: var(--surface);
-    border-top: 1px solid var(--border-subtle);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    align-items: center;
-    justify-content: space-around;
-    padding: 0 4px;
-    padding-bottom: env(safe-area-inset-bottom, 0);
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-  }
-
-  .mobile-nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    padding: 6px 0;
-    min-width: 56px;
-    border: none;
-    background: transparent;
-    color: var(--on-surface-variant);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    -webkit-tap-highlight-color: transparent;
-    position: relative;
-    border-radius: 12px;
-  }
-
-  .mobile-nav-item.active {
-    color: var(--primary);
-  }
-
-  .mobile-nav-item.active::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 24px;
-    height: 3px;
-    border-radius: 0 0 3px 3px;
-    background: var(--primary);
-  }
-
-  .mobile-nav-item svg,
-  .mobile-nav-item .nav-icon {
-    width: 22px;
-    height: 22px;
-  }
-
-  .mobile-nav-label {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.3px;
-  }
-
-  /* More menu overlay */
+  /* More menu overlay — used by "Más" drawer */
   .mobile-more-overlay {
     position: fixed;
     inset: 0;
@@ -2154,24 +2115,20 @@ a:hover {
     color: var(--on-surface-variant);
     flex-shrink: 0;
   }
+
+  /* Main content gets extra bottom padding for floating orb */
+  .main-content {
+    padding-bottom: 100px !important;
+  }
 }
 
 /* =============================================
    SMALL PHONES (<400px)
    ============================================= */
 @media (max-width: 400px) {
-  .mobile-bottom-nav {
-    height: 56px;
-  }
-  .mobile-nav-item {
-    min-width: 48px;
-  }
-  .mobile-nav-label {
-    font-size: 9px;
-  }
   .main-content {
     padding: 60px var(--space-sm) var(--space-sm) !important;
-    padding-bottom: 72px !important;
+    padding-bottom: 100px !important;
   }
 }
 

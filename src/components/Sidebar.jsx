@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTeam } from '../contexts/TeamContext';
 import {
   LayoutDashboard, Users, Target, Brain, TrendingUp,
   Megaphone, Globe, KanbanSquare, PackageSearch, ShoppingCart,
   Settings, Download, Menu, X, Zap, Calendar, Sun, Moon, Warehouse,
-  Hammer, BarChart3, Clock, ChevronDown, ChevronRight, MoreHorizontal
+  Hammer, BarChart3, Clock, ChevronDown, ChevronRight, MoreHorizontal,
+  BarChart2, MessageSquare, Repeat, FileText, Sparkles
 } from 'lucide-react';
 
 const NAV_GROUPS = [
@@ -58,13 +59,7 @@ const NAV_GROUPS = [
   },
 ];
 
-// Mobile bottom nav: 5 main items
-const MOBILE_NAV = [
-  { id: 'dashboard', icon: LayoutDashboard, label: 'Inicio' },
-  { id: 'clientes', icon: Users, label: 'Clientes' },
-  { id: 'taller', icon: Hammer, label: 'Taller' },
-  { id: 'marketing', icon: TrendingUp, label: 'Marketing' },
-];
+// Mobile quick-nav is handled by FloatingOrbNav component
 
 function useMediaQuery(query) {
   const [matches, setMatches] = useState(() => {
@@ -353,29 +348,29 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
       )}
 
       {/* ════════════════════════════════════════════
-          MOBILE: Bottom Navigation Bar
+          MOBILE: Floating Glassmorphism Orb Navigation
           ════════════════════════════════════════════ */}
       {isMobile && (
         <>
           {/* Top bar for mobile */}
           <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, zIndex: 140,
-            height: 56, background: 'var(--surface)', borderBottom: '1px solid var(--border-subtle)',
+            height: 56, background: 'rgba(15,20,30,0.8)', borderBottom: '1px solid rgba(255,255,255,0.06)',
             display: 'flex', alignItems: 'center', padding: '0 16px', gap: 12,
-            backdropFilter: 'blur(20px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+            backdropFilter: 'blur(24px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
           }}>
             <div style={{
               width: 32, height: 32, borderRadius: 10,
-              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+              background: 'linear-gradient(135deg, #6366f1, #a855f7, #ec4899)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 2px 8px rgba(99,102,241,0.3)',
+              boxShadow: '0 2px 12px rgba(139,92,246,0.4)',
               flexShrink: 0,
             }}>
               <Zap size={16} color="#fff" />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--on-surface)', letterSpacing: '-0.02em' }}>APES</div>
+              <div style={{ fontSize: 14, fontWeight: 800, background: 'linear-gradient(135deg, #c4b5fd, #f0abfc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.02em' }}>APES</div>
             </div>
             {currentMember && (
               <div style={{
@@ -390,70 +385,202 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
             )}
           </div>
 
-          {/* Bottom Nav */}
-          <nav className="mobile-bottom-nav">
-            {MOBILE_NAV.map(item => {
-              const active = isActive(item.id);
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.id}
-                  className={`mobile-nav-item ${active ? 'active' : ''}`}
-                  onClick={() => handleNavigate(item.id)}
-                >
-                  <Icon size={22} strokeWidth={active ? 2.5 : 1.8} />
-                  <span className="mobile-nav-label">{item.label}</span>
-                </button>
-              );
-            })}
+          {/* ── Floating Orb + Expanded Menu ── */}
+          <FloatingOrbNav
+            activeView={activeView}
+            onNavigate={handleNavigate}
+            moreOpen={moreOpen}
+            setMoreOpen={setMoreOpen}
+            theme={theme}
+            toggleTheme={toggleTheme}
+            filteredGroups={filteredGroups}
+            allItems={allItems}
+          />
+        </>
+      )}
+    </>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════
+   Floating Orb Navigation — Innovative Glassmorphism Mobile Nav
+   ════════════════════════════════════════════════════════════ */
+
+function FloatingOrbNav({ activeView, onNavigate, moreOpen, setMoreOpen, theme, toggleTheme, filteredGroups, allItems }) {
+  const [expanded, setExpanded] = useState(false);
+  const orbRef = useRef(null);
+
+  const quickNav = [
+    { id: 'dashboard', icon: LayoutDashboard, label: 'Inicio', color: '#3b82f6' },
+    { id: 'clientes', icon: Users, label: 'Clientes', color: '#10b981' },
+    { id: 'taller', icon: Hammer, label: 'Taller', color: '#f59e0b' },
+    { id: 'marketing', icon: TrendingUp, label: 'Marketing', color: '#ec4899' },
+    { id: 'ventas_view', icon: BarChart2, label: 'Ventas', color: '#06b6d4' },
+  ];
+
+  const handleNav = (id) => {
+    onNavigate(id);
+    setExpanded(false);
+  };
+
+  const activeItem = quickNav.find(n => n.id === activeView) || quickNav.find(n => n.id === 'dashboard');
+  const ActiveIcon = activeItem?.icon || LayoutDashboard;
+
+  return (
+    <>
+      {/* Backdrop */}
+      {expanded && (
+        <div
+          onClick={() => setExpanded(false)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 198,
+            background: 'rgba(0,0,0,0.5)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            animation: 'fadeIn 0.2s ease',
+          }}
+        />
+      )}
+
+      {/* Expanded menu pill */}
+      <div style={{
+        position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)',
+        zIndex: 200,
+        display: 'flex', gap: 8, padding: '8px 12px',
+        background: 'rgba(15,20,30,0.92)',
+        backdropFilter: 'blur(32px) saturate(200%)',
+        WebkitBackdropFilter: 'blur(32px) saturate(200%)',
+        borderRadius: 28, border: '1px solid rgba(255,255,255,0.08)',
+        boxShadow: '0 12px 48px rgba(0,0,0,0.5), 0 0 60px rgba(139,92,246,0.15), inset 0 1px 0 rgba(255,255,255,0.06)',
+        opacity: expanded ? 1 : 0,
+        pointerEvents: expanded ? 'auto' : 'none',
+        transition: 'all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        transform: `translateX(-50%) translateY(${expanded ? 0 : 20}px) scale(${expanded ? 1 : 0.8})`,
+      }}>
+        {quickNav.map((item, i) => {
+          const Icon = item.icon;
+          const isActive = activeView === item.id;
+          return (
             <button
-              className={`mobile-nav-item ${moreOpen ? 'active' : ''}`}
-              onClick={() => setMoreOpen(!moreOpen)}
+              key={item.id}
+              onClick={() => handleNav(item.id)}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                padding: '10px 6px 6px', borderRadius: 16, border: 'none', cursor: 'pointer',
+                background: isActive ? `${item.color}20` : 'transparent',
+                color: isActive ? item.color : 'rgba(255,255,255,0.5)',
+                transition: 'all 0.25s ease',
+                minWidth: 56,
+                animation: expanded ? `orbItemIn 0.3s ease ${i * 0.05}s both` : 'none',
+              }}
             >
-              <MoreHorizontal size={22} strokeWidth={moreOpen ? 2.5 : 1.8} />
-              <span className="mobile-nav-label">Más</span>
+              <div style={{
+                width: 40, height: 40, borderRadius: 14,
+                background: isActive ? `${item.color}18` : 'rgba(255,255,255,0.05)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.25s ease',
+                boxShadow: isActive ? `0 4px 16px ${item.color}30` : 'none',
+              }}>
+                <Icon size={19} strokeWidth={isActive ? 2.4 : 1.8} />
+              </div>
+              <span style={{ fontSize: 9, fontWeight: isActive ? 700 : 500, letterSpacing: '0.2px' }}>{item.label}</span>
             </button>
-          </nav>
+          );
+        })}
 
-          {/* More Drawer */}
-          {moreOpen && (
-            <div className="mobile-more-overlay" onClick={() => setMoreOpen(false)}>
-              <div className="mobile-more-sheet" onClick={e => e.stopPropagation()}>
-                <div className="sheet-handle" />
+        {/* Separator */}
+        <div style={{ width: 1, background: 'rgba(255,255,255,0.06)', margin: '6px 2px', alignSelf: 'stretch' }} />
 
-                {/* Theme toggle */}
-                <button className="mobile-more-item" onClick={() => { toggleTheme(); }}>
-                  {theme === 'dark' ? <Moon size={20} /> : <Sun size={20} />}
-                  Modo {theme === 'dark' ? 'Oscuro' : 'Claro'}
-                </button>
+        {/* More items */}
+        <button
+          onClick={() => { setExpanded(false); setMoreOpen(true); }}
+          style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+            padding: '10px 6px 6px', borderRadius: 16, border: 'none', cursor: 'pointer',
+            background: moreOpen ? 'rgba(255,255,255,0.08)' : 'transparent',
+            color: moreOpen ? '#a855f7' : 'rgba(255,255,255,0.5)',
+            transition: 'all 0.25s ease',
+            minWidth: 56,
+          }}
+        >
+          <div style={{
+            width: 40, height: 40, borderRadius: 14,
+            background: moreOpen ? 'rgba(168,85,247,0.12)' : 'rgba(255,255,255,0.05)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Sparkles size={19} strokeWidth={1.8} />
+          </div>
+          <span style={{ fontSize: 9, fontWeight: 500 }}>Más</span>
+        </button>
+      </div>
 
-                {filteredGroups.filter(g => g.id !== 'principal').map(group => (
-                  <div key={group.id} className="mobile-more-group">
-                    <div className="mobile-more-group-label">{group.label}</div>
-                    {group.items.map(item => {
-                      const Icon = item.icon;
-                      return (
-                        <button
-                          key={item.id}
-                          className="mobile-more-item"
-                          onClick={() => handleNavigate(item.id)}
-                          style={{
-                            color: isActive(item.id) ? 'var(--primary)' : 'var(--on-surface)',
-                            fontWeight: isActive(item.id) ? 700 : 500,
-                          }}
-                        >
-                          <Icon size={20} />
-                          {item.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                ))}
+      {/* The Orb */}
+      <button
+        ref={orbRef}
+        onClick={() => setExpanded(!expanded)}
+        style={{
+          position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 201,
+          width: expanded ? 52 : 56, height: expanded ? 52 : 56,
+          borderRadius: '50%', border: 'none', cursor: 'pointer',
+          background: expanded
+            ? 'linear-gradient(135deg, #6366f1, #a855f7)'
+            : 'linear-gradient(135deg, #6366f1, #a855f7, #ec4899)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: expanded
+            ? '0 8px 32px rgba(139,92,246,0.6), 0 0 60px rgba(139,92,246,0.25)'
+            : '0 8px 32px rgba(139,92,246,0.5), 0 0 60px rgba(139,92,246,0.2), 0 0 0 3px rgba(139,92,246,0.15)',
+          transition: 'all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          animation: expanded ? 'none' : 'orbPulse 3s ease-in-out infinite',
+          color: '#fff',
+          outline: 'none',
+        }}
+      >
+        <div style={{
+          transition: 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          transform: expanded ? 'rotate(45deg) scale(0.9)' : 'rotate(0) scale(1)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          {expanded ? <X size={22} strokeWidth={2.5} /> : <ActiveIcon size={22} strokeWidth={2.5} />}
+        </div>
+      </button>
+
+      {/* More Drawer (Bottom Sheet) */}
+      {moreOpen && (
+        <div className="mobile-more-overlay" onClick={() => setMoreOpen(false)}>
+          <div className="mobile-more-sheet" onClick={e => e.stopPropagation()}>
+            <div className="sheet-handle" />
+
+            <button className="mobile-more-item" onClick={() => { toggleTheme(); }}>
+              {theme === 'dark' ? <Moon size={20} /> : <Sun size={20} />}
+              Modo {theme === 'dark' ? 'Oscuro' : 'Claro'}
+            </button>
+
+            {filteredGroups.filter(g => g.id !== 'principal').map(group => (
+              <div key={group.id} className="mobile-more-group">
+                <div className="mobile-more-group-label">{group.label}</div>
+                {group.items.map(item => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.id}
+                      className="mobile-more-item"
+                      onClick={() => handleNav(item.id)}
+                      style={{
+                        color: activeView === item.id ? 'var(--primary)' : 'var(--on-surface)',
+                        fontWeight: activeView === item.id ? 700 : 500,
+                      }}
+                    >
+                      <Icon size={20} />
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
               </div>
             </div>
           )}
-        </>
-      )}
     </>
   );
 }

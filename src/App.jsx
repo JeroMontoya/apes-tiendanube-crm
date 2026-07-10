@@ -287,10 +287,11 @@ export default function App() {
 
   // Auto-refresh polling
   useEffect(() => {
-    if (!storeId || connectionStatus !== 'connected' || !workspaceData?.tiendanube_access_token) return;
-    const intervalMs = (workspaceData.sync_interval_seconds || 90) * 1000;
+    if (!storeId || connectionStatus !== 'connected') return;
+    const intervalMs = (workspaceData?.sync_interval_seconds || 90) * 1000;
     const interval = setInterval(() => {
-      fetchRealData(storeId, workspaceData.tiendanube_access_token);
+      const token = workspaceData?.tiendanube_access_token || 'system';
+      fetchRealData(storeId, token);
     }, intervalMs);
     return () => clearInterval(interval);
   }, [storeId, connectionStatus, workspaceData]);

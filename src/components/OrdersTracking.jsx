@@ -62,13 +62,17 @@ function getStatusBadge(status, config) {
 
 function getShippingStatus(order) {
   if (order.state === 'cancelled') return 'cancelled';
-  if (order.state === 'closed') return 'delivered';
+  const fs = order.fulfillment_status;
+  if (fs === 'fulfilled') return 'delivered';
+  if (fs === 'partial') return 'partial';
+  if (order.state === 'closed' && !fs) return 'delivered';
   return 'pending';
 }
 
 const SHIPPING_STATUS = {
-  pending: { label: 'Por empaquetar', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', icon: Package },
+  pending: { label: 'Por preparar', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', icon: Package },
   delivered: { label: 'Despachado', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: Truck },
+  partial: { label: 'Despacho parcial', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)', icon: Package },
   cancelled: { label: 'Cancelado', color: '#ef4444', bg: 'rgba(239,68,68,0.12)', icon: XCircle },
 };
 
@@ -86,7 +90,7 @@ export default function OrdersTracking({ rawOrders, lastSync, refreshOrders, sto
 
   // Auto-refresh every 90 seconds
   useEffect(() => {
-    if (autoRefresh && storeId && workspaceData?.tiendanube_access_token) {
+    if (autoRefresh && storeId) {
       intervalRef.current = setInterval(() => {
         handleRefresh(true);
       }, 90 * 1000);
@@ -94,13 +98,14 @@ export default function OrdersTracking({ rawOrders, lastSync, refreshOrders, sto
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [autoRefresh, storeId, workspaceData]);
+  }, [autoRefresh, storeId]);
 
   const handleRefresh = async (silent = false) => {
-    if (!storeId || !workspaceData?.tiendanube_access_token) return;
+    if (!storeId) return;
     if (!silent) setIsRefreshing(true);
     try {
-      await refreshOrders(storeId, workspaceData.tiendanube_access_token);
+      const token = workspaceData?.tiendanube_access_token || 'system';
+      await refreshOrders(storeId, token);
     } catch (e) {
       console.error('Refresh failed:', e);
     } finally {

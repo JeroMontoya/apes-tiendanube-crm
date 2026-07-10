@@ -188,9 +188,23 @@ export default function SettingsPanel({ onConnect, connectionStatus, session }) 
   return (
     <div className="settings-panel">
       <div className="section-header">
-        <h2>⚙️ Configuración del CRM</h2>
-        <p>Conecta tus plataformas de marketing para alimentar el motor de remarketing omnicanal.</p>
+        <h2>Configuración del CRM</h2>
+        <p>{isAdmin ? 'Administra las credenciales de las APIs.' : 'Las credenciales están configuradas por el administrador.'}</p>
       </div>
+
+      {!isAdmin && (
+        <div className="glass-card" style={{ padding: '16px 20px', marginBottom: 20, borderLeft: '3px solid #3b82f6' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 18 }}>🔒</span>
+            <div>
+              <strong style={{ fontSize: 14 }}>Acceso de Solo Lectura</strong>
+              <p style={{ fontSize: 12, color: 'var(--on-surface-variant)', margin: '2px 0 0' }}>
+                Solo los administradores pueden modificar las credenciales de las APIs.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleConnect}>
         {/* ── TiendaNube Section ── */}
@@ -198,15 +212,15 @@ export default function SettingsPanel({ onConnect, connectionStatus, session }) 
           <div style={sectionStyle}>
             <div style={sectionHeaderStyle}>
               <h3 style={{ margin: 0 }}>
-                <span>🛒 TiendaNube</span>
+                <span>TiendaNube</span>
               </h3>
-              <span className="badge" style={{ background: 'rgba(255,255,255,0.1)' }}>
-                API REST v1
+              <span className="badge" style={{ background: storeId && token ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)', color: storeId && token ? '#10b981' : '#ef4444' }}>
+                {storeId && token ? 'Conectado' : 'Sin Conectar'}
               </span>
             </div>
 
             <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: 20 }}>
-              Tu tienda de e-commerce. Los clientes y pedidos se descargarán automáticamente.
+              {isAdmin ? 'Configura las credenciales de tu tienda. Los datos se sincronizarán automáticamente para todo el equipo.' : 'Tu tienda está conectada y sincronizando datos en tiempo real.'}
             </p>
 
             <div className="form-group">
@@ -216,6 +230,8 @@ export default function SettingsPanel({ onConnect, connectionStatus, session }) 
                 placeholder="Ej: 5048163" 
                 value={storeId}
                 onChange={(e) => setStoreId(e.target.value)}
+                disabled={!isAdmin}
+                style={{ opacity: isAdmin ? 1 : 0.6, cursor: isAdmin ? 'text' : 'not-allowed' }}
               />
             </div>
 
@@ -227,6 +243,8 @@ export default function SettingsPanel({ onConnect, connectionStatus, session }) 
                   placeholder="Pegá tu token acá..." 
                   value={token}
                   onChange={(e) => setToken(e.target.value)}
+                  disabled={!isAdmin}
+                  style={{ opacity: isAdmin ? 1 : 0.6, cursor: isAdmin ? 'text' : 'not-allowed' }}
                 />
                 <button type="button" className="password-toggle" onClick={() => setShowToken(!showToken)}>
                   {showToken ? 'Ocultar' : 'Mostrar'}
@@ -267,6 +285,8 @@ export default function SettingsPanel({ onConnect, connectionStatus, session }) 
                 placeholder="Ej: act_123456789" 
                 value={metaAdAccountId}
                 onChange={(e) => setMetaAdAccountId(e.target.value)}
+                disabled={!isAdmin}
+                style={{ opacity: isAdmin ? 1 : 0.6, cursor: isAdmin ? 'text' : 'not-allowed' }}
               />
             </div>
 
@@ -278,6 +298,8 @@ export default function SettingsPanel({ onConnect, connectionStatus, session }) 
                   placeholder="Pegá tu token de Meta Business acá..." 
                   value={metaAccessToken}
                   onChange={(e) => setMetaAccessToken(e.target.value)}
+                  disabled={!isAdmin}
+                  style={{ opacity: isAdmin ? 1 : 0.6, cursor: isAdmin ? 'text' : 'not-allowed' }}
                 />
                 <button type="button" className="password-toggle" onClick={() => setShowMetaToken(!showMetaToken)}>
                   {showMetaToken ? 'Ocultar' : 'Mostrar'}
@@ -315,6 +337,8 @@ export default function SettingsPanel({ onConnect, connectionStatus, session }) 
                 placeholder="Ej: 123456789" 
                 value={ga4PropertyId}
                 onChange={(e) => setGa4PropertyId(e.target.value)}
+                disabled={!isAdmin}
+                style={{ opacity: isAdmin ? 1 : 0.6, cursor: isAdmin ? 'text' : 'not-allowed' }}
               />
             </div>
 
@@ -325,6 +349,7 @@ export default function SettingsPanel({ onConnect, connectionStatus, session }) 
                 value={ga4Credentials}
                 onChange={(e) => setGa4Credentials(e.target.value)}
                 rows={6}
+                disabled={!isAdmin}
                 style={{
                   width: '100%',
                   fontFamily: 'monospace',
@@ -335,6 +360,8 @@ export default function SettingsPanel({ onConnect, connectionStatus, session }) 
                   border: '1px solid var(--border-subtle)',
                   borderRadius: 8,
                   padding: '12px 14px',
+                  opacity: isAdmin ? 1 : 0.6,
+                  cursor: isAdmin ? 'text' : 'not-allowed',
                 }}
               />
             </div>
@@ -369,6 +396,8 @@ export default function SettingsPanel({ onConnect, connectionStatus, session }) 
                 placeholder="Ej: https://n8n.tu-dominio.com/webhook/..." 
                 value={n8nWebhookUrl}
                 onChange={(e) => setN8nWebhookUrl(e.target.value)}
+                disabled={!isAdmin}
+                style={{ opacity: isAdmin ? 1 : 0.6, cursor: isAdmin ? 'text' : 'not-allowed' }}
               />
             </div>
             <div className="tip-box" style={{ background: 'rgba(239, 68, 68, 0.05)', borderColor: 'rgba(239, 68, 68, 0.2)' }}>
@@ -454,10 +483,10 @@ export default function SettingsPanel({ onConnect, connectionStatus, session }) 
           <button 
             type="submit" 
             className="btn btn-primary" 
-            disabled={saving}
-            style={{ minWidth: 220 }}
+            disabled={saving || !isAdmin}
+            style={{ minWidth: 220, opacity: isAdmin ? 1 : 0.5 }}
           >
-            {saving ? '⏳ Guardando...' : '💾 Guardar y Sincronizar'}
+            {saving ? 'Guardando...' : isAdmin ? 'Guardar y Sincronizar' : 'Solo Administradores'}
           </button>
 
           {saveMessage && (
@@ -479,8 +508,8 @@ export default function SettingsPanel({ onConnect, connectionStatus, session }) 
           <div>
             <strong style={{ fontSize: '0.9rem' }}>Seguridad de nivel empresarial</strong>
             <p style={{ fontSize: '0.8rem', color: 'var(--on-surface-variant)', margin: '4px 0 0' }}>
-              Tus credenciales se almacenan cifradas en Supabase con Row Level Security (RLS). 
-              Solo tú puedes acceder a tus datos. Ningún token se almacena en tu navegador.
+              Las credenciales se almacenan cifradas en Supabase y se comparten entre todo el equipo a través del proxy seguro.
+              Los miembros del equipo no necesitan configurar nada — el sistema viene pre-conectado.
             </p>
           </div>
         </div>

@@ -3,13 +3,13 @@ import { createClient } from '@supabase/supabase-js';
 // ---------------------------------------------------------------------------
 // Supabase admin client (service role — never exposed to the browser)
 // ---------------------------------------------------------------------------
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://kxhdslhgvuvpoxgffssv.supabase.co',
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://kxhdslhgvuvpoxgffssv.supabase.co';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // ---------------------------------------------------------------------------
-// CORS helper — allow all origins for SPA consumption; tighten in production
+// CORS helper
 // ---------------------------------------------------------------------------
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -26,57 +26,64 @@ function setCors(res) {
 // ---------------------------------------------------------------------------
 export default async function handler(req, res) {
   setCors(res);
-
-  // Preflight
   if (req.method === 'OPTIONS') return res.status(204).end();
 
   try {
-    // ------------------------------------------------------------------
-    // 1. Authenticate the caller via their Supabase JWT
-    // ------------------------------------------------------------------
-    const bearerToken = req.headers.authorization?.replace('Bearer ', '');
-    if (!bearerToken) {
-      return res.status(401).json({ error: 'Missing Authorization header' });
-    }
+    let tiendanubeToken = null;
+    let storeId = null;
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(bearerToken);
-    if (authError || !user) {
-      return res.status(401).json({ error: 'Unauthorized — invalid or expired token' });
-    }
-
-    // ------------------------------------------------------------------
-    // 2. Fetch the user's workspace to obtain the TiendaNube token
-    // ------------------------------------------------------------------
-    const { data: workspace, error: wsError } = await supabase
-      .from('workspaces')
-      .select('*')
-      .eq('user_id', user.id)
+    // ---------------------------------------------------------------
+    // 1. Try to get token from system_config (shared across all users)
+    // ---------------------------------------------------------------
+    const { data: sysConfig } = await supabase
+      .from('system_config')
+      .select('tiendanube_access_token, tiendanube_store_id')
+      .eq('id', 'main')
       .single();
 
-    if (wsError || !workspace) {
-      return res.status(404).json({ error: 'Workspace not found for this user' });
+    if (sysConfig?.tiendanube_access_token) {
+      tiendanubeToken = sysConfig.tiendanube_access_token;
+      storeId = sysConfig.tiendanube_store_id;
     }
 
-    const tiendanubeToken = workspace.tiendanube_access_token;
+    // ---------------------------------------------------------------
+    // 2. Fall back to user's workspace
+    // ---------------------------------------------------------------
     if (!tiendanubeToken) {
-      return res.status(400).json({ error: 'TiendaNube access token not configured in workspace' });
+      const bearerToken = req.headers.authorization?.replace('Bearer ', '');
+      if (bearerToken) {
+        const { data: { user } } = await supabase.auth.getUser(bearerToken);
+        if (user) {
+          const { data: workspace } = await supabase
+            .from('workspaces')
+            .select('tiendanube_access_token, tiendanube_store_id')
+            .eq('user_id', user.id)
+            .single();
+          if (workspace?.tiendanube_access_token) {
+            tiendanubeToken = workspace.tiendanube_access_token;
+            storeId = workspace.tiendanube_store_id;
+          }
+        }
+      }
     }
 
-    // ------------------------------------------------------------------
-    // 3. Build the upstream URL from the catch-all path segments
-    // ------------------------------------------------------------------
+    if (!tiendanubeToken) {
+      return res.status(400).json({ error: 'TiendaNube not configured. Admin must set credentials in Settings.' });
+    }
+
+    // ---------------------------------------------------------------
+    // 3. Build upstream URL
+    // ---------------------------------------------------------------
     const pathSegments = req.query.path || [];
     const upstreamPath = Array.isArray(pathSegments) ? pathSegments.join('/') : pathSegments;
-
-    // Preserve original query string (minus the internal "path" param)
     const url = new URL(`https://api.tiendanube.com/v1/${upstreamPath}`);
     Object.entries(req.query).forEach(([key, value]) => {
       if (key !== 'path') url.searchParams.append(key, value);
     });
 
-    // ------------------------------------------------------------------
-    // 4. Forward the request to TiendaNube
-    // ------------------------------------------------------------------
+    // ---------------------------------------------------------------
+    // 4. Forward to TiendaNube
+    // ---------------------------------------------------------------
     const upstreamRes = await fetch(url.toString(), {
       method: req.method,
       headers: {
@@ -84,18 +91,13 @@ export default async function handler(req, res) {
         'User-Agent': 'APES CRM (contact@apesdigital.com)',
         'Content-Type': 'application/json',
       },
-      // Forward body for mutating methods
       ...(req.method !== 'GET' && req.method !== 'HEAD' && req.body
         ? { body: JSON.stringify(req.body) }
         : {}),
     });
 
-    // ------------------------------------------------------------------
-    // 5. Relay the upstream response back to the client
-    // ------------------------------------------------------------------
     const contentType = upstreamRes.headers.get('content-type') || 'application/json';
     res.setHeader('Content-Type', contentType);
-
     const data = await upstreamRes.text();
     return res.status(upstreamRes.status).send(data);
 
