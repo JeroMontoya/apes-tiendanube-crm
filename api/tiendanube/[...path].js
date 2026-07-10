@@ -52,7 +52,7 @@ export default async function handler(req, res) {
 
     // Path B: Forward client's token directly
     if (!tiendanubeToken) {
-      const authHeader = req.headers.authorization || '';
+      const authHeader = req.headers.authentication || req.headers.authorization || '';
       tiendanubeToken = authHeader.replace(/^Bearer\s+/i, '').trim();
     }
 
