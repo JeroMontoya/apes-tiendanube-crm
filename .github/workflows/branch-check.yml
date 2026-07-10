@@ -1,0 +1,31 @@
+name: Enforce Branch Naming
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  check-branch-name:
+    name: Validate Branch Name
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch name format
+        run: |
+          BRANCH="${GITHUB_HEAD_REF}"
+          PATTERN="^(feat|fix|chore|docs|refactor|style|test)/[a-z0-9._-]+$"
+          if [[ ! "$BRANCH" =~ $PATTERN ]]; then
+            echo ""
+            echo "❌ Invalid branch name: '$BRANCH'"
+            echo ""
+            echo "Branch names must follow: <type>/<description>"
+            echo ""
+            echo "Types: feat, fix, chore, docs, refactor, style, test"
+            echo ""
+            echo "Examples:"
+            echo "  feat/taller-tiendanube-sync"
+            echo "  fix/inventory-variant-parsing"
+            echo "  chore/update-dependencies"
+            echo ""
+            exit 1
+          fi
+          echo "✅ Branch name OK: $BRANCH"

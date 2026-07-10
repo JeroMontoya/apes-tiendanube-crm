@@ -1,15 +1,21 @@
 {
   "name": "app-tiendanueve",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepare": "husky",
+    "commit": "git-cz",
+    "release": "changeset version && changeset publish"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.2.1",
+    "@commitlint/config-conventional": "^21.2.0",
     "@vitejs/plugin-react": "^6.0.2",
+    "husky": "^9.1.7",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "typescript": "~6.0.2",
