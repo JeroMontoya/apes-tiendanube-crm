@@ -44,7 +44,7 @@ import { TeamMemberBadge } from './components/TeamPanel';
 
 import { unifyClients } from './utils/unifyClients';
 import { TiendanubeAPI, mapTiendanubeDataToUnified } from './utils/tiendanubeAPI';
-import { loadFromCache, saveToCache } from './data/cache';
+import { loadFromCache, saveToCache, clearCache } from './data/cache';
 import { MetaAPI } from './api/MetaAPI';
 import { GA4API } from './api/GA4API';
 
@@ -164,6 +164,10 @@ export default function App() {
     if (authLoading || !session) return;
 
     const loadData = async () => {
+      try {
+        // Force-clear stale localforage that may contain mock/phantom data from previous sessions
+        await clearCache();
+      } catch (_) {}
       try {
         const cachedProducts = await loadFromCache('tiendanube_products');
         if (cachedProducts) setTiendanubeProducts(cachedProducts);
