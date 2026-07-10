@@ -507,14 +507,16 @@ function AppContent({
       />
       
       <main className="main-content">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+        <div className="toolbar-row" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
           {!['configuracion', 'exportar', 'pqr', 'inventario', 'taller', 'equipo', 'actividad', 'rendimiento'].includes(activeView) && (
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: '1 1 200px', minWidth: 0 }}>
               <GlobalDatePicker dateRange={dateRange} setDateRange={setDateRange} />
             </div>
           )}
-          <TeamMemberBadge />
-          <NotificationCenter />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            <TeamMemberBadge />
+            <NotificationCenter />
+          </div>
         </div>
         
         {isFetchingInsights ? (
