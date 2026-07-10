@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { 
   DollarSign, Users, ShoppingCart, Repeat, 
-  Star, Package, TrendingUp, Rocket, Globe, ArrowUpRight, ArrowDownRight
+  Star, Package, TrendingUp, Rocket, Globe, ArrowUpRight, ArrowDownRight, Target
 } from 'lucide-react';
 
 function formatCurrency(value) {
@@ -64,13 +64,14 @@ function Sparkline({ data, color, width = 80, height = 32 }) {
 }
 
 const CARD_CONFIG = [
-  { key: 'revenue', icon: DollarSign, label: 'Ingresos Totales', color: '#10b981', span: 'bento-span-4' },
-  { key: 'total', icon: Users, label: 'Total Clientes', color: '#3b82f6', span: 'bento-span-4' },
-  { key: 'avgTicket', icon: ShoppingCart, label: 'Ticket Promedio', color: '#f59e0b', span: 'bento-span-4' },
-  { key: 'retention', icon: Repeat, label: 'Tasa Retención', color: '#8b5cf6', span: 'bento-span-3' },
-  { key: 'vip', icon: Star, label: 'Clientes VIP', color: '#f59e0b', span: 'bento-span-3' },
-  { key: 'totalOrders', icon: Package, label: 'Órdenes', color: '#ef4444', span: 'bento-span-3' },
+  { key: 'revenue', icon: DollarSign, label: 'Ingresos Totales', color: '#10b981', span: 'bento-span-3' },
   { key: 'metaSpend', icon: TrendingUp, label: 'Inversión Meta', color: '#1877F2', span: 'bento-span-3' },
+  { key: 'roas', icon: Rocket, label: 'ROAS Global', color: '#8b5cf6', span: 'bento-span-3' },
+  { key: 'cpa', icon: Target, label: 'CPA Promedio', color: '#f43f5e', span: 'bento-span-3' },
+  { key: 'total', icon: Users, label: 'Total Clientes', color: '#3b82f6', span: 'bento-span-3' },
+  { key: 'avgTicket', icon: ShoppingCart, label: 'Ticket Promedio', color: '#f59e0b', span: 'bento-span-3' },
+  { key: 'cltv', icon: Globe, label: 'CLTV Promedio', color: '#06b6d4', span: 'bento-span-3' },
+  { key: 'retention', icon: Repeat, label: 'Tasa Retención', color: '#8b5cf6', span: 'bento-span-3' },
 ];
 
 export default function StatsCards({ clients, metaInsights, ga4Insights }) {
@@ -88,15 +89,45 @@ export default function StatsCards({ clients, metaInsights, ga4Insights }) {
     const avgTicket = totalOrders > 0 ? (revenue / totalOrders) : 0;
 
     const metaSpend = metaInsights?.global ? parseFloat(metaInsights.global.spend || 0) : 0;
+    const roas = metaSpend > 0 ? (revenue / metaSpend) : 0;
+    const cpa = total > 0 ? (metaSpend / total) : 0;
+    const cltv = withPurchases > 0 ? (revenue / withPurchases) : 0;
+
+    const buildHistoricSpark = (metric) => {
+      if (arr.length === 0) return [0,0,0,0,0,0,0];
+      let allPurchases = [];
+      arr.forEach(c => { if (c.purchases) allPurchases.push(...c.purchases); });
+      if (allPurchases.length === 0) return [0,0,0,0,0,0,0];
+      allPurchases.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      const start = new Date(allPurchases[0].date).getTime();
+      const end = new Date(allPurchases[allPurchases.length-1].date).getTime();
+      const range = end - start || 1;
+      const buckets = [0,0,0,0,0,0,0];
+      allPurchases.forEach(p => {
+        const t = new Date(p.date).getTime();
+        let index = Math.floor(((t - start) / range) * 7);
+        if (index >= 7) index = 6;
+        if (metric === 'revenue') buckets[index] += parseFloat(p.amount || 0);
+        else if (metric === 'orders') buckets[index] += 1;
+      });
+      if (buckets.every(b => b === 0)) return [1,1,1,1,1,1,1];
+      return buckets;
+    };
+
+    const revSpark = buildHistoricSpark('revenue');
+    const orderSpark = buildHistoricSpark('orders');
 
     return {
-      revenue: { value: formatCurrency(revenue), sparkData: [revenue*0.6, revenue*0.7, revenue*0.65, revenue*0.8, revenue*0.85, revenue*0.9, revenue] },
-      total: { value: total.toLocaleString('es-CO'), sparkData: [total*0.5, total*0.6, total*0.7, total*0.75, total*0.8, total*0.9, total] },
-      avgTicket: { value: formatCurrency(avgTicket), sparkData: [avgTicket*0.8, avgTicket*0.9, avgTicket*0.85, avgTicket*1, avgTicket*0.95, avgTicket*1.05, avgTicket] },
-      retention: { value: `${retention.toFixed(1)}%`, sparkData: [retention*0.7, retention*0.8, retention*0.85, retention*0.9, retention*0.95, retention] },
-      vip: { value: vipCount.toLocaleString('es-CO'), sparkData: [vipCount*0.4, vipCount*0.5, vipCount*0.65, vipCount*0.7, vipCount*0.85, vipCount] },
-      totalOrders: { value: totalOrders.toLocaleString('es-CO'), sparkData: [totalOrders*0.5, totalOrders*0.6, totalOrders*0.7, totalOrders*0.8, totalOrders*0.9, totalOrders] },
+      revenue: { value: formatCurrency(revenue), sparkData: revSpark },
       metaSpend: { value: metaInsights?.global ? formatCurrency(metaSpend) : '---', sparkData: [metaSpend*0.6, metaSpend*0.7, metaSpend*0.8, metaSpend*0.9, metaSpend] },
+      roas: { value: roas > 0 ? `${roas.toFixed(2)}x` : '---', sparkData: revSpark },
+      cpa: { value: cpa > 0 ? formatCurrency(cpa) : '---', sparkData: orderSpark },
+      total: { value: total.toLocaleString('es-CO'), sparkData: orderSpark },
+      avgTicket: { value: formatCurrency(avgTicket), sparkData: revSpark },
+      cltv: { value: formatCurrency(cltv), sparkData: revSpark },
+      retention: { value: `${retention.toFixed(1)}%`, sparkData: orderSpark },
+      vip: { value: vipCount.toLocaleString('es-CO'), sparkData: orderSpark },
+      totalOrders: { value: totalOrders.toLocaleString('es-CO'), sparkData: orderSpark },
     };
   }, [clients, metaInsights, ga4Insights]);
 

@@ -1,36 +1,54 @@
 import React, { useMemo, useState, useEffect } from 'react';
 
-const SEGMENT_CONFIG = [
+const LIFECYCLE_CONFIG = [
   {
-    key: 'abandoned',
+    key: 'sin_compra',
     icon: '🛒',
-    label: 'Carrito Abandonado',
-    filter: (c) => (c.purchaseCount ?? 0) === 0,
+    label: 'Leads / Abandonos',
+    filter: (c) => c.segmentTags?.includes('sin_compra'),
     accentColor: '#EF4444',
     accentBg: 'rgba(239, 68, 68, 0.12)',
     borderColor: 'rgba(239, 68, 68, 0.3)',
     glowColor: 'rgba(239, 68, 68, 0.15)',
   },
   {
-    key: 'regular',
-    icon: '🛍️',
-    label: 'Cliente Regular',
-    filter: (c) => (c.purchaseCount ?? 0) === 1,
+    key: 'nuevo',
+    icon: '🌱',
+    label: 'Clientes Nuevos (1)',
+    filter: (c) => c.segmentTags?.includes('nuevo'),
+    accentColor: '#10B981',
+    accentBg: 'rgba(16, 185, 129, 0.12)',
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+    glowColor: 'rgba(16, 185, 129, 0.15)',
+  },
+  {
+    key: 'repetidor',
+    icon: '🔄',
+    label: 'Repetidores (2-3)',
+    filter: (c) => c.segmentTags?.includes('repetidor'),
     accentColor: '#3B82F6',
     accentBg: 'rgba(59, 130, 246, 0.12)',
     borderColor: 'rgba(59, 130, 246, 0.3)',
     glowColor: 'rgba(59, 130, 246, 0.15)',
   },
   {
-    key: 'vip',
-    icon: '🌟',
-    label: 'Cliente VIP',
-    filter: (c) => (c.purchaseCount ?? 0) >= 2,
-    accentColor: '#F59E0B',
-    accentBg: 'rgba(245, 158, 11, 0.12)',
-    borderColor: 'rgba(245, 158, 11, 0.3)',
-    glowColor: 'rgba(245, 158, 11, 0.15)',
+    key: 'fiel',
+    icon: '👑',
+    label: 'Clientes Fieles (4+)',
+    filter: (c) => c.segmentTags?.includes('fiel'),
+    accentColor: '#8B5CF6',
+    accentBg: 'rgba(139, 92, 246, 0.12)',
+    borderColor: 'rgba(139, 92, 246, 0.3)',
+    glowColor: 'rgba(139, 92, 246, 0.15)',
   },
+];
+
+const BEHAVIORAL_CONFIG = [
+  { key: 'alto_valor', label: 'Alto Valor', icon: '💎', color: '#F59E0B', filter: c => c.segmentTags?.includes('alto_valor') },
+  { key: 'riesgo_churn', label: 'Riesgo Fuga', icon: '⚠️', color: '#F97316', filter: c => c.segmentTags?.includes('riesgo_churn') },
+  { key: 'dormido', label: 'Dormidos', icon: '💤', color: '#6B7280', filter: c => c.segmentTags?.includes('dormido') },
+  { key: 'sensible_precio', label: 'Caza Descuentos', icon: '🎟️', color: '#EC4899', filter: c => c.segmentTags?.includes('sensible_precio') },
+  { key: 'vip_coleccion', label: 'Ed. Limitadas', icon: '🎨', color: '#06B6D4', filter: c => c.segmentTags?.includes('vip_coleccion') },
 ];
 
 function formatARS(val) {
@@ -176,7 +194,7 @@ export default function ClassificationTree({ clients }) {
   const [visible, setVisible] = useState([]);
 
   useEffect(() => {
-    const timers = SEGMENT_CONFIG.map((_, i) =>
+    const timers = LIFECYCLE_CONFIG.map((_, i) =>
       setTimeout(() => {
         setVisible(prev => [...prev, i]);
       }, 200 + i * 200)
@@ -188,7 +206,7 @@ export default function ClassificationTree({ clients }) {
     const arr = clients || [];
     const total = arr.length || 1;
 
-    return SEGMENT_CONFIG.map(cfg => {
+    return LIFECYCLE_CONFIG.map(cfg => {
       const members = arr.filter(cfg.filter);
       const count = members.length;
       const pct = ((count / total) * 100).toFixed(1);
@@ -201,6 +219,15 @@ export default function ClassificationTree({ clients }) {
         .map(c => c.name || c.email || 'Sin nombre');
 
       return { ...cfg, count, pct, avgSpend, top3 };
+    });
+  }, [clients]);
+
+  const behavioralStats = useMemo(() => {
+    const arr = clients || [];
+    const total = arr.length || 1;
+    return BEHAVIORAL_CONFIG.map(cfg => {
+      const count = arr.filter(cfg.filter).length;
+      return { ...cfg, count, pct: ((count / total) * 100).toFixed(1) };
     });
   }, [clients]);
 
@@ -269,6 +296,33 @@ export default function ClassificationTree({ clients }) {
               )}
             </div>
           </React.Fragment>
+        ))}
+      </div>
+
+      <div style={{ ...s.title, marginTop: 32, fontSize: 16 }}>
+        🧠 Segmentos de Comportamiento
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+        {behavioralStats.map(b => (
+          <div key={b.key} style={{ 
+            background: 'var(--surface-container)', 
+            padding: '12px 16px', 
+            borderRadius: 12,
+            border: '1px solid var(--border-subtle)',
+            display: 'flex',
+            flexDirection: 'column',
+            minWidth: 140,
+            flex: 1
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <span style={{ fontSize: 18 }}>{b.icon}</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: b.color }}>{b.label}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <span style={{ fontSize: 20, fontWeight: 800, color: 'var(--on-surface)' }}>{b.count}</span>
+              <span style={{ fontSize: 12, color: 'var(--on-surface-variant)', fontWeight: 600 }}>{b.pct}%</span>
+            </div>
+          </div>
         ))}
       </div>
     </div>

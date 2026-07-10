@@ -251,6 +251,103 @@ export class TiendanubeAPI {
 
     return ok(allCheckouts);
   }
+
+  /**
+   * Fetches a single page of products.
+   *
+   * @param {Record<string, string|number>} [params={}]
+   * @returns {Promise<{ success: boolean, data: Array|null, error: any }>}
+   */
+  async fetchProducts(params = {}) {
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined && value !== null) {
+        query.set(key, String(value));
+      }
+    }
+    const qs = query.toString();
+    const url = `${API_BASE}/${this.storeId}/products${qs ? `?${qs}` : ''}`;
+    return this._request(url);
+  }
+
+  /**
+   * Fetches all products by paginating automatically.
+   *
+   * @param {number} [perPage=50]
+   * @returns {Promise<{ success: boolean, data: Array|null, error: any }>}
+   */
+  async fetchAllProducts(perPage = 200) {
+    const allProducts = [];
+    let page = 1;
+
+    console.log(`[TiendanubeAPI] fetchAllProducts starting, perPage=${perPage}`);
+
+    while (true) {
+      const result = await this.fetchProducts({ page, per_page: perPage });
+
+      if (!result.success) {
+        console.warn(`[TiendanubeAPI] fetchProducts page ${page} failed:`, result.error);
+        if (allProducts.length > 0) return ok(allProducts);
+        return result;
+      }
+
+      const products = result.data;
+      if (!Array.isArray(products) || products.length === 0) {
+        console.log(`[TiendanubeAPI] Page ${page} returned 0 products, stopping.`);
+        break;
+      }
+
+      console.log(`[TiendanubeAPI] Page ${page}: ${products.length} products fetched (total: ${allProducts.length + products.length})`);
+      allProducts.push(...products);
+
+      if (products.length < perPage) {
+        console.log(`[TiendanubeAPI] Page ${page} returned ${products.length} < ${perPage}, done.`);
+        break;
+      }
+      page += 1;
+    }
+
+    console.log(`[TiendanubeAPI] fetchAllProducts complete: ${allProducts.length} total products`);
+    return ok(allProducts);
+  }
+
+  /**
+   * Alias for fetchAllCheckouts, representing abandoned carts.
+   */
+  async fetchAbandonedCarts(perPage = 50) {
+    return this.fetchAllCheckouts(perPage);
+  }
+
+  /**
+   * Updates a single product (e.g. stock, name, etc.) via PUT.
+   *
+   * @param {string|number} productId
+   * @param {object}        body — partial product object to merge
+   * @returns {Promise<{ success: boolean, data: any, error: any }>}
+   */
+  async updateProduct(productId, body) {
+    const url = `${API_BASE}/${this.storeId}/products/${productId}`;
+    return this._request(url, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    });
+  }
+
+  /**
+   * Updates stock for a specific variant.
+   *
+   * @param {string|number} productId
+   * @param {string|number} variantId
+   * @param {number}        newStock
+   * @returns {Promise<{ success: boolean, data: any, error: any }>}
+   */
+  async updateVariantStock(productId, variantId, newStock) {
+    const url = `${API_BASE}/${this.storeId}/products/${productId}/variants/${variantId}`;
+    return this._request(url, {
+      method: 'PUT',
+      body: JSON.stringify({ stock: newStock, stock_management: true }),
+    });
+  }
 }
 
 // ─── Data Mapper ────────────────────────────────────────────────────

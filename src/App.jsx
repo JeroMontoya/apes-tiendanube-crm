@@ -18,9 +18,24 @@ import CampaignPipeline from './components/CampaignPipeline';
 import MetaAdsPanel from './components/MetaAdsPanel';
 import GA4Panel from './components/GA4Panel';
 import PQRPanel from './components/PQRPanel';
+import InventoryPage from './components/InventoryPage';
 import GoalTrackerBanner from './components/GoalTrackerBanner';
 import ActiveCampaignsWidget from './components/ActiveCampaignsWidget';
 import EventCalendar from './components/EventCalendar';
+import NotificationCenter from './components/NotificationCenter';
+import CohortRetentionChart from './components/CohortRetentionChart';
+import StockAlertWidget from './components/StockAlertWidget';
+import AIInsightsWidget from './components/AIInsightsWidget';
+import ChurnRadar from './components/ChurnRadar';
+import RecentActivityFeed from './components/RecentActivityFeed';
+
+// Team System
+import { TeamProvider, useTeam } from './contexts/TeamContext';
+import WorkshopPage from './components/WorkshopPage';
+import ActivityLog from './components/ActivityLog';
+import ProductivityDashboard from './components/ProductivityDashboard';
+import SalesView from './components/SalesView';
+import { TeamManager, TeamMemberBadge } from './components/TeamPanel';
 
 // Data & Logic
 import historicClientsData from './data/mockHistoricClients';
@@ -59,6 +74,8 @@ export default function App() {
 
   const [historicClients, setHistoricClients] = useState([]);
   const [unifiedClients, setUnifiedClients] = useState([]);
+  const [rawOrders, setRawOrders] = useState([]);
+  const [tiendanubeProducts, setTiendanubeProducts] = useState([]);
   
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
   const [storeId, setStoreId] = useState(null);
@@ -80,6 +97,33 @@ export default function App() {
     endDate: initialDates.end
   });
   
+  const [isRefreshingStock, setIsRefreshingStock] = useState(false);
+
+  const refreshStock = async () => {
+    console.log('[StockRefresh] storeId:', storeId, 'session:', !!session);
+    if (!storeId || !session) return;
+    setIsRefreshingStock(true);
+    try {
+      const { data } = await supabase.from('workspaces').select('tiendanube_access_token').eq('user_id', session.user.id).single();
+      console.log('[StockRefresh] token found:', !!data?.tiendanube_access_token);
+      if (!data?.tiendanube_access_token) return;
+      const api = new TiendanubeAPI(storeId, data.tiendanube_access_token);
+      const productsRes = await api.fetchAllProducts();
+      console.log('[StockRefresh] API result:', productsRes.success, 'products:', productsRes.data?.length || 0);
+        if (productsRes.success) {
+          console.log(`[App] Products fetched from Tiendanube: ${productsRes.data?.length || 0}`);
+          setTiendanubeProducts(productsRes.data);
+          await saveToCache('tiendanube_products', productsRes.data);
+        } else {
+          console.warn('[App] Products fetch failed:', productsRes.error);
+        }
+    } catch (err) {
+      console.error('[StockRefresh] Error:', err);
+    } finally {
+      setIsRefreshingStock(false);
+    }
+  };
+
   const [isSyncing, setIsSyncing] = useState(false);
   const [isFetchingInsights, setIsFetchingInsights] = useState(false);
 
@@ -120,6 +164,10 @@ export default function App() {
       try {
         const cachedClients = await loadFromCache('unified_clients');
         const cachedSync = await loadFromCache('last_sync');
+        const cachedProducts = await loadFromCache('tiendanube_products');
+        
+        if (cachedProducts) setTiendanubeProducts(cachedProducts);
+
         if (cachedClients && cachedClients.length > 0) {
           setUnifiedClients(cachedClients);
           if (cachedSync) setLastSync(new Date(cachedSync));
@@ -133,7 +181,7 @@ export default function App() {
 
       const { data: workspace } = await supabase
         .from('workspaces')
-        .select('tiendanube_store_id, tiendanube_access_token, meta_ad_account_id, meta_access_token, ga4_property_id, ga4_credentials_json')
+        .select('tiendanube_store_id, tiendanube_access_token, meta_ad_account_id, meta_access_token, ga4_property_id, ga4_credentials_json, n8n_webhook_url')
         .eq('user_id', session.user.id)
         .single();
 
@@ -171,6 +219,7 @@ export default function App() {
       } else {
         if (unifiedClients.length === 0) {
           const initialUnified = unifyClients([], mockTiendanubeOrders);
+          setRawOrders(mockTiendanubeOrders);
           setUnifiedClients(initialUnified);
         }
       }
@@ -229,17 +278,24 @@ export default function App() {
     const api = new TiendanubeAPI(sid, token);
     
     try {
-      const [customersRes, ordersRes] = await Promise.all([
+      const [customersRes, ordersRes, productsRes] = await Promise.all([
         api.fetchCustomers(),
-        api.fetchAllOrders()
+        api.fetchAllOrders(),
+        api.fetchAllProducts()
       ]);
 
       if (customersRes.success && ordersRes.success) {
         const mappedOrders = mapTiendanubeDataToUnified(customersRes.data, ordersRes.data);
         const newUnified = unifyClients([], mappedOrders);
         
+        setRawOrders(mappedOrders);
         setUnifiedClients(newUnified);
         setConnectionStatus('connected');
+
+        if (productsRes.success) {
+          setTiendanubeProducts(productsRes.data);
+          await saveToCache('tiendanube_products', productsRes.data);
+        }
         
         const syncDate = new Date();
         setLastSync(syncDate);
@@ -254,6 +310,7 @@ export default function App() {
       console.error('Fetch real data failed:', err);
       if (unifiedClients.length === 0) {
         const initialUnified = unifyClients([], mockTiendanubeOrders);
+        setRawOrders(mockTiendanubeOrders);
         setUnifiedClients(initialUnified);
       }
       setConnectionStatus('disconnected');
@@ -272,18 +329,25 @@ export default function App() {
         return;
       }
 
-      const [customersRes, ordersRes] = await Promise.all([
+      const [customersRes, ordersRes, productsRes] = await Promise.all([
         api.fetchCustomers(),
-        api.fetchAllOrders()
+        api.fetchAllOrders(),
+        api.fetchAllProducts()
       ]);
 
       if (customersRes.success && ordersRes.success) {
         const mappedOrders = mapTiendanubeDataToUnified(customersRes.data, ordersRes.data);
         const newUnified = unifyClients([], mappedOrders);
+        setRawOrders(mappedOrders);
         setUnifiedClients(newUnified);
         setConnectionStatus('connected');
         setStoreId(sid);
         setLastSync(new Date());
+
+        if (productsRes.success) {
+          setTiendanubeProducts(productsRes.data);
+          await saveToCache('tiendanube_products', productsRes.data);
+        }
         
         await saveToCache('unified_clients', newUnified);
         await saveToCache('last_sync', new Date().toISOString());
@@ -309,7 +373,6 @@ export default function App() {
     const end = new Date(dateRange.endDate);
     end.setHours(23, 59, 59, 999);
 
-    // Deep clone and filter orders for each client
     return unifiedClients.map(client => {
       if (!client.purchases) return client;
       
@@ -319,16 +382,17 @@ export default function App() {
         return purchaseDate >= start && purchaseDate <= end;
       });
 
-      // Recalculate metrics based on filtered orders
-      const totalSpent = filteredPurchases.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+      const filteredTotal = filteredPurchases.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
       
       return {
         ...client,
         purchases: filteredPurchases,
-        purchaseCount: filteredPurchases.length,
-        totalSpent: totalSpent
+        purchaseCount: client.purchases.length,
+        totalSpent: client.totalSpent || client.purchases.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0),
+        filteredPurchaseCount: filteredPurchases.length,
+        filteredTotalSpent: filteredTotal
       };
-    }).filter(client => client.purchaseCount > 0);
+    }).filter(client => client.filteredPurchaseCount > 0);
   }, [unifiedClients, dateRange]);
 
 
@@ -361,170 +425,49 @@ export default function App() {
     );
   }
 
-  const renderView = () => {
-    switch(activeView) {
-      case 'dashboard':
-        return (
-          <>
-            {/* Hero Header */}
-            <div className="section-header">
-              <div>
-                <h1 style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  Centro de Comando
-                  <span className="live-dot" />
-                </h1>
-                <p>Panel de control operativo en tiempo real</p>
-              </div>
-              {lastSync && (
-                <div style={{ 
-                  fontSize: 12, color: 'var(--on-surface-variant)', 
-                  background: 'rgba(255,255,255,0.05)', 
-                  padding: '6px 14px', borderRadius: 20, 
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  fontWeight: 500
-                }}>
-                  <span className="live-dot" style={{ width: 6, height: 6 }} />
-                  Última sinc: {lastSync.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
-                </div>
-              )}
-            </div>
+  return (
+    <TeamProvider session={session}>
+      <AppContent
+        activeView={activeView}
+        setActiveView={setActiveView}
+        theme={theme}
+        toggleTheme={toggleTheme}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        selectedClient={selectedClient}
+        setSelectedClient={setSelectedClient}
+        historicClients={historicClients}
+        unifiedClients={unifiedClients}
+        rawOrders={rawOrders}
+        tiendanubeProducts={tiendanubeProducts}
+        connectionStatus={connectionStatus}
+        storeId={storeId}
+        lastSync={lastSync}
+        metaInsights={metaInsights}
+        ga4Insights={ga4Insights}
+        workspaceData={workspaceData}
+        isRefreshingStock={isRefreshingStock}
+        refreshStock={refreshStock}
+        isSyncing={isSyncing}
+        isFetchingInsights={isFetchingInsights}
+        session={session}
+        dateRange={dateRange}
+        setDateRange={setDateRange}
+        filteredClients={filteredClients}
+        handleConnect={handleConnect}
+      />
+    </TeamProvider>
+  );
+}
 
-            {/* Goal Banner - Full Width */}
-            <GoalTrackerBanner clients={filteredClients} dateRange={dateRange} />
-
-            {/* Bento Metrics Grid */}
-            <StatsCards clients={filteredClients} metaInsights={metaInsights} ga4Insights={ga4Insights} />
-
-            {/* Lower Bento: Funnels + Campaigns + Top Clients */}
-            <div className="bento-grid" style={{ marginTop: 16, gridAutoRows: 'minmax(200px, auto)' }}>
-              {/* Frequency Funnel - takes 5 cols */}
-              <div className="glass-card bento-span-5 bento-row-2" style={{ minHeight: 400, padding: 0, overflow: 'hidden' }}>
-                <FrequencyFunnel clients={filteredClients} onSelectClient={setSelectedClient} />
-              </div>
-              
-              {/* Active Campaigns Widget - takes 4 cols */}
-              <div className="glass-card bento-span-4 bento-row-2" style={{ minHeight: 400, padding: 0, overflow: 'hidden' }}>
-                <ActiveCampaignsWidget workspace={workspaceData} onRefreshMeta={() => { if (workspaceData?.meta_ad_account_id && workspaceData?.meta_access_token) { const m = new (MetaAPI)(workspaceData.meta_ad_account_id, workspaceData.meta_access_token); m.getInsights(dateRange).then(r => { if (r) setMetaInsights(r); }); }}} />
-              </div>
-              
-              {/* Top Clients - takes 3 cols */}
-              <div className="glass-card bento-span-3 bento-row-2" style={{ padding: 0, display: 'flex', flexDirection: 'column', minHeight: 400 }}>
-                <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <h3 style={{ fontSize: 15, fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--on-surface)' }}>
-                    <Award size={18} color="#f59e0b" /> Top Clientes
-                  </h3>
-                </div>
-                  {filteredClients.slice(0, 8).map((client, i) => (
-                    <div 
-                      key={client.id} 
-                      className="top-client-item"
-                      onClick={() => setSelectedClient(client)}
-                      style={{ 
-                        padding: '14px 24px', 
-                        borderBottom: '1px solid rgba(255,255,255,0.04)', 
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 12,
-                      }}
-                    >
-                      <div style={{
-                        width: 32, height: 32, borderRadius: 8,
-                        background: `hsl(${(i * 47) % 360}, 60%, 25%)`,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 13, fontWeight: 700, color: '#fff',
-                        flexShrink: 0,
-                      }}>
-                        {client.name?.charAt(0)?.toUpperCase()}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--on-surface)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{client.name}</div>
-                        <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
-                          <span>{client.ordersCount || client.purchaseCount} compras</span>
-                          <span style={{ color: '#10b981', fontWeight: 600 }}>
-                            {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(client.totalSpent)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Geo Funnel - full width bottom */}
-              <div className="glass-card bento-span-12" style={{ padding: 0, overflow: 'hidden' }}>
-                <GeoFunnel clients={filteredClients} onSelectClient={setSelectedClient} />
-              </div>
-          </>
-        );
-      case 'calendario':
-        return (
-          <>
-            <div className="section-header">
-              <div>
-                <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 12, color: 'var(--on-surface)' }}>
-                  Calendario de Eventos
-                </h1>
-                <p style={{ margin: '4px 0 0', color: 'var(--on-surface-variant)', fontSize: 14 }}>
-                  Planificación de campañas, promociones y actividades
-                </p>
-              </div>
-            </div>
-            <EventCalendar />
-          </>
-        );
-      case 'clientes':
-        return (
-          <>
-            <div style={{ marginBottom: 24 }}>
-              <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: 'var(--on-surface)' }}>Base Maestra de Clientes</h1>
-              <p style={{ fontSize: 13, color: 'var(--on-surface-variant)', margin: '4px 0 0' }}>Historial cruzado unificado automáticamente.</p>
-            </div>
-            <div className="glass-card" style={{ padding: '0' }}>
-              <MasterTable clients={filteredClients} onSelectClient={setSelectedClient} />
-            </div>
-          </>
-        );
-      case 'segmentos':
-        return (
-          <>
-            <div style={{ marginBottom: 24 }}>
-              <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: 'var(--on-surface)' }}>Árbol de Gestión</h1>
-              <p style={{ fontSize: 13, color: 'var(--on-surface-variant)', margin: '4px 0 0' }}>Clasificación automática del funnel de ventas.</p>
-            </div>
-            <ClassificationTree clients={filteredClients} />
-          </>
-        );
-      case 'analitica':
-        return (
-          <>
-            <div style={{ marginBottom: 24 }}>
-              <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: 'var(--on-surface)' }}>El Cerebro (Analítica)</h1>
-              <p style={{ fontSize: 13, color: 'var(--on-surface-variant)', margin: '4px 0 0' }}>Inteligencia de negocio en tiempo real.</p>
-            </div>
-            <AnalyticsPanel clients={filteredClients} />
-          </>
-        );
-      case 'marketing':
-        return <MarketingReport rawClients={unifiedClients} dateRange={dateRange} />;
-      case 'meta_ads':
-        return <MetaAdsPanel metaInsights={metaInsights} workspace={workspaceData} dateRange={dateRange} onRefreshMeta={() => { if (workspaceData?.meta_ad_account_id && workspaceData?.meta_access_token) { const m = new MetaAPI(workspaceData.meta_ad_account_id, workspaceData.meta_access_token); m.getInsights(dateRange).then(r => { if (r) setMetaInsights(r); }); }}} />;
-      case 'ga4':
-        return <GA4Panel ga4Insights={ga4Insights} />;
-      case 'pipeline':
-        return <CampaignPipeline session={session} unifiedClients={filteredClients} />;
-      case 'pqr':
-        return <PQRPanel session={session} />;
-      case 'configuracion':
-        return <SettingsPanel onConnect={handleConnect} connectionStatus={connectionStatus} session={session} />;
-      case 'exportar':
-        return <ExportPanel clients={filteredClients} />;
-      default:
-        return <div>Vista no encontrada</div>;
-    }
-  };
+function AppContent({
+  activeView, setActiveView, theme, toggleTheme, sidebarOpen, setSidebarOpen,
+  selectedClient, setSelectedClient, historicClients, unifiedClients, rawOrders,
+  tiendanubeProducts, connectionStatus, storeId, lastSync, metaInsights, ga4Insights,
+  workspaceData, isRefreshingStock, refreshStock, isSyncing, isFetchingInsights,
+  session, dateRange, setDateRange, filteredClients, handleConnect,
+}) {
+  const { currentMember, ROLE_LABELS, ROLE_COLORS, ROLE_ICONS } = useTeam();
 
   return (
     <div className="app-layout">
@@ -534,25 +477,271 @@ export default function App() {
         onNavigate={(view) => { setActiveView(view); setSidebarOpen(false); }} 
         theme={theme}
         toggleTheme={toggleTheme}
+        currentMember={currentMember}
+        ROLE_LABELS={ROLE_LABELS}
+        ROLE_COLORS={ROLE_COLORS}
+        ROLE_ICONS={ROLE_ICONS}
       />
       
       <main className="main-content">
-        {!['configuracion', 'exportar', 'pqr'].includes(activeView) && (
-          <GlobalDatePicker dateRange={dateRange} setDateRange={setDateRange} />
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+          {!['configuracion', 'exportar', 'pqr', 'inventario', 'taller', 'ventas_view', 'equipo', 'actividad', 'rendimiento'].includes(activeView) && (
+            <div style={{ flex: 1 }}>
+              <GlobalDatePicker dateRange={dateRange} setDateRange={setDateRange} />
+            </div>
+          )}
+          <TeamMemberBadge />
+          <NotificationCenter />
+        </div>
         
         {isFetchingInsights ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
             <div style={{ color: 'var(--primary)', fontWeight: 'bold' }}>Sincronizando datos del periodo...</div>
           </div>
         ) : (
-          renderView()
+          <div key={activeView} className="view-enter">
+            <AppViewRenderer
+              activeView={activeView}
+              filteredClients={filteredClients}
+              tiendanubeProducts={tiendanubeProducts}
+              rawOrders={rawOrders}
+              session={session}
+              storeId={storeId}
+              workspaceData={workspaceData}
+              isRefreshingStock={isRefreshingStock}
+              refreshStock={refreshStock}
+              metaInsights={metaInsights}
+              ga4Insights={ga4Insights}
+              connectionStatus={connectionStatus}
+              lastSync={lastSync}
+              handleConnect={handleConnect}
+              dateRange={dateRange}
+              historicClients={historicClients}
+              unifiedClients={unifiedClients}
+              setSelectedClient={setSelectedClient}
+            />
+          </div>
         )}
       </main>
 
       {selectedClient && (
-        <ClientDetailModal client={selectedClient} onClose={() => setSelectedClient(null)} />
+        <ClientDetailModal client={selectedClient} allClients={unifiedClients} onClose={() => setSelectedClient(null)} />
       )}
     </div>
   );
+}
+
+function AppViewRenderer({
+  activeView, filteredClients, tiendanubeProducts, rawOrders, session, storeId,
+  workspaceData, isRefreshingStock, refreshStock, metaInsights, ga4Insights,
+  connectionStatus, lastSync, handleConnect, dateRange, historicClients,
+  unifiedClients, setSelectedClient,
+}) {
+  switch(activeView) {
+    case 'dashboard':
+      return (
+        <>
+          <div className="section-header">
+            <div>
+              <h1 style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                Centro de Comando
+                <span className="live-dot" />
+              </h1>
+              <p>Panel de control operativo en tiempo real</p>
+            </div>
+            {lastSync && (
+              <div style={{ 
+                fontSize: 12, color: 'var(--on-surface-variant)', 
+                background: 'rgba(255,255,255,0.05)', 
+                padding: '6px 14px', borderRadius: 20, 
+                border: '1px solid rgba(255,255,255,0.08)',
+                display: 'flex', alignItems: 'center', gap: 6,
+                fontWeight: 500
+              }}>
+                <span className="live-dot" style={{ width: 6, height: 6 }} />
+                Última sinc: {lastSync.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+              </div>
+            )}
+          </div>
+          <GoalTrackerBanner clients={filteredClients} dateRange={dateRange} />
+          <StatsCards clients={filteredClients} metaInsights={metaInsights} ga4Insights={ga4Insights} />
+          <div className="bento-grid" style={{ marginTop: 16, gridTemplateColumns: 'repeat(12, 1fr)' }}>
+            <div className="bento-span-8" style={{ display: 'flex', flexDirection: 'column' }}>
+              <CohortRetentionChart clients={filteredClients} />
+            </div>
+            <div className="bento-span-4" style={{ display: 'flex', flexDirection: 'column' }}>
+              <StockAlertWidget
+                clients={filteredClients}
+                products={tiendanubeProducts}
+                onRefresh={refreshStock}
+                isRefreshing={isRefreshingStock}
+                lastSync={lastSync}
+                isConnected={connectionStatus === 'connected' || tiendanubeProducts.length > 0}
+              />
+            </div>
+          </div>
+          <div className="bento-grid" style={{ marginTop: 16, gridTemplateColumns: 'repeat(12, 1fr)' }}>
+            <div className="bento-span-8" style={{ display: 'flex', flexDirection: 'column' }}>
+              <AIInsightsWidget clients={filteredClients} storeId={storeId} />
+            </div>
+            <div className="bento-span-4" style={{ display: 'flex', flexDirection: 'column' }}>
+              <ChurnRadar clients={filteredClients} />
+            </div>
+          </div>
+          <div className="bento-grid" style={{ marginTop: 16, gridAutoRows: 'minmax(400px, auto)' }}>
+            <div className="glass-card bento-span-7" style={{ padding: 0, overflow: 'hidden' }}>
+              <FrequencyFunnel clients={filteredClients} onSelectClient={setSelectedClient} />
+            </div>
+            <div className="glass-card bento-span-5" style={{ padding: 0, overflow: 'hidden' }}>
+              <ActiveCampaignsWidget workspace={workspaceData} onRefreshMeta={() => { if (workspaceData?.meta_ad_account_id && workspaceData?.meta_access_token) { const m = new MetaAPI(workspaceData.meta_ad_account_id, workspaceData.meta_access_token); m.getInsights(dateRange).then(r => { if (r) metaInsights && metaInsights(r); }); }}} />
+            </div>
+          </div>
+          <div className="bento-grid" style={{ marginTop: 16, gridAutoRows: 'minmax(400px, auto)' }}>
+            <div className="bento-span-7">
+              <RecentActivityFeed clients={filteredClients} rawOrders={rawOrders} />
+            </div>
+            <div className="glass-card bento-span-5" style={{ padding: 0, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <h3 style={{ fontSize: 15, fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--on-surface)' }}>
+                  <Award size={18} color="#f59e0b" /> Top Clientes
+                </h3>
+              </div>
+              <div style={{ flex: 1, overflowY: 'auto' }}>
+                {filteredClients.slice(0, 8).map((client, i) => (
+                  <div 
+                    key={client.id} 
+                    className="top-client-item"
+                    onClick={() => setSelectedClient(client)}
+                    style={{ padding: '14px 24px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', transition: 'all 0.2s ease', display: 'flex', alignItems: 'center', gap: 12 }}
+                  >
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: `hsl(${(i * 47) % 360}, 60%, 25%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+                      {client.name?.charAt(0)?.toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--on-surface)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{client.name}</div>
+                      <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
+                        <span>{client.ordersCount || client.purchaseCount} compras</span>
+                        <span style={{ color: '#10b981', fontWeight: 600 }}>
+                          {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(client.totalSpent)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="glass-card bento-span-12" style={{ padding: 0, overflow: 'hidden', marginTop: 16 }}>
+            <GeoFunnel clients={filteredClients} onSelectClient={setSelectedClient} />
+          </div>
+        </>
+      );
+    case 'calendario':
+      return (
+        <>
+          <div className="section-header">
+            <div>
+              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 12, color: 'var(--on-surface)' }}>
+                Calendario de Eventos
+              </h1>
+              <p style={{ margin: '4px 0 0', color: 'var(--on-surface-variant)', fontSize: 14 }}>
+                Planificación de campañas, promociones y actividades
+              </p>
+            </div>
+          </div>
+          <EventCalendar />
+        </>
+      );
+    case 'clientes':
+      return (
+        <>
+          <div style={{ marginBottom: 24 }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: 'var(--on-surface)' }}>Base Maestra de Clientes</h1>
+            <p style={{ fontSize: 13, color: 'var(--on-surface-variant)', margin: '4px 0 0' }}>Historial cruzado unificado automáticamente.</p>
+          </div>
+          <div className="glass-card" style={{ padding: '0' }}>
+            <MasterTable clients={filteredClients} onSelectClient={setSelectedClient} />
+          </div>
+        </>
+      );
+    case 'segmentos':
+      return (
+        <>
+          <div style={{ marginBottom: 24 }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: 'var(--on-surface)' }}>Árbol de Gestión</h1>
+            <p style={{ fontSize: 13, color: 'var(--on-surface-variant)', margin: '4px 0 0' }}>Clasificación automática del funnel de ventas.</p>
+          </div>
+          <ClassificationTree clients={filteredClients} />
+        </>
+      );
+    case 'analitica':
+      return (
+        <>
+          <div style={{ marginBottom: 24 }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: 'var(--on-surface)' }}>El Cerebro (Analítica)</h1>
+            <p style={{ fontSize: 13, color: 'var(--on-surface-variant)', margin: '4px 0 0' }}>Inteligencia de negocio en tiempo real.</p>
+          </div>
+          <AnalyticsPanel clients={filteredClients} />
+        </>
+      );
+    case 'marketing':
+      return <MarketingReport rawClients={unifiedClients} dateRange={dateRange} />;
+    case 'meta_ads':
+      return <MetaAdsPanel metaInsights={metaInsights} workspace={workspaceData} dateRange={dateRange} onRefreshMeta={() => { if (workspaceData?.meta_ad_account_id && workspaceData?.meta_access_token) { const m = new MetaAPI(workspaceData.meta_ad_account_id, workspaceData.meta_access_token); m.getInsights(dateRange).then(r => { if (r) metaInsights && metaInsights(r); }); }}} />;
+    case 'ga4':
+      return <GA4Panel ga4Insights={ga4Insights} />;
+    case 'pipeline':
+      return <CampaignPipeline session={session} unifiedClients={filteredClients} />;
+    case 'inventario':
+      return (
+        <InventoryPage
+          products={tiendanubeProducts}
+          onRefresh={refreshStock}
+          isRefreshing={isRefreshingStock}
+          lastSync={lastSync}
+          isConnected={connectionStatus === 'connected' || tiendanubeProducts.length > 0}
+          onUpdateStock={async (productId, variantId, newStock) => {
+            if (!storeId || !session) return;
+            const { data } = await supabase.from('workspaces').select('tiendanube_access_token').eq('user_id', session.user.id).single();
+            if (!data?.tiendanube_access_token) return;
+            const api = new TiendanubeAPI(storeId, data.tiendanube_access_token);
+            await api.updateVariantStock(productId, variantId, newStock);
+          }}
+        />
+      );
+    case 'pqr':
+      return <PQRPanel session={session} rawOrders={rawOrders} n8nWebhookUrl={workspaceData?.n8n_webhook_url} />;
+    case 'taller':
+      return (
+        <WorkshopPage
+          products={tiendanubeProducts}
+          onRefresh={refreshStock}
+          isRefreshing={isRefreshingStock}
+          storeId={storeId}
+          session={session}
+          onUpdateStock={async (productId, variantId, newStock) => {
+            if (!storeId || !session) return;
+            const { data } = await supabase.from('workspaces').select('tiendanube_access_token').eq('user_id', session.user.id).single();
+            if (!data?.tiendanube_access_token) return;
+            const api = new TiendanubeAPI(storeId, data.tiendanube_access_token);
+            await api.updateVariantStock(productId, variantId, newStock);
+          }}
+          onRefreshStock={refreshStock}
+        />
+      );
+    case 'ventas_view':
+      return <SalesView products={tiendanubeProducts} clients={filteredClients} />;
+    case 'equipo':
+      return <TeamManager />;
+    case 'actividad':
+      return <ActivityLog />;
+    case 'rendimiento':
+      return <ProductivityDashboard />;
+    case 'configuracion':
+      return <SettingsPanel onConnect={handleConnect} connectionStatus={connectionStatus} session={session} />;
+    case 'exportar':
+      return <ExportPanel clients={filteredClients} n8nWebhookUrl={workspaceData?.n8n_webhook_url} />;
+    default:
+      return <div>Vista no encontrada</div>;
+  }
 }

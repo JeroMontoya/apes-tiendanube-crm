@@ -15,6 +15,9 @@ export default function SettingsPanel({ onConnect, connectionStatus, session }) 
   const [ga4PropertyId, setGa4PropertyId] = useState('');
   const [ga4Credentials, setGa4Credentials] = useState('');
 
+  // n8n
+  const [n8nWebhookUrl, setN8nWebhookUrl] = useState('');
+
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -39,6 +42,7 @@ export default function SettingsPanel({ onConnect, connectionStatus, session }) 
         setMetaAccessToken(data.meta_access_token || '');
         setGa4PropertyId(data.ga4_property_id || '');
         setGa4Credentials(data.ga4_credentials_json ? JSON.stringify(data.ga4_credentials_json, null, 2) : '');
+        setN8nWebhookUrl(data.n8n_webhook_url || '');
       }
     } catch (err) {
       console.warn('No workspace found yet, user will create one on save.');
@@ -72,6 +76,7 @@ export default function SettingsPanel({ onConnect, connectionStatus, session }) 
         meta_access_token: metaAccessToken.trim() || null,
         ga4_property_id: ga4PropertyId.trim() || null,
         ga4_credentials_json: ga4Json,
+        n8n_webhook_url: n8nWebhookUrl.trim() || null,
       };
 
       const { error } = await supabase
@@ -292,6 +297,37 @@ export default function SettingsPanel({ onConnect, connectionStatus, session }) 
               3. Agrega el email de la cuenta como "Viewer" en GA4 → Admin → Property Access Management
             </div>
           </div>
+
+          {/* ── n8n Webhook Section ── */}
+          <div style={sectionStyle}>
+            <div style={sectionHeaderStyle}>
+              <h3 style={{ margin: 0 }}>
+                <span>⚡ Automatizaciones n8n</span>
+              </h3>
+              <span className="badge" style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444' }}>
+                Webhooks
+              </span>
+            </div>
+
+            <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: 20 }}>
+              Conecta APES CRM con tus flujos de n8n para disparar secuencias de Email, Slack y más.
+            </p>
+
+            <div className="form-group">
+              <label>URL del Webhook (Catch Hook)</label>
+              <input 
+                type="url" 
+                placeholder="Ej: https://n8n.tu-dominio.com/webhook/..." 
+                value={n8nWebhookUrl}
+                onChange={(e) => setN8nWebhookUrl(e.target.value)}
+              />
+            </div>
+            <div className="tip-box" style={{ background: 'rgba(239, 68, 68, 0.05)', borderColor: 'rgba(239, 68, 68, 0.2)' }}>
+              <strong>¿Cómo funciona?</strong><br/>
+              Pega aquí el Catch Webhook de n8n. Cuando exportes un segmento o cambies el estado de un ticket PQR, APES CRM enviará un POST a esta URL con los datos (payload).
+            </div>
+          </div>
+
         </div>
 
         {/* ── Save Button ── */}

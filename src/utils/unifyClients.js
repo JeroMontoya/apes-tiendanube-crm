@@ -111,6 +111,63 @@ function resolveSegment(count) {
   return 'vip';
 }
 
+function getDaysSinceLastPurchase(client) {
+  if (!client.purchases || client.purchases.length === 0) return 999;
+  const sorted = [...client.purchases].sort((a,b) => new Date(b.date) - new Date(a.date));
+  const lastDate = new Date(sorted[0].date);
+  return Math.floor((Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function hasLimitedEditionPurchase(client) {
+  if (!client.purchases) return false;
+  return client.purchases.some(p => p.product?.toLowerCase().includes('limitada') || p.product?.toLowerCase().includes('edicion') || p.product?.toLowerCase().includes('bioma'));
+}
+
+function hasMysteryBoxPurchase(client) {
+  if (!client.purchases) return false;
+  return client.purchases.some(p => p.product?.toLowerCase().includes('mystery') || p.product?.toLowerCase().includes('caja sorpresa'));
+}
+
+function getCouponUsageRate(client) {
+  if (!client.purchases || client.purchases.length === 0) return 0;
+  const withCoupon = client.purchases.filter(p => p.hasDiscount || p.coupon).length;
+  return withCoupon / client.purchases.length;
+}
+
+function resolveSegmentTags(client) {
+  const tags = [];
+  const pc = client.purchaseCount || 0;
+  const ts = client.totalSpent || 0;
+  const daysSinceLast = getDaysSinceLastPurchase(client);
+  
+  // Frecuencia
+  if (pc === 0) tags.push('sin_compra');
+  else if (pc === 1) tags.push('nuevo');
+  else if (pc >= 2 && pc <= 3) tags.push('repetidor');
+  else if (pc >= 4) tags.push('fiel');
+  
+  // Valor
+  if (ts >= 500000) tags.push('alto_valor');    // > 500K COP
+  else if (ts >= 200000) tags.push('medio_valor');
+  
+  // VIP: compra ediciones limitadas o mystery boxes
+  if (hasLimitedEditionPurchase(client)) tags.push('vip_coleccion');
+  if (hasMysteryBoxPurchase(client)) tags.push('mystery_box');
+  
+  // Riesgo de churn
+  if (pc >= 2 && daysSinceLast > 90) tags.push('riesgo_churn');
+  if (pc >= 2 && daysSinceLast > 180) tags.push('dormido');
+  
+  // Recencia
+  if (daysSinceLast <= 30) tags.push('activo_reciente');
+  
+  // Engagement con descuentos
+  const couponRate = getCouponUsageRate(client);
+  if (couponRate > 0.5) tags.push('sensible_precio');
+  
+  return tags;
+}
+
 /**
  * Generates a deterministic ID for new profiles created from
  * Tiendanube orders that do not match any historic record.
@@ -246,6 +303,7 @@ function mergeOrderIntoProfile(profile, order) {
 
   // Recalculate segment
   profile.segment = resolveSegment(profile.purchaseCount);
+  profile.segmentTags = resolveSegmentTags(profile);
 }
 
 /**
@@ -267,7 +325,7 @@ function profileFromOrder(order) {
   const trueCity = order.shipping_address?.city || order.billing_address?.city || '';
   const trueProvince = order.shipping_address?.province || order.billing_address?.province || order.shipping_address?.locality || '';
 
-  return {
+  const newProfile = {
     id: generateProfileId(order.id),
     name: trueName,
     email: trueEmail,
@@ -281,6 +339,9 @@ function profileFromOrder(order) {
     source: 'tiendanube',
     segment: resolveSegment(purchaseCount),
   };
+  
+  newProfile.segmentTags = resolveSegmentTags(newProfile);
+  return newProfile;
 }
 
 /**
@@ -309,6 +370,7 @@ export function unifyClients(historicClients = [], tiendanubeOrders = []) {
       source: 'historic',
       segment: resolveSegment(client.purchaseCount || 0),
     };
+    profile.segmentTags = resolveSegmentTags(profile);
 
     profilesById.set(profile.id, profile);
 
