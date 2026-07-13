@@ -346,6 +346,13 @@ export default function App() {
           saveToCache('tiendanube_products', snapshot.data.products || []);
           saveToCache('last_sync', snapshot.lastSync);
 
+          // If cache is >5 min old, trigger background refresh
+          const cacheAge = Date.now() - new Date(snapshot.lastSync).getTime();
+          if (cacheAge > 5 * 60 * 1000) {
+            console.log(`[Snapshot] Cache is ${Math.round(cacheAge / 60000)}min old, triggering background refresh`);
+            fetch('/api/cron/sync').catch(() => {});
+          }
+
           return; // Done! No need for live API calls
         }
       } catch (snapErr) {
