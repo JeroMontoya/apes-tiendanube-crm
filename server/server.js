@@ -657,6 +657,336 @@ app.post('/api/seed/credentials', express.json(), async (req, res) => {
 
 // === END REAL-TIME SYNC ===
 
+// === SERVER-SIDE DATA CACHE (CRON) ===
+// Cron job fetches all data server-side, clients read from cache instantly
+
+const TN_RATE_LIMIT_MS = 550;
+let tnLastReq = 0;
+async function tnFetch(path, token) {
+  const now = Date.now();
+  const wait = TN_RATE_LIMIT_MS - (now - tnLastReq);
+  if (wait > 0) await new Promise(r => setTimeout(r, wait));
+  tnLastReq = Date.now();
+  const res = await fetch(`https://api.tiendanube.com/v1${path}`, {
+    headers: { 'Authentication': `bearer ${token}`, 'User-Agent': 'APES CRM (contact@apesdigital.com)', 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) throw new Error(`TN ${path}: ${res.status}`);
+  const link = res.headers.get('link') || '';
+  const data = await res.json();
+  const nextMatch = link.match(/[?&]page=(\d+)>;\s*rel="next"/);
+  return { data, nextPage: nextMatch ? parseInt(nextMatch[1]) : null };
+}
+
+async function tnFetchAll(path, token) {
+  let page = 1, all = [];
+  while (true) {
+    const qs = path.includes('?') ? '&' : '?';
+    const { data, nextPage } = await tnFetch(`${path}${qs}page=${page}`, token);
+    all = all.concat(data);
+    if (!nextPage || nextPage <= page) break;
+    page = nextPage;
+  }
+  return all;
+}
+
+async function ga4GetAccessToken(sa) {
+  const { SignJWT, importPKCS8 } = await import('jose');
+  const cleaned = sa.private_key.replace(/\\n/g, '\n').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+  const pk = await importPKCS8(cleaned, 'RS256');
+  const jwt = await new SignJWT({ iss: sa.client_email, scope: 'https://www.googleapis.com/auth/analytics.readonly', aud: 'https://oauth2.googleapis.com/token' })
+    .setProtectedHeader({ alg: 'RS256', typ: 'JWT' }).setIssuedAt().setExpirationTime('1h').sign(pk);
+  const r = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt }) });
+  if (!r.ok) throw new Error('GA4 token failed');
+  const j = await r.json();
+  return j.access_token;
+}
+
+async function ga4GetInsights(sa, propId, startDate, endDate) {
+  if (!sa || !propId) return null;
+  try {
+    const token = await ga4GetAccessToken(sa);
+    const r = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propId}:runReport`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        dateRanges: [{ startDate, endDate }],
+        metrics: [{ name: 'totalUsers' }, { name: 'sessions' }, { name: 'screenPageViews' }, { name: 'conversions' }, { name: 'totalRevenue' }],
+        dimensions: [{ name: 'date' }],
+      }),
+    });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch (e) { console.warn('[Cron GA4]', e.message); return null; }
+}
+
+async function mcGetAccessToken(sa) {
+  const { SignJWT, importPKCS8 } = await import('jose');
+  const cleaned = sa.private_key.replace(/\\n/g, '\n').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+  const pk = await importPKCS8(cleaned, 'RS256');
+  const jwt = await new SignJWT({ iss: sa.client_email, scope: 'https://www.googleapis.com/auth/content', aud: 'https://oauth2.googleapis.com/token' })
+    .setProtectedHeader({ alg: 'RS256', typ: 'JWT' }).setIssuedAt().setExpirationTime('1h').sign(pk);
+  const r = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt }) });
+  if (!r.ok) throw new Error('MC token failed');
+  return (await r.json()).access_token;
+}
+
+async function mcFetchProducts(sa, merchantId) {
+  if (!sa || !merchantId) return [];
+  try {
+    const token = await mcGetAccessToken(sa);
+    let all = [], pageToken;
+    do {
+      const url = `https://shoppingcontent.googleapis.com/content/v2.1/${merchantId}/products?maxResults=50${pageToken ? '&pageToken=' + pageToken : ''}`;
+      const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      if (!r.ok) return all;
+      const j = await r.json();
+      all = all.concat(j.resources || []);
+      pageToken = j.nextPageToken;
+    } while (pageToken);
+    return all;
+  } catch (e) { console.warn('[Cron MC]', e.message); return []; }
+}
+
+async function gscFetch(siteUrl, sa, startDate, endDate) {
+  if (!sa || !siteUrl) return { queries: [], pages: [], performance: null };
+  try {
+    const token = await ga4GetAccessToken(sa); // same service account scopes
+    const siteEnc = encodeURIComponent(siteUrl);
+    const body = JSON.stringify({ startDate, endDate, dimensions: ['query'], rowLimit: 50 });
+    const [qr, pr] = await Promise.all([
+      fetch(`https://www.googleapis.com/webmasters/v3/sites/${siteEnc}/searchAnalytics/query`, { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body }),
+      fetch(`https://www.googleapis.com/webmasters/v3/sites/${siteEnc}/searchAnalytics/query`, { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ startDate, endDate, dimensions: ['page'], rowLimit: 50 }) }),
+    ]);
+    const qData = qr.ok ? await qr.json() : { rows: [] };
+    const pData = pr.ok ? await pr.json() : { rows: [] };
+    return {
+      queries: (qData.rows || []).map(r => ({ query: r.keys[0], clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position })),
+      pages: (pData.rows || []).map(r => ({ page: r.keys[0], clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position })),
+      performance: { totalClicks: (qData.rows || []).reduce((s, r) => s + r.clicks, 0), totalImpressions: (qData.rows || []).reduce((s, r) => s + r.impressions, 0) },
+    };
+  } catch (e) { console.warn('[Cron GSC]', e.message); return { queries: [], pages: [], performance: null }; }
+}
+
+function mapToUnified(orders) {
+  const clientMap = new Map();
+  for (const o of orders) {
+    const cust = o.customer || {};
+    const email = cust.email || '';
+    const phone = cust.phone || '';
+    const key = email || phone || `unknown_${cust.id || Math.random()}`;
+    if (!clientMap.has(key)) {
+      clientMap.set(key, {
+        id: cust.id || key, name: `${cust.first_name || ''} ${cust.last_name || ''}`.trim() || 'Sin nombre',
+        email, phone, city: cust.city || '', province: cust.province || '',
+        totalOrders: 0, totalSpent: 0, orders: [], firstOrder: null, lastOrder: null,
+      });
+    }
+    const c = clientMap.get(key);
+    c.totalOrders++;
+    c.totalSpent += parseFloat(o.total || 0);
+    const orderDate = o.completed_at || o.created_at;
+    if (!c.firstOrder || orderDate < c.firstOrder) c.firstOrder = orderDate;
+    if (!c.lastOrder || orderDate > c.lastOrder) c.lastOrder = orderDate;
+    c.orders.push({ id: o.id, total: parseFloat(o.total || 0), date: orderDate, status: o.status });
+  }
+  return Array.from(clientMap.values());
+}
+
+// POST /api/cron/sync — Vercel cron triggers this every 5 min
+app.get('/api/cron/sync', async (req, res) => {
+  // Vercel cron sends CRON_SECRET header
+  const authHeader = req.headers.authorization;
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    // Also allow from service_role
+    const svcKey = req.headers['x-supabase-service-role'];
+    if (!svcKey) return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const startTime = Date.now();
+  const errors = [];
+
+  const supabaseAdmin = createClient(
+    process.env.VITE_SUPABASE_URL || '',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''
+  );
+
+  try {
+    // 1. Load credentials from system_config
+    const { data: config, error: cfgErr } = await supabaseAdmin.from('system_config').select('*').eq('id', 'main').single();
+    if (cfgErr || !config) throw new Error('No system_config found');
+
+    const storeId = config.tiendanube_store_id;
+    const token = config.tiendanube_access_token;
+    if (!storeId || !token) throw new Error('No TN credentials');
+
+    // 2. Fetch TiendaNueve data in parallel (respecting rate limit via tnFetch)
+    console.log('[Cron] Fetching TiendaNueve data...');
+    let customers = [], orders = [], products = [];
+    try {
+      customers = await tnFetchAll(`/store/${storeId}/customers`, token);
+    } catch (e) { errors.push({ api: 'tn_customers', msg: e.message }); }
+
+    try {
+      orders = await tnFetchAll(`/store/${storeId}/orders`, token);
+    } catch (e) { errors.push({ api: 'tn_orders', msg: e.message }); }
+
+    try {
+      products = await tnFetchAll(`/store/${storeId}/products`, token);
+    } catch (e) { errors.push({ api: 'tn_products', msg: e.message }); }
+
+    console.log(`[Cron] TN: ${customers.length} customers, ${orders.length} orders, ${products.length} products`);
+
+    // 3. Map to unified format
+    const unifiedClients = mapToUnified(orders);
+    const rawOrders = orders.map(o => ({
+      id: o.id, total: parseFloat(o.total || 0), date: o.completed_at || o.created_at,
+      status: o.status, customer_id: o.customer?.id,
+    }));
+
+    // 4. Date range for analytics (last 30 days)
+    const end = new Date();
+    const start = new Date(end);
+    start.setDate(start.getDate() - 30);
+    const sd = start.toISOString().split('T')[0];
+    const ed = end.toISOString().split('T')[0];
+
+    // 5. Fetch external APIs in parallel
+    console.log('[Cron] Fetching external APIs...');
+    let ga4 = null, meta = null, mc = [], gsc = { queries: [], pages: [], performance: null };
+
+    const sa = config.ga4_credentials_json || config.merchant_center_credentials_json;
+    const [ga4Res, mcRes, gscRes] = await Promise.allSettled([
+      ga4GetInsights(sa, config.ga4_property_id, sd, ed),
+      mcFetchProducts(sa, config.merchant_center_merchant_id),
+      gscFetch(config.search_console_site_url, sa, sd, ed),
+    ]);
+    if (ga4Res.status === 'fulfilled') ga4 = ga4Res.value; else errors.push({ api: 'ga4', msg: ga4Res.reason?.message });
+    if (mcRes.status === 'fulfilled') mc = mcRes.value; else errors.push({ api: 'mc', msg: mcRes.reason?.message });
+    if (gscRes.status === 'fulfilled') gsc = gscRes.value; else errors.push({ api: 'gsc', msg: gscRes.reason?.message });
+
+    // Meta (simple: just use token directly)
+    if (config.meta_ad_account_id && config.meta_access_token) {
+      try {
+        const metaUrl = `https://graph.facebook.com/v21.0/act_${config.meta_ad_account_id}/insights?fields=impressions,clicks,spend,actions,cost_per_action_type&date_preset=max_30d&access_token=${config.meta_access_token}`;
+        const mr = await fetch(metaUrl);
+        if (mr.ok) { const md = await mr.json(); meta = md.data?.[0] || null; }
+      } catch (e) { errors.push({ api: 'meta', msg: e.message }); }
+    }
+
+    // 6. Save to server_cache
+    const duration = Date.now() - startTime;
+    console.log(`[Cron] Sync completed in ${duration}ms`);
+
+    const { error: upsertErr } = await supabaseAdmin.from('server_cache').upsert({
+      id: 'main',
+      tiendanube_products: products,
+      tiendanube_orders: rawOrders,
+      tiendanube_customers: customers,
+      unified_clients: unifiedClients,
+      raw_orders: rawOrders,
+      ga4_insights: ga4,
+      meta_insights: meta,
+      mc_products: mc,
+      gsc_queries: gsc.queries,
+      gsc_pages: gsc.pages,
+      gsc_performance: gsc.performance,
+      sync_status: errors.length > 0 ? 'partial' : 'ok',
+      sync_duration_ms: duration,
+      error_log: errors,
+      last_sync: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'id' });
+
+    if (upsertErr) console.error('[Cron] Upsert error:', upsertErr.message);
+
+    res.json({ status: 'ok', duration, customers: customers.length, orders: orders.length, products: products.length, errors });
+  } catch (err) {
+    console.error('[Cron] Fatal:', err.message);
+    const duration = Date.now() - startTime;
+    try {
+      await supabaseAdmin.from('server_cache').upsert({
+        id: 'main', sync_status: 'error', sync_duration_ms: duration,
+        error_log: [{ api: 'cron', msg: err.message }],
+        last_sync: new Date().toISOString(), updated_at: new Date().toISOString(),
+      }, { onConflict: 'id' });
+    } catch (_) {}
+    res.status(500).json({ error: err.message, duration });
+  }
+});
+
+// POST /api/cron/sync (POST also allowed for manual triggers)
+app.post('/api/cron/sync', async (req, res) => {
+  // Redirect to GET handler logic
+  req.method = 'GET';
+  app.handle(req, res);
+});
+
+// GET /api/data/snapshot — clients read this for instant data
+app.get('/api/data/snapshot', async (req, res) => {
+  const supabaseAdmin = createClient(
+    process.env.VITE_SUPABASE_URL || '',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''
+  );
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('server_cache')
+      .select('tiendanube_products, tiendanube_orders, tiendanube_customers, unified_clients, raw_orders, ga4_insights, meta_insights, mc_products, gsc_queries, gsc_pages, gsc_performance, ai_insights, last_sync, sync_status, sync_duration_ms, error_log')
+      .eq('id', 'main')
+      .single();
+
+    if (error || !data) {
+      return res.json({ ready: false, message: 'Cache not initialized yet. First sync pending.' });
+    }
+
+    res.json({
+      ready: data.sync_status === 'ok' || data.sync_status === 'partial',
+      lastSync: data.last_sync,
+      syncStatus: data.sync_status,
+      syncDuration: data.sync_duration_ms,
+      data: {
+        products: data.tiendanube_products || [],
+        orders: data.tiendanube_orders || [],
+        customers: data.tiendanube_customers || [],
+        unifiedClients: data.unified_clients || [],
+        rawOrders: data.raw_orders || [],
+        ga4Insights: data.ga4_insights,
+        metaInsights: data.meta_insights,
+        mcProducts: data.mc_products || [],
+        gscQueries: data.gsc_queries || [],
+        gscPages: data.gsc_pages || [],
+        gscPerformance: data.gsc_performance,
+        aiInsights: data.ai_insights,
+      },
+      errors: data.error_log || [],
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/cron/sync-manual — authenticated user triggers immediate sync
+app.post('/api/cron/sync-manual', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ error: 'No auth token' });
+
+  // Trigger the same sync logic
+  req.method = 'GET';
+  req.headers.authorization = undefined;
+  // Use internal fetch to call ourselves
+  try {
+    const protocol = req.headers['x-forwarded-proto'] || 'https';
+    const host = req.headers.host;
+    const url = `${protocol}://${host}/api/cron/sync`;
+    const r = await fetch(url);
+    const data = await r.json();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);

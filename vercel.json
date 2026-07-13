@@ -15,6 +15,14 @@
   ],
   "rewrites": [
     {
+      "source": "/api/cron/(.*)",
+      "destination": "/server/server.js"
+    },
+    {
+      "source": "/api/data/(.*)",
+      "destination": "/server/server.js"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/server/server.js"
     },
@@ -25,6 +33,12 @@
     {
       "source": "/(.*)",
       "destination": "/index.html"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/sync",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

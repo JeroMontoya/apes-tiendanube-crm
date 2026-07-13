@@ -49,7 +49,7 @@ import { TeamMemberBadge } from './components/TeamPanel';
 
 import { unifyClients } from './utils/unifyClients';
 import { TiendanubeAPI, mapTiendanubeDataToUnified } from './utils/tiendanubeAPI';
-import { loadFromCache, saveToCache, clearStaleCache } from './data/cache';
+import { loadFromCache, saveToCache } from './data/cache';
 import { MerchantCenterAPI, mapMerchantCenterToUnified } from './api/MerchantCenterAPI';
 import { SearchConsoleAPI, fetchSearchConsoleInsights } from './api/SearchConsoleAPI';
 import { AIInsightsEngine } from './api/AIInsightsEngine';
@@ -220,54 +220,32 @@ export default function App() {
     if (authLoading || !session) return;
 
     const loadData = async () => {
+      // Load cached clients and orders for instant UI restore (IndexedDB)
       try {
-        // Remove stale cached products that may contain mock data
-        await clearStaleCache();
-      } catch (_) {}
-      try {
-        const cachedProducts = await loadFromCache('tiendanube_products');
-        if (cachedProducts) setTiendanubeProducts(cachedProducts);
-        
-        // Load cached clients and orders for instant UI restore
         const [cachedClients, cachedOrders, cachedLastSync] = await Promise.all([
           loadFromCache('unified_clients'),
           loadFromCache('raw_orders'),
           loadFromCache('last_sync'),
         ]);
-        if (cachedClients) {
-          setUnifiedClients(cachedClients);
-          console.log('[App] Restored', cachedClients.length, 'clients from cache');
-        }
-        if (cachedOrders) {
-          setRawOrders(cachedOrders);
-          console.log('[App] Restored', cachedOrders.length, 'orders from cache');
-        }
-        if (cachedLastSync) {
-          setLastSync(new Date(cachedLastSync));
-        }
-      } catch (err) {
-        console.warn('No se pudo cargar datos desde caché', err);
-      }
+        if (cachedClients) { setUnifiedClients(cachedClients); console.log('[App] Restored', cachedClients.length, 'clients from cache'); }
+        if (cachedOrders) { setRawOrders(cachedOrders); console.log('[App] Restored', cachedOrders.length, 'orders from cache'); }
+        if (cachedLastSync) setLastSync(new Date(cachedLastSync));
+      } catch (err) { console.warn('No se pudo cargar datos desde caché local', err); }
 
       setIsSyncing(true);
 
-      // 1. Try shared system_config first (all team members use same credentials)
-      const { data: systemConfig } = await supabase
-        .from('system_config')
-        .select('*')
-        .eq('id', 'main')
-        .single();
+      // 1. Load credentials from Supabase (parallel)
+      const [cfgResult, wsResult] = await Promise.all([
+        supabase.from('system_config').select('*').eq('id', 'main').single(),
+        supabase.from('workspaces')
+          .select('tiendanube_store_id, tiendanube_access_token, meta_ad_account_id, meta_access_token, n8n_webhook_url, merchant_center_merchant_id, merchant_center_credentials_json, search_console_site_url, search_console_credentials_json, google_ads_customer_id, google_ads_client_id, google_ads_client_secret, google_ads_refresh_token, google_ads_developer_token, tiktok_advertiser_id, tiktok_access_token, tiktok_app_secret')
+          .eq('user_id', session.user.id)
+          .single(),
+      ]);
+      const systemConfig = cfgResult.data;
+      const userWorkspace = wsResult.data;
+      if (wsResult.error) console.warn('[Workspace] Query warning:', wsResult.error.message);
 
-      // 2. Fall back to per-user workspace for backward compatibility
-      const { data: userWorkspace, error: wsError } = await supabase
-        .from('workspaces')
-        .select('tiendanube_store_id, tiendanube_access_token, meta_ad_account_id, meta_access_token, n8n_webhook_url, merchant_center_merchant_id, merchant_center_credentials_json, search_console_site_url, search_console_credentials_json, google_ads_customer_id, google_ads_client_id, google_ads_client_secret, google_ads_refresh_token, google_ads_developer_token, tiktok_advertiser_id, tiktok_access_token, tiktok_app_secret')
-        .eq('user_id', session.user.id)
-        .single();
-
-      if (wsError) console.warn('[Workspace] Query warning:', wsError.message);
-
-      // Merge: system_config takes priority, user workspace fills gaps
       const workspace = {
         tiendanube_store_id: import.meta.env.VITE_TIENDANUBE_STORE_ID || systemConfig?.tiendanube_store_id || userWorkspace?.tiendanube_store_id,
         tiendanube_access_token: import.meta.env.VITE_TIENDANUBE_TOKEN || systemConfig?.tiendanube_access_token || userWorkspace?.tiendanube_access_token,
@@ -276,26 +254,21 @@ export default function App() {
         ga4_property_id: import.meta.env.VITE_GA4_PROPERTY_ID || systemConfig?.ga4_property_id || '',
         ga4_credentials_json: import.meta.env.VITE_GA4_CREDENTIALS || systemConfig?.ga4_credentials_json || '',
         n8n_webhook_url: import.meta.env.VITE_N8N_WEBHOOK_URL || systemConfig?.n8n_webhook_url || userWorkspace?.n8n_webhook_url,
-        // Google Merchant Center
         merchant_center_merchant_id: import.meta.env.VITE_MERCHANT_CENTER_MERCHANT_ID || systemConfig?.merchant_center_merchant_id || userWorkspace?.merchant_center_merchant_id,
         merchant_center_credentials_json: import.meta.env.VITE_MERCHANT_CENTER_CREDENTIALS || systemConfig?.merchant_center_credentials_json || userWorkspace?.merchant_center_credentials_json,
-        // Google Search Console
         search_console_site_url: import.meta.env.VITE_SEARCH_CONSOLE_SITE_URL || systemConfig?.search_console_site_url || userWorkspace?.search_console_site_url,
         search_console_credentials_json: import.meta.env.VITE_SEARCH_CONSOLE_CREDENTIALS || systemConfig?.search_console_credentials_json || userWorkspace?.search_console_credentials_json,
-        // Google Ads
         google_ads_customer_id: import.meta.env.VITE_GOOGLE_ADS_CUSTOMER_ID || systemConfig?.google_ads_customer_id || userWorkspace?.google_ads_customer_id,
         google_ads_client_id: import.meta.env.VITE_GOOGLE_ADS_CLIENT_ID || systemConfig?.google_ads_client_id || userWorkspace?.google_ads_client_id,
         google_ads_client_secret: import.meta.env.VITE_GOOGLE_ADS_CLIENT_SECRET || systemConfig?.google_ads_client_secret || userWorkspace?.google_ads_client_secret,
         google_ads_refresh_token: import.meta.env.VITE_GOOGLE_ADS_REFRESH_TOKEN || systemConfig?.google_ads_refresh_token || userWorkspace?.google_ads_refresh_token,
         google_ads_developer_token: import.meta.env.VITE_GOOGLE_ADS_DEVELOPER_TOKEN || systemConfig?.google_ads_developer_token || userWorkspace?.google_ads_developer_token,
-        // TikTok Ads
         tiktok_advertiser_id: import.meta.env.VITE_TIKTOK_ADS_ADVERTISER_ID || systemConfig?.tiktok_advertiser_id || userWorkspace?.tiktok_advertiser_id,
         tiktok_access_token: import.meta.env.VITE_TIKTOK_ADS_ACCESS_TOKEN || systemConfig?.tiktok_access_token || userWorkspace?.tiktok_access_token,
         tiktok_app_secret: import.meta.env.VITE_TIKTOK_ADS_APP_SECRET || systemConfig?.tiktok_app_secret || userWorkspace?.tiktok_app_secret,
         auto_sync_enabled: systemConfig?.auto_sync_enabled !== false,
         sync_interval_seconds: systemConfig?.sync_interval_seconds || 90,
       };
-
       setWorkspaceData(workspace);
 
       let currentStore = workspace?.tiendanube_store_id;
@@ -306,58 +279,86 @@ export default function App() {
         const installed = urlParams.get('installed');
         const storeFromUrl = urlParams.get('store') || urlParams.get('store_id');
         const tokenFromUrl = urlParams.get('token');
-        
         if (installed === 'true' && storeFromUrl && tokenFromUrl) {
-           currentStore = storeFromUrl;
-           currentToken = tokenFromUrl;
-           await supabase.from('workspaces').upsert({
-             user_id: session.user.id,
-             tiendanube_store_id: currentStore,
-             tiendanube_access_token: currentToken
-           });
-           window.history.replaceState({}, document.title, '/');
+          currentStore = storeFromUrl; currentToken = tokenFromUrl;
+          await supabase.from('workspaces').upsert({ user_id: session.user.id, tiendanube_store_id: currentStore, tiendanube_access_token: currentToken });
+          window.history.replaceState({}, document.title, '/');
         } else if (storeFromUrl) {
-           setAuthStoreId(storeFromUrl);
-           setIsSyncing(false);
-           return;
+          setAuthStoreId(storeFromUrl); setIsSyncing(false); return;
         }
       }
 
-      if (currentStore && currentToken) {
-        setStoreId(currentStore);
-        await fetchRealData(currentStore, currentToken);
-      } else {
-        // No credentials in DB — auto-seed from server endpoint
+      // Auto-seed if credentials missing
+      const needsSeed = !systemConfig?.ga4_property_id || !systemConfig?.meta_access_token || !systemConfig?.merchant_center_merchant_id || !currentToken;
+      if (needsSeed) {
         try {
           const { data: { session: authSession } } = await supabase.auth.getSession();
           if (authSession?.access_token) {
-            const seedRes = await fetch('/api/seed/credentials', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${authSession.access_token}`,
-              },
-              body: JSON.stringify({}),
-            });
+            const seedRes = await fetch('/api/seed/credentials', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authSession.access_token}` }, body: JSON.stringify({}) });
             const seedData = await seedRes.json();
             console.log('[Seed]', seedData);
             if (seedData.saved) {
-              // Reload workspace data after seeding
-              const { data: newConfig } = await supabase.from('system_config').select('*').eq('id', 'main').single();
-              const { data: newWs } = await supabase.from('workspaces').select('*').eq('user_id', session.user.id).single();
-              const merged = { ...newConfig, ...newWs };
+              const [newCfg, newWs] = await Promise.all([
+                supabase.from('system_config').select('*').eq('id', 'main').single(),
+                supabase.from('workspaces').select('*').eq('user_id', session.user.id).single(),
+              ]);
+              const merged = { ...newCfg.data, ...newWs.data };
+              setWorkspaceData(prev => ({ ...prev, ...merged }));
               if (merged?.tiendanube_store_id && merged?.tiendanube_access_token) {
-                setWorkspaceData(prev => ({ ...prev, ...merged }));
                 setStoreId(merged.tiendanube_store_id);
-                await fetchRealData(merged.tiendanube_store_id, merged.tiendanube_access_token);
+                currentStore = merged.tiendanube_store_id;
+                currentToken = merged.tiendanube_access_token;
               }
             }
           }
-        } catch (seedErr) {
-          console.warn('[Seed] Auto-seed failed:', seedErr);
-        }
+        } catch (seedErr) { console.warn('[Seed] Auto-seed failed:', seedErr); }
       }
-      // No credentials → empty state, never mock data
+
+      // ════════════════════════════════════════════════════════════════════
+      // MAIN LOAD: Read from server cache snapshot (instant!)
+      // ════════════════════════════════════════════════════════════════════
+      try {
+        const snapshotRes = await fetch('/api/data/snapshot');
+        const snapshot = await snapshotRes.json();
+
+        if (snapshot.ready && snapshot.data) {
+          console.log(`[Snapshot] Loaded from server cache. Last sync: ${snapshot.lastSync} (${snapshot.syncDuration}ms)`);
+          
+          // Set all data from cache instantly
+          if (snapshot.data.unifiedClients?.length) setUnifiedClients(snapshot.data.unifiedClients);
+          if (snapshot.data.rawOrders?.length) setRawOrders(snapshot.data.rawOrders);
+          if (snapshot.data.products?.length) setTiendanubeProducts(snapshot.data.products);
+          if (snapshot.data.ga4Insights) setGa4Insights(snapshot.data.ga4Insights);
+          if (snapshot.data.metaInsights) setMetaInsights(snapshot.data.metaInsights);
+          if (snapshot.data.mcProducts?.length) setMcProducts(snapshot.data.mcProducts);
+          if (snapshot.data.gscQueries?.length) setGscQueries(snapshot.data.gscQueries);
+          if (snapshot.data.gscPages?.length) setGscPages(snapshot.data.gscPages);
+          if (snapshot.data.gscPerformance) setGscPerformance(snapshot.data.gscPerformance);
+          if (snapshot.data.aiInsights) setAiInsights(snapshot.data.aiInsights);
+
+          setLastSync(new Date(snapshot.lastSync));
+          setConnectionStatus('connected');
+          setIsSyncing(false);
+
+          // Save to local IndexedDB for offline fallback
+          saveToCache('unified_clients', snapshot.data.unifiedClients || []);
+          saveToCache('raw_orders', snapshot.data.rawOrders || []);
+          saveToCache('tiendanube_products', snapshot.data.products || []);
+          saveToCache('last_sync', snapshot.lastSync);
+
+          return; // Done! No need for live API calls
+        }
+      } catch (snapErr) {
+        console.warn('[Snapshot] Server cache unavailable, falling back to live sync:', snapErr.message);
+      }
+
+      // ════════════════════════════════════════════════════════════════════
+      // FALLBACK: Live sync if server cache not ready
+      // ════════════════════════════════════════════════════════════════════
+      if (currentStore && currentToken) {
+        setStoreId(currentStore);
+        await fetchRealData(currentStore, currentToken);
+      }
 
       setIsSyncing(false);
     };
@@ -506,17 +507,67 @@ export default function App() {
     // DO NOT add fetchMetaInsights — it depends on dateRange/workspaceData already, creating duplicate triggers
   }, [dateRange, workspaceData]);
 
-  // Fallback polling - real-time sync (SSE + Supabase Realtime) handles primary updates
-  // This runs every 5 minutes as a safety net in case real-time events are missed
+  // Fallback polling — re-read from server cache every 2 minutes
   useEffect(() => {
     if (!storeId || connectionStatus !== 'connected') return;
-    const FALLBACK_INTERVAL = 5 * 60 * 1000; // 5 minutes fallback
-    const interval = setInterval(() => {
-      const token = workspaceData?.tiendanube_access_token || 'system';
-      fetchRealData(storeId, token, { isManual: false });
-    }, FALLBACK_INTERVAL);
+    const POLL_INTERVAL = 2 * 60 * 1000;
+    const interval = setInterval(async () => {
+      try {
+        const snapshotRes = await fetch('/api/data/snapshot');
+        const snapshot = await snapshotRes.json();
+        if (snapshot.ready && snapshot.data) {
+          if (snapshot.data.unifiedClients?.length) setUnifiedClients(snapshot.data.unifiedClients);
+          if (snapshot.data.rawOrders?.length) setRawOrders(snapshot.data.rawOrders);
+          if (snapshot.data.products?.length) setTiendanubeProducts(snapshot.data.products);
+          if (snapshot.data.ga4Insights) setGa4Insights(snapshot.data.ga4Insights);
+          if (snapshot.data.metaInsights) setMetaInsights(snapshot.data.metaInsights);
+          if (snapshot.data.mcProducts?.length) setMcProducts(snapshot.data.mcProducts);
+          if (snapshot.data.gscQueries?.length) setGscQueries(snapshot.data.gscQueries);
+          if (snapshot.data.gscPages?.length) setGscPages(snapshot.data.gscPages);
+          if (snapshot.data.gscPerformance) setGscPerformance(snapshot.data.gscPerformance);
+          setLastSync(new Date(snapshot.lastSync));
+          saveToCache('unified_clients', snapshot.data.unifiedClients || []);
+          saveToCache('raw_orders', snapshot.data.rawOrders || []);
+          saveToCache('tiendanube_products', snapshot.data.products || []);
+          saveToCache('last_sync', snapshot.lastSync);
+        }
+      } catch (e) { console.warn('[Poll] Snapshot refresh failed:', e.message); }
+    }, POLL_INTERVAL);
     return () => clearInterval(interval);
-  }, [storeId, connectionStatus, workspaceData]);
+  }, [storeId, connectionStatus]);
+
+  // Manual sync: trigger server-side cron + reload snapshot
+  const handleManualSync = useCallback(async () => {
+    setConnectionStatus('connecting');
+    try {
+      // Trigger server-side sync
+      await fetch('/api/cron/sync', { method: 'GET' }).catch(() => {});
+      // Wait a moment for sync to complete, then load snapshot
+      await new Promise(r => setTimeout(r, 2000));
+      const snapshotRes = await fetch('/api/data/snapshot');
+      const snapshot = await snapshotRes.json();
+      if (snapshot.ready && snapshot.data) {
+        if (snapshot.data.unifiedClients?.length) setUnifiedClients(snapshot.data.unifiedClients);
+        if (snapshot.data.rawOrders?.length) setRawOrders(snapshot.data.rawOrders);
+        if (snapshot.data.products?.length) setTiendanubeProducts(snapshot.data.products);
+        if (snapshot.data.ga4Insights) setGa4Insights(snapshot.data.ga4Insights);
+        if (snapshot.data.metaInsights) setMetaInsights(snapshot.data.metaInsights);
+        if (snapshot.data.mcProducts?.length) setMcProducts(snapshot.data.mcProducts);
+        if (snapshot.data.gscQueries?.length) setGscQueries(snapshot.data.gscQueries);
+        if (snapshot.data.gscPages?.length) setGscPages(snapshot.data.gscPages);
+        if (snapshot.data.gscPerformance) setGscPerformance(snapshot.data.gscPerformance);
+        setLastSync(new Date(snapshot.lastSync));
+        saveToCache('unified_clients', snapshot.data.unifiedClients || []);
+        saveToCache('raw_orders', snapshot.data.rawOrders || []);
+        saveToCache('tiendanube_products', snapshot.data.products || []);
+        saveToCache('last_sync', snapshot.lastSync);
+      }
+      setConnectionStatus('connected');
+    } catch (e) {
+      console.error('[ManualSync] Error:', e);
+      setConnectionStatus('connected');
+    }
+  }, []);
 
   const fetchRealData = async (sid, token, options = {}) => {
     const { isManual = false, incremental = false } = options;
@@ -901,6 +952,7 @@ setConnectionStatus('connected');
         onRemoveCompetitor={handleRemoveCompetitor}
         fetchMetaInsights={fetchMetaInsights}
         setWorkspaceData={setWorkspaceData}
+        handleManualSync={handleManualSync}
       />
 </TeamProvider>
       </ErrorBoundary>
@@ -917,7 +969,7 @@ function AppContent({
   syncProgress, setSyncProgress,
   competitors, landscape, insights, aiInsights, ciLoading,
   onRefreshCompetitive, onAddCompetitor, onAnalyzeCompetitor, onRemoveCompetitor,
-  fetchMetaInsights, setWorkspaceData,
+  fetchMetaInsights, setWorkspaceData, handleManualSync,
 }) {
   const { currentMember, ROLE_LABELS, ROLE_COLORS, ROLE_ICONS } = useTeam();
 
@@ -1032,6 +1084,7 @@ function AppContent({
             onRemoveCompetitor={onRemoveCompetitor}
             fetchMetaInsights={fetchMetaInsights}
             setWorkspaceData={setWorkspaceData}
+            handleManualSync={handleManualSync}
           />
         </div>
       </main>
@@ -1060,7 +1113,7 @@ function AppViewRenderer({
   unifiedClients, setSelectedClient, fetchRealData,
   competitors, landscape, insights, aiInsights, ciLoading,
   onRefreshCompetitive, onAddCompetitor, onAnalyzeCompetitor, onRemoveCompetitor,
-  fetchMetaInsights, setWorkspaceData,
+  fetchMetaInsights, setWorkspaceData, handleManualSync,
 }) {
   switch(activeView) {
     case 'dashboard':
@@ -1085,6 +1138,17 @@ function AppViewRenderer({
               }}>
                 <span className="live-dot" style={{ width: 6, height: 6 }} />
                 Última sinc: {lastSync.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                <button
+                  onClick={handleManualSync}
+                  title="Sincronizar ahora"
+                  style={{
+                    marginLeft: 8, background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.3)',
+                    color: '#818cf8', borderRadius: 12, padding: '2px 8px', cursor: 'pointer',
+                    fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4,
+                  }}
+                >
+                  ↻ Sync
+                </button>
               </div>
             )}
           </div>
