@@ -792,16 +792,8 @@ function mapToUnified(orders) {
   return Array.from(clientMap.values());
 }
 
-// POST /api/cron/sync — Vercel cron triggers this every 5 min
+// GET /api/cron/sync — on-demand server-side data refresh
 app.get('/api/cron/sync', async (req, res) => {
-  // Vercel cron sends CRON_SECRET header
-  const authHeader = req.headers.authorization;
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    // Also allow from service_role
-    const svcKey = req.headers['x-supabase-service-role'];
-    if (!svcKey) return res.status(401).json({ error: 'Unauthorized' });
-  }
 
   const startTime = Date.now();
   const errors = [];
