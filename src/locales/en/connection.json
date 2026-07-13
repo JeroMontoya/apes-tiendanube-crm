@@ -1,0 +1,62 @@
+{
+  "home_title": "Tendencias del día",
+  "home_subtitle": "Resumen de ventas y análisis para hoy",
+  
+  "meta": {
+    "title": "Conexión Meta",
+    "subtitle": "Monitorea tus campañas publicitarias en Facebook e Instagram",
+    
+    "not_connected": "No estás conectado a Meta.",
+    "connection_error": "Error al conectar a Meta",
+    "retry_button": "Reintentar conexión",
+    "disconnect_button": "Desconectar",
+    "connect_button": "Conectar Meta",
+    
+    "campaign_title": "Campañas actuales",
+    "no_campaigns": "No hay campañas disponibles",
+    
+    "insights": {
+      "today": "Insights de hoy",
+      "last_7_days": "Últimos 7 días",
+      "last_30_days": "Últimos 30 días"
+    },
+    
+    "metrics": {
+      "reach": "Alcance",
+      "impressions": "Impresiones", 
+      "spend": "Gasto",
+      "clicks": "Clics",
+      "ctr": "CTR",
+      "cpc": "CPV",
+      "roi": "ROI"
+    }
+  },
+  
+  "google": {
+    "title": "Análisis con IA",
+    "subtitle": "Obtén insights y análisis generados por inteligencia artificial",
+    
+    "not_connected": "No estás conectado a Google AI.",
+    "connection_error": "Error al conectar a Google AI",
+    "retry_button": "Reintentar conexión",
+    "disconnect_button": "Desconectar",
+    "connect_button": "Conectar Google AI",
+    
+    "ai_analysis": "Análisis de IA",
+    "generate_insights": "Generar insights",
+    
+    "loading": "Cargando análisis...",
+    "analysis_complete": "Análisis completado"
+  },
+  
+  "common": {
+    "connected": "Conectado",
+    "disconnected": "Desconectado",
+    "loading": "Cargando...",
+    "error": "Error",
+    "retry": "Reintentar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "close": "Cerrar"
+  }
+}

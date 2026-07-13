@@ -2,7 +2,8 @@ import React, { useMemo } from 'react';
 import {
   Users, Clock, ArrowDownRight, Target, Globe, Smartphone,
   Search, Share2, Mail, BarChart3, Activity, MousePointerClick,
-  Eye, TrendingUp, AlertTriangle, CheckCircle, Lightbulb
+  Eye, TrendingUp, AlertTriangle, CheckCircle, Lightbulb,
+  ShoppingCart, DollarSign, Package
 } from 'lucide-react';
 
 // ─── Paleta de colores para gráficos ─────────────────────────────────
@@ -494,20 +495,48 @@ function generateAdvice(global, acquisition) {
 
 // ─── Componente Principal ────────────────────────────────────────────
 export default function GA4Panel({ ga4Insights }) {
-  // ── Estado de carga / null ──
+  // ── Sin datos: mostrar estado de configuración ──
   if (!ga4Insights || !ga4Insights.global) {
     return (
-      <div className="glass-card" style={styles.loadingContainer}>
-        <Activity size={28} color="var(--on-surface-variant)" style={{ marginBottom: '12px' }} />
-        <p style={{ margin: 0, fontWeight: 500 }}>Cargando datos de Google Analytics...</p>
-        <p style={{ margin: '6px 0 0', fontSize: '13px', opacity: 0.7 }}>
-          Los datos pueden tardar unos segundos en aparecer.
-        </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center', padding: '48px 24px' }}>
+        <div style={{
+          width: 64, height: 64, borderRadius: 20,
+          background: 'rgba(245, 158, 11, 0.1)', display: 'flex',
+          alignItems: 'center', justifyContent: 'center'
+        }}>
+          <BarChart3 size={32} color="#F59E0B" />
+        </div>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--on-surface)', margin: 0 }}>Google Analytics 4</h2>
+        <div style={{
+          maxWidth: 500, textAlign: 'center', padding: '20px 24px', borderRadius: 14,
+          background: 'rgba(245, 158, 11, 0.05)', border: '1px solid rgba(245, 158, 11, 0.15)'
+        }}>
+          <p style={{ fontSize: 14, color: 'var(--on-surface)', margin: '0 0 12px', fontWeight: 600 }}>
+            Google Analytics no está configurado
+          </p>
+          <p style={{ fontSize: 13, color: 'var(--on-surface-variant)', margin: '0 0 16px', lineHeight: 1.6 }}>
+            Para ver datos reales de tráfico, ventas y comportamiento de usuarios en tu tienda, necesitás configurar GA4.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, textAlign: 'left', fontSize: 13, color: 'var(--on-surface-variant)' }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <span style={{ background: 'rgba(245,158,11,0.2)', color: '#F59E0B', borderRadius: 6, padding: '2px 8px', fontWeight: 700, flexShrink: 0 }}>1</span>
+              <span>Andá a <strong>Ajustes</strong> → sección <strong>Google Analytics 4</strong></span>
+            </div>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <span style={{ background: 'rgba(245,158,11,0.2)', color: '#F59E0B', borderRadius: 6, padding: '2px 8px', fontWeight: 700, flexShrink: 0 }}>2</span>
+              <span>Ingresá tu <strong>Property ID</strong> (GA4 → Administrador → Detalles del Stream)</span>
+            </div>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <span style={{ background: 'rgba(245,158,11,0.2)', color: '#F59E0B', borderRadius: 6, padding: '2px 8px', fontWeight: 700, flexShrink: 0 }}>3</span>
+              <span>Marcá "Reutilizar credenciales de Merchant Center" si usás el mismo Service Account</span>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
-  const { global, acquisition = [], events = [] } = ga4Insights;
+  const { global, acquisition = [], events = [], ecommerce } = ga4Insights;
 
   // ── Cálculos memoizados ──
   const totalSessions = useMemo(() => {
@@ -734,6 +763,75 @@ export default function GA4Panel({ ga4Insights }) {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* ═══════ E-COMMERCE ═══════ */}
+      {ecommerce && ecommerce.totalRevenue > 0 && (
+        <div className="glass-card" style={styles.sectionCard}>
+          <h3 style={styles.sectionTitle}>
+            <ShoppingCart size={18} color="#F59E0B" />
+            Ventas y E-commerce
+            <span style={styles.sectionSubtitle}>— Datos reales de GA4</span>
+          </h3>
+
+          <div style={styles.metricsGrid}>
+            <MetricCard
+              icon={DollarSign}
+              label="Ingresos Totales"
+              value={`$${formatNumber(Math.round(ecommerce.totalRevenue))}`}
+              hint="Revenue bruto del período"
+              iconBg="rgba(245, 158, 11, 0.12)"
+              iconColor="#F59E0B"
+            />
+            <MetricCard
+              icon={ShoppingCart}
+              label="Compras Totales"
+              value={formatNumber(ecommerce.totalPurchases)}
+              hint="Transacciones completadas"
+              iconBg="rgba(16, 185, 129, 0.12)"
+              iconColor="#10B981"
+            />
+            <MetricCard
+              icon={TrendingUp}
+              label="Ticket Promedio"
+              value={`$${formatNumber(Math.round(ecommerce.averageOrderValue))}`}
+              hint="Cuánto gasta cada cliente en promedio"
+              iconBg="rgba(79, 70, 229, 0.12)"
+              iconColor="#4F46E5"
+            />
+          </div>
+
+          {/* Top Products */}
+          {ecommerce.topProducts && ecommerce.topProducts.length > 0 && (
+            <div style={{ marginTop: 20 }}>
+              <h4 style={{ fontSize: 14, fontWeight: 600, color: 'var(--on-surface)', margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Package size={16} color="#F59E0B" />
+                Productos Más Vendidos
+              </h4>
+              {ecommerce.topProducts.slice(0, 8).map((prod, i) => {
+                const maxRev = ecommerce.topProducts[0]?.revenue || 1;
+                const pct = (prod.revenue / maxRev) * 100;
+                return (
+                  <div key={i} style={styles.eventRow}>
+                    <span style={{ ...styles.eventName, minWidth: 200 }}>
+                      {prod.name || 'Sin nombre'}
+                    </span>
+                    <div style={styles.eventBarTrack}>
+                      <div
+                        style={{
+                          ...styles.eventBarFill,
+                          width: `${Math.max(pct, 3)}%`,
+                          background: `linear-gradient(90deg, #F59E0B, #F59E0Bdd)`,
+                        }}
+                      />
+                    </div>
+                    <span style={styles.eventCount}>${formatNumber(Math.round(prod.revenue))}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 

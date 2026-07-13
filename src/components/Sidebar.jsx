@@ -5,7 +5,8 @@ import {
   Megaphone, Globe, KanbanSquare, PackageSearch, ShoppingCart,
   Settings, Download, Menu, X, Zap, Calendar, Sun, Moon, Warehouse,
   Hammer, BarChart3, Clock, ChevronDown, ChevronRight, MoreHorizontal,
-  BarChart2, MessageSquare, Repeat, FileText, Sparkles
+  BarChart2, MessageSquare, Repeat, FileText, Sparkles,
+  Compass, Music, Video, Link
 } from 'lucide-react';
 
 const NAV_GROUPS = [
@@ -14,6 +15,7 @@ const NAV_GROUPS = [
     label: null,
     items: [
       { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['admin', 'taller', 'ventas', 'atencion_cliente'] },
+      { id: 'marketing_center', icon: Brain, label: 'Centro de Marketing', roles: ['admin'] },
       { id: 'calendario', icon: Calendar, label: 'Calendario', roles: ['admin'] },
     ],
   },
@@ -23,9 +25,17 @@ const NAV_GROUPS = [
     items: [
       { id: 'marketing', icon: TrendingUp, label: 'Marketing', roles: ['admin'] },
       { id: 'meta_ads', icon: Megaphone, label: 'Meta Ads', roles: ['admin'] },
+      { id: 'google_ads', icon: Megaphone, label: 'Google Ads', roles: ['admin'] },
+      { id: 'tiktok_ads', icon: Music, label: 'TikTok Ads', roles: ['admin'] },
       { id: 'ga4', icon: Globe, label: 'Google Analytics', roles: ['admin'] },
       { id: 'analitica', icon: Brain, label: 'Analítica', roles: ['admin'] },
       { id: 'segmentos', icon: Target, label: 'Segmentos', roles: ['admin'] },
+      { id: 'inteligencia_competitiva', icon: Compass, label: 'Inteligencia Competitiva', roles: ['admin'] },
+      { id: 'merchant_center', icon: ShoppingCart, label: 'Merchant Center', roles: ['admin'] },
+      { id: 'search_console', icon: Globe, label: 'Search Console', roles: ['admin'] },
+      { id: 'reportes', icon: FileText, label: 'Reportes', roles: ['admin'] },
+      { id: 'ia_chat', icon: Sparkles, label: 'Asistente IA', roles: ['admin'] },
+      { id: 'utm_builder', icon: Link, label: 'UTM Builder', roles: ['admin'] },
     ],
   },
   {
@@ -150,28 +160,26 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
           )}
 
           <aside className={`sidebar ${mobileOpen ? 'open' : ''}`} style={{
-            background: 'rgba(15, 20, 30, 0.85)',
+            background: 'var(--surface-container)',
             backdropFilter: 'blur(24px) saturate(180%)',
             WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-            borderRight: '1px solid rgba(255,255,255,0.06)',
-            boxShadow: '4px 0 24px rgba(0,0,0,0.2)',
+            borderRight: '1px solid var(--border-subtle)',
+            boxShadow: 'var(--shadow-md)',
           }}>
             {/* ── Logo ── */}
             <div className="sidebar-logo" style={{ padding: '20px 16px 16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{
                   width: 40, height: 40, borderRadius: 14,
-                  background: 'linear-gradient(135deg, #6366f1, #a855f7, #ec4899)',
+                  background: 'var(--primary)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 4px 20px rgba(139,92,246,0.4), 0 0 40px rgba(139,92,246,0.15)',
                   flexShrink: 0,
-                  animation: 'logoPulse 3s ease-in-out infinite',
                 }}>
                   <Zap size={20} color="#fff" strokeWidth={2.5} />
                 </div>
                 <div className="brand-text">
-                  <h1 style={{ fontSize: '1.3rem', margin: 0, fontWeight: 900, letterSpacing: '-0.04em', background: 'linear-gradient(135deg, #c4b5fd, #f0abfc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>APES</h1>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>CRM & Analytics</div>
+                  <h1 style={{ fontSize: '1.3rem', margin: 0, fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--on-surface)' }}>APES</h1>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--on-surface-variant)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>CRM & Analytics</div>
                 </div>
               </div>
             </div>
@@ -181,8 +189,8 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
               <div className="member-badge-wrapper" style={{ padding: '0 12px', marginBottom: 12 }}>
                 <div className="member-info" style={{
                   display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
-                  borderRadius: 14, background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: 14, background: 'var(--surface-container-high)',
+                  border: '1px solid var(--border-subtle)',
                   backdropFilter: 'blur(10px)',
                 }}>
                   <div style={{
@@ -196,7 +204,7 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: ROLE_COLORS[currentMember.role], whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentMember.name}</div>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>{ROLE_LABELS[currentMember.role]}</div>
+                    <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', fontWeight: 500 }}>{ROLE_LABELS[currentMember.role]}</div>
                   </div>
                 </div>
               </div>
@@ -217,11 +225,11 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
                           padding: '8px 10px 4px', cursor: 'pointer', borderRadius: 8,
                           transition: 'all 0.2s',
                         }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-container-highest)'}
                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                       >
                         <span className="nav-group-label" style={{
-                          fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.3)',
+                          fontSize: 9, fontWeight: 700, color: 'var(--on-surface-variant)',
                           textTransform: 'uppercase', letterSpacing: '1.2px',
                           display: 'flex', alignItems: 'center', gap: 4,
                         }}>
@@ -230,8 +238,8 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
                         </span>
                         {group.items.length > 1 && (
                           <span className="nav-group-count" style={{
-                            fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.25)',
-                            background: 'rgba(255,255,255,0.06)', padding: '2px 7px', borderRadius: 6,
+                            fontSize: 9, fontWeight: 700, color: 'var(--on-surface-variant)',
+                            background: 'var(--surface-container-high)', padding: '2px 7px', borderRadius: 6,
                           }}>
                             {group.items.length}
                           </span>
@@ -247,52 +255,10 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
                           return (
                             <button
                               key={item.id}
-                              className="sidebar-nav-item"
+                              className={`sidebar-nav-item ${active ? 'active' : ''}`}
                               onClick={() => handleNavigate(item.id)}
-                              style={{
-                                width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-                                padding: '10px 12px', borderRadius: 12, border: 'none', cursor: 'pointer',
-                                background: active
-                                  ? 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(99,102,241,0.12))'
-                                  : 'transparent',
-                                color: active ? '#c4b5fd' : 'rgba(255,255,255,0.5)',
-                                fontSize: 13, fontWeight: active ? 700 : 500,
-                                textAlign: 'left', transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-                                position: 'relative',
-                                boxShadow: active ? '0 2px 12px rgba(139,92,246,0.15)' : 'none',
-                              }}
-                              onMouseEnter={e => {
-                                if (!active) {
-                                  e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
-                                  e.currentTarget.style.color = 'rgba(255,255,255,0.85)';
-                                  e.currentTarget.style.transform = 'translateX(4px)';
-                                }
-                              }}
-                              onMouseLeave={e => {
-                                if (!active) {
-                                  e.currentTarget.style.background = 'transparent';
-                                  e.currentTarget.style.color = 'rgba(255,255,255,0.5)';
-                                  e.currentTarget.style.transform = 'translateX(0)';
-                                }
-                              }}
                             >
-                              {active && (
-                                <div style={{
-                                  position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
-                                  width: 3, height: 20, borderRadius: 2,
-                                  background: 'linear-gradient(180deg, #a855f7, #6366f1)',
-                                  boxShadow: '0 0 8px rgba(139,92,246,0.5)',
-                                }} />
-                              )}
-                              <span style={{
-                                width: 30, height: 30, borderRadius: 10,
-                                background: active
-                                  ? 'linear-gradient(135deg, rgba(139,92,246,0.25), rgba(99,102,241,0.15))'
-                                  : 'rgba(255,255,255,0.05)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                                transition: 'all 0.2s',
-                                boxShadow: active ? '0 0 12px rgba(139,92,246,0.2)' : 'none',
-                              }}>
+                              <span className="nav-icon">
                                 <Icon size={15} strokeWidth={active ? 2.2 : 1.8} />
                               </span>
                               <span>{item.label}</span>
@@ -303,7 +269,7 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
                     )}
 
                     {groupIdx < filteredGroups.length - 1 && (
-                      <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)', margin: '8px 12px' }} />
+                      <div style={{ height: 1, background: 'var(--border-subtle)', margin: '8px 12px' }} />
                     )}
                   </div>
                 );
@@ -312,21 +278,21 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
 
             {/* ── Theme Toggle ── */}
             <div className="theme-toggle-row" style={{ padding: '8px 12px' }}>
-              <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)', marginBottom: 8 }} />
+              <div style={{ height: 1, background: 'var(--border-subtle)', marginBottom: 8 }} />
               <button
                 onClick={toggleTheme}
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                   padding: '10px 12px', borderRadius: 12, border: 'none', cursor: 'pointer',
-                  background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.5)',
+                  background: 'var(--surface-container-high)', color: 'var(--on-surface)',
                   fontSize: 13, fontWeight: 500, textAlign: 'left',
                   transition: 'all 0.2s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-container-highest)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface-container-high)'; }}
               >
                 <span style={{
-                  width: 30, height: 30, borderRadius: 10, background: 'rgba(255,255,255,0.06)',
+                  width: 30, height: 30, borderRadius: 10, background: 'var(--surface-container-highest)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}>
                   {theme === 'dark' ? <Moon size={15} /> : <Sun size={15} />}
@@ -339,9 +305,9 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
             <div className="sidebar-footer" style={{ padding: '10px 12px 14px', textAlign: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 4 }}>
                 <span className="live-dot" />
-                <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', fontWeight: 600, letterSpacing: '0.5px' }}>Sistema Activo</span>
+                <span style={{ fontSize: 9, color: 'var(--on-surface-variant)', fontWeight: 600, letterSpacing: '0.5px' }}>Sistema Activo</span>
               </div>
-              <p style={{ margin: 0, fontSize: 9, color: 'rgba(255,255,255,0.15)', fontWeight: 500, letterSpacing: '0.5px' }}>APES DIGITAL v4.0</p>
+              <p style={{ margin: 0, fontSize: 9, color: 'var(--on-surface-variant)', opacity: 0.7, fontWeight: 500, letterSpacing: '0.5px' }}>APES DIGITAL v4.0</p>
             </div>
           </aside>
         </>
@@ -355,22 +321,21 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
           {/* Top bar for mobile */}
           <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, zIndex: 140,
-            height: 56, background: 'rgba(15,20,30,0.8)', borderBottom: '1px solid rgba(255,255,255,0.06)',
+            height: 56, background: 'var(--surface-container)', borderBottom: '1px solid var(--border-subtle)',
             display: 'flex', alignItems: 'center', padding: '0 16px', gap: 12,
-            backdropFilter: 'blur(24px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
           }}>
             <div style={{
               width: 32, height: 32, borderRadius: 10,
-              background: 'linear-gradient(135deg, #6366f1, #a855f7, #ec4899)',
+              background: 'var(--primary)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 2px 12px rgba(139,92,246,0.4)',
               flexShrink: 0,
             }}>
               <Zap size={16} color="#fff" />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, background: 'linear-gradient(135deg, #c4b5fd, #f0abfc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.02em' }}>APES</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--on-surface)', letterSpacing: '-0.02em' }}>APES</div>
             </div>
             {currentMember && (
               <div style={{
@@ -416,6 +381,7 @@ function FloatingOrbNav({ activeView, onNavigate, moreOpen, setMoreOpen, theme, 
     { id: 'taller', icon: Hammer, label: 'Taller', color: '#f59e0b' },
     { id: 'marketing', icon: TrendingUp, label: 'Marketing', color: '#ec4899' },
     { id: 'ventas_view', icon: BarChart2, label: 'Ventas', color: '#06b6d4' },
+    { id: 'inteligencia_competitiva', icon: Compass, label: 'Int. Competitiva', color: '#8b5cf6' },
   ];
 
   const handleNav = (id) => {
@@ -444,14 +410,14 @@ function FloatingOrbNav({ activeView, onNavigate, moreOpen, setMoreOpen, theme, 
 
       {/* Expanded menu pill */}
       <div style={{
-        position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)',
+        position: 'fixed', bottom: 90, left: '50%',
         zIndex: 200,
         display: 'flex', gap: 8, padding: '8px 12px',
-        background: 'rgba(15,20,30,0.92)',
-        backdropFilter: 'blur(32px) saturate(200%)',
-        WebkitBackdropFilter: 'blur(32px) saturate(200%)',
-        borderRadius: 28, border: '1px solid rgba(255,255,255,0.08)',
-        boxShadow: '0 12px 48px rgba(0,0,0,0.5), 0 0 60px rgba(139,92,246,0.15), inset 0 1px 0 rgba(255,255,255,0.06)',
+        background: 'var(--surface)',
+        backdropFilter: 'blur(32px)',
+        WebkitBackdropFilter: 'blur(32px)',
+        borderRadius: 28, border: '1px solid var(--border-subtle)',
+        boxShadow: 'var(--shadow-md)',
         opacity: expanded ? 1 : 0,
         pointerEvents: expanded ? 'auto' : 'none',
         transition: 'all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',

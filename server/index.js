@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { isInvalidEmail } from '../src/utils/unifyClients.js';
 
 dotenv.config();
 
@@ -15,160 +16,365 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const STORES_FILE = path.join(__dirname, 'stores.json');
 
-app.use(cors({ origin: 'http://localhost:5173' })); // Allow Vite dev server
-// Custom middleware para guardar el rawBody necesario para HMAC
+app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json({
   verify: (req, res, buf) => {
     req.rawBody = buf;
   }
 }));
 
-// Funciones para manejar stores.json
-const getStores = () => {
-  if (!fs.existsSync(STORES_FILE)) return [];
-  return JSON.parse(fs.readFileSync(STORES_FILE, 'utf8'));
+const INVALID_EMAIL_PATTERNS = [
+  '@noinformado.com',
+  'onli@',
+  '@nomail.com',
+  '@sinmail.com',
+  'noemail@',
+  'test@test',
+  '@example.com',
+];
+
+const normalizeName = (name) => {
+  if (!name || typeof name !== 'string') return '';
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\u0300-\u036f/g, '')
+    .replace(/[^a-z]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 };
 
-const saveStore = (storeId, accessToken) => {
-  const stores = getStores();
-  const existing = stores.find(s => s.storeId === storeId);
-  if (existing) {
-    existing.accessToken = accessToken;
-  } else {
-    stores.push({ storeId, accessToken });
+const digitsOnly = (value) => {
+  if (!value || typeof value !== 'string') return '';
+  return value.replace(/\D/g, '');
+};
+
+function isInvalidDni(dni) {
+  if (!dni || typeof dni !== 'string') return true;
+  if (dni.length < 6) return true;
+  if (/^(\d)\1+$/.test(dni)) return true;
+
+  const fakeDnis = [
+    '1234092267',
+    '1234567891',
+    '123456789',
+    '12345678',
+    '123456',
+    '12345'
+  ];
+  if (fakeDnis.includes(dni)) return true;
+
+  return false;
+}
+
+function isInvalidPhone(phone) {
+  const d = digitsOnly(phone);
+  if (d.length < 8) return true;
+  if (/^(\d)\1{7,}$/.test(d)) return true;
+  if (/^(012345|123456)/.test(d)) return true;
+  return false;
+}
+
+function resolveSegment(count) {
+  if (count === 0) return 'abandoned';
+  if (count === 1) return 'regular';
+  return 'vip';
+}
+
+function getDaysSinceLastPurchase(client) {
+  if (!client.purchases || client.purchases.length === 0) return 999;
+  const sorted = [...client.purchases].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const lastDate = new Date(sorted[0].date);
+  return Math.floor((Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function hasLimitedEditionPurchase(client) {
+  if (!client.purchases) return false;
+  return client.purchases.some(p => 
+    p.product?.toLowerCase().includes('limitada') || 
+    p.product?.toLowerCase().includes('edicion') || 
+    p.product?.toLowerCase().includes('bioma')
+  );
+}
+
+function hasMysteryBoxPurchase(client) {
+  if (!client.purchases) return false;
+  return client.purchases.some(p => 
+    p.product?.toLowerCase().includes('mystery') || 
+    p.product?.toLowerCase().includes('caja sorpresa')
+  );
+}
+
+function getCouponUsageRate(client) {
+  if (!client.purchases || client.purchases.length === 0) return 0;
+  const withCoupon = client.purchases.filter(p => p.hasDiscount || p.coupon).length;
+  return withCoupon / client.purchases.length;
+}
+
+function resolveSegmentTags(client) {
+  const tags = [];
+  const pc = client.purchaseCount || 0;
+  const ts = client.totalSpent || 0;
+  const daysSinceLast = getDaysSinceLastPurchase(client);
+
+  if (pc === 0) tags.push('sin_compra');
+  else if (pc === 1) tags.push('nuevo');
+  else if (pc >= 2 && pc <= 3) tags.push('repetidor');
+  else if (pc >= 4) tags.push('fiel');
+
+  if (ts >= 500000) tags.push('alto_valor');
+  else if (ts >= 200000) tags.push('medio_valor');
+
+  if (hasLimitedEditionPurchase(client)) tags.push('vip_coleccion');
+  if (hasMysteryBoxPurchase(client)) tags.push('mystery_box');
+
+  if (pc >= 2 && daysSinceLast > 90) tags.push('riesgo_churn');
+  if (pc >= 2 && daysSinceLast > 180) tags.push('dormido');
+
+  if (daysSinceLast <= 30) tags.push('activo_reciente');
+
+  const couponRate = getCouponUsageRate(client);
+  if (couponRate > 0.5) tags.push('sensible_precio');
+
+  return tags;
+}
+
+function generateProfileId(orderId) {
+  return `TN-${String(orderId).padStart(5, '0')}`;
+}
+
+function orderToPurchase(order) {
+  const discountTotal = parseFloat(order.discount) || 0;
+  const discountCoupon = parseFloat(order.discount_coupon) || 0;
+  const discountGateway = parseFloat(order.discount_gateway) || 0;
+  const promoDiscountAmount = parseFloat(order.promotional_discount?.total_discount_amount) || 0;
+
+  let smartPromoName = 'Promoción de Tienda';
+  if (promoDiscountAmount > 0 && order.total > 0) {
+    const subtotal = parseFloat(order.total) + discountTotal;
+    if (subtotal > 0) {
+      const pct = Math.round((promoDiscountAmount / subtotal) * 100);
+      smartPromoName = `Promo Automática ${pct}% OFF`;
+    }
   }
-  fs.writeFileSync(STORES_FILE, JSON.stringify(stores, null, 2));
-};
 
-const getStoreToken = (storeId) => {
-  const stores = getStores();
-  const store = stores.find(s => String(s.storeId) === String(storeId));
-  return store ? store.accessToken : null;
-};
+  let benefitType = 'normal';
+  if (order.coupon) {
+    benefitType = 'coupon';
+  } else if (promoDiscountAmount > 0) {
+    benefitType = 'promo_auto';
+  } else if (discountGateway > 0 && discountTotal > 0) {
+    benefitType = 'gateway';
+  } else if (discountTotal > 0) {
+    benefitType = 'manual';
+  }
 
-// ── Rutas OAuth ─────────────────────────────────────────────
+  return {
+    date: order.created_at
+      ? order.created_at.substring(0, 10)
+      : new Date().toISOString().substring(0, 10),
+    amount: parseFloat(order.total) || 0,
+    product: (order.products || []).map(p => p.name).join(' + '),
+    productsArray: order.products || [],
+    coupon: order.coupon?.code || null,
+    couponType: order.coupon?.type || null,
+    couponValue: order.coupon?.value || null,
+    couponSaved: order.coupon ? discountCoupon : 0,
+    hasDiscount: discountTotal > 0 || promoDiscountAmount > 0,
+    discountTotal,
+    discountCoupon,
+    discountGateway,
+    promoDiscountAmount,
+    smartPromoName,
+    benefitType,
+  };
+}
 
-app.get('/api/auth/install', (req, res) => {
-  const { store_id } = req.query;
-  if (!store_id) return res.status(400).send('Falta store_id');
+function extractCouponInfo(coupon) {
+  if (!coupon) return null;
 
-  const clientId = process.env.TN_CLIENT_ID;
-  const redirectUri = process.env.TN_REDIRECT_URI;
-  
-  const authUrl = `https://www.tiendanube.com/apps/${clientId}/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&state=${store_id}`;
-  res.redirect(authUrl);
-});
+  let raw = null;
+  if (typeof coupon === 'string') return { code: coupon, type: null, value: null };
+  else if (Array.isArray(coupon) && coupon.length > 0) raw = coupon[0];
+  else if (typeof coupon === 'object') raw = coupon;
 
-app.get('/api/auth/callback', async (req, res) => {
-  const { code, state: storeId } = req.query;
-  
-  if (!code) return res.status(400).send('No se recibió el código de autorización');
+  if (!raw) return null;
+  const code = raw.code || raw.name || null;
+  if (!code) return null;
 
-  try {
-    const response = await fetch('https://www.tiendanube.com/apps/authorize/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        client_id: process.env.TN_CLIENT_ID,
-        client_secret: process.env.TN_CLIENT_SECRET,
-        grant_type: 'authorization_code',
-        code: code
-      })
-    });
+  if (code.toUpperCase().startsWith('DRAFT-ORDER-')) return null;
 
-    const data = await response.json();
+  return {
+    code,
+    type: raw.type || null,
+    value: raw.value || null,
+  };
+}
 
-    if (!response.ok) {
-      console.error('Error obteniendo token:', data);
-      return res.status(500).send('Error obteniendo token de acceso');
+function mergeOrderIntoProfile(profile, order) {
+  const purchase = orderToPurchase(order);
+
+  profile.purchases.push(purchase);
+  profile.totalSpent += purchase.amount;
+  profile.purchaseCount = profile.purchases.length;
+
+  const orderEmail = order.contact_email;
+  if (isInvalidEmail(profile.email) && !isInvalidEmail(orderEmail)) {
+    profile.email = orderEmail;
+  }
+
+  const trueCity = order.shipping_address?.city || order.billing_address?.city || '';
+  if (!profile.city && trueCity) {
+    profile.city = trueCity;
+  }
+
+  const trueProvince = order.shipping_address?.province || order.billing_address?.province || order.shipping_address?.locality || '';
+  if (!profile.province && trueProvince) {
+    profile.province = trueProvince;
+  }
+
+  if (profile.source === 'historic') {
+    profile.source = 'unified';
+  }
+
+  profile.segment = resolveSegment(profile.purchaseCount);
+  profile.segmentTags = resolveSegmentTags(profile);
+}
+
+function profileFromOrder(order) {
+  const purchase = orderToPurchase(order);
+  const purchaseCount = 1;
+
+  const trueName = order.contact_name || order.billing_name || 'Sin nombre';
+  const trueEmail = order.contact_email || '';
+  const truePhone = order.contact_phone || order.billing_phone || '';
+  const trueDni = order.billing_identification || '';
+
+  const trueCity = order.shipping_address?.city || order.billing_address?.city || '';
+  const trueProvince = order.shipping_address?.province || order.billing_address?.province || order.shipping_address?.locality || '';
+
+  const newProfile = {
+    id: generateProfileId(order.id),
+    name: trueName,
+    email: trueEmail,
+    phone: truePhone,
+    city: trueCity,
+    province: trueProvince,
+    dniCuit: trueDni,
+    totalSpent: purchase.amount,
+    purchaseCount,
+    purchases: [purchase],
+    source: 'tiendanube',
+    segment: resolveSegment(purchaseCount),
+  };
+
+  newProfile.segmentTags = resolveSegmentTags(newProfile);
+  return newProfile;
+}
+
+export function unifyClients(historicClients = [], tiendanubeOrders = []) {
+  const profilesById = new Map();
+  const emailIndex = new Map();
+  const phoneIndex = new Map();
+  const dniIndex = new Map();
+  const nameIndex = new Map();
+
+  for (const client of historicClients) {
+    const profile = {
+      ...client,
+      purchases: [...(client.purchases || [])],
+      source: 'historic',
+      segment: resolveSegment(client.purchaseCount || 0),
+    };
+    profile.segmentTags = resolveSegmentTags(profile);
+
+    profilesById.set(profile.id, profile);
+
+    if (!isInvalidEmail(client.email)) {
+      emailIndex.set(client.email.toLowerCase().trim(), profile.id);
     }
 
-    saveStore(data.store_id || storeId, data.access_token);
-    
-    // Redirigir de vuelta al frontend
-    res.redirect(`http://localhost:5173?installed=true&store=${data.store_id || storeId}`);
-  } catch (error) {
-    console.error('Error OAuth callback:', error);
-    res.status(500).send('Error interno');
+    const phoneKey = digitsOnly(client.phone);
+    if (!isInvalidPhone(phoneKey)) {
+      phoneIndex.set(phoneKey, profile.id);
+    }
+
+    const dniKey = digitsOnly(client.dniCuit);
+    if (!isInvalidDni(dniKey)) {
+      dniIndex.set(dniKey, profile.id);
+    }
   }
-});
 
-// ── Rutas API ─────────────────────────────────────────────
+  const processedOrderNumbers = new Set();
 
-app.get('/api/stores', (req, res) => {
-  res.json(getStores().map(s => ({ storeId: s.storeId }))); // Omitir tokens por seguridad
-});
+  for (const order of tiendanubeOrders) {
+    const payStatus = (order.payment_status || '').toLowerCase();
+    const orderStatus = (order.state || order.status || '').toLowerCase();
+    if (
+      payStatus === 'cancelled' || payStatus === 'voided' || payStatus === 'refunded' ||
+      orderStatus === 'cancelled'
+    ) {
+      continue;
+    }
 
-const proxyTiendaNube = async (req, res, endpoint) => {
-  const { storeId } = req.params;
-  const token = getStoreToken(storeId);
-  
-  if (!token) return res.status(404).send('Tienda no encontrada o no autorizada');
+    const orderNum = order.number || order.id;
+    if (processedOrderNumbers.has(orderNum)) {
+      continue;
+    }
+    processedOrderNumbers.add(orderNum);
 
-  // Construir query string de los parámetros entrantes
-  const qs = new URLSearchParams(req.query).toString();
-  const url = `https://api.tiendanube.com/v1/${storeId}/${endpoint}${qs ? '?' + qs : ''}`;
+    const trueName = order.contact_name || order.billing_name || '';
+    const trueEmail = order.contact_email || '';
+    const truePhone = order.contact_phone || order.billing_phone || '';
+    const trueDni = order.billing_identification || '';
 
-  try {
-    const response = await fetch(url, {
-      headers: {
-        'Authentication': `bearer ${token}`,
-        'User-Agent': 'APES CRM (tu@email.com)'
+    let matchedProfileId = null;
+
+    const orderEmail = trueEmail.toLowerCase().trim();
+    if (orderEmail && !isInvalidEmail(orderEmail)) {
+      matchedProfileId = emailIndex.get(orderEmail) || null;
+    }
+
+    if (!matchedProfileId) {
+      const orderPhone = digitsOnly(truePhone);
+      if (!isInvalidPhone(orderPhone)) {
+        matchedProfileId = phoneIndex.get(orderPhone) || null;
       }
-    });
-
-    if (response.status === 404 && endpoint === 'customers') {
-       return res.json([]);
     }
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      return res.status(response.status).send(errorText);
+    if (!matchedProfileId) {
+      const orderDni = digitsOnly(trueDni);
+      if (!isInvalidDni(orderDni)) {
+        matchedProfileId = dniIndex.get(orderDni) || null;
+      }
     }
 
-    const data = await response.json();
-    res.json(data);
-  } catch (error) {
-    console.error(`Error proxying ${endpoint}:`, error);
-    res.status(500).send('Error interno del servidor');
-  }
-};
+    if (matchedProfileId) {
+      const profile = profilesById.get(matchedProfileId);
+      mergeOrderIntoProfile(profile, order);
 
-app.get('/api/stores/:storeId/orders', (req, res) => proxyTiendaNube(req, res, 'orders'));
-app.get('/api/stores/:storeId/customers', (req, res) => proxyTiendaNube(req, res, 'customers'));
+      if (!isInvalidEmail(profile.email)) {
+        emailIndex.set(profile.email.toLowerCase().trim(), profile.id);
+      }
+    } else {
+      const newProfile = profileFromOrder(order);
+      profilesById.set(newProfile.id, newProfile);
 
-// ── Webhooks ─────────────────────────────────────────────
-
-app.post('/api/webhooks/orders', (req, res) => {
-  const signature = req.headers['x-linkedstore-hmac-sha256'];
-  const clientSecret = process.env.TN_CLIENT_SECRET;
-
-  if (!signature || !req.rawBody) {
-    return res.status(401).send('Firma o cuerpo faltante');
-  }
-
-  const expectedHmac = crypto
-    .createHmac('sha256', clientSecret)
-    .update(req.rawBody)
-    .digest('hex');
-
-  const isValid = crypto.timingSafeEqual(Buffer.from(expectedHmac), Buffer.from(signature));
-
-  if (!isValid) {
-    console.error('Webhook HMAC inválido');
-    return res.status(401).send('No autorizado');
+      if (!isInvalidEmail(newProfile.email)) {
+        emailIndex.set(newProfile.email.toLowerCase().trim(), newProfile.id);
+      }
+      const newPhone = digitsOnly(newProfile.phone);
+      if (!isInvalidPhone(newPhone)) {
+        phoneIndex.set(newPhone, newProfile.id);
+      }
+      const newDni = digitsOnly(newProfile.dniCuit);
+      if (!isInvalidDni(newDni)) {
+        dniIndex.set(newDni, newProfile.id);
+      }
+    }
   }
 
-  // Responder inmediatamente (Requisito TiendaNube: < 3 segs)
-  res.status(200).send('OK');
-
-  // Procesar evento asincrónicamente
-  console.log('Webhook orden recibida:', req.body.event, 'ID:', req.body.id);
-  // Aquí podríamos encolar un job para procesar la nueva orden
-});
-
-app.listen(PORT, () => {
-  console.log(`Backend TiendaNube APES escuchando en http://localhost:${PORT}`);
-});
+  return Array.from(profilesById.values()).sort(
+    (a, b) => b.totalSpent - a.totalSpent
+  );
+}

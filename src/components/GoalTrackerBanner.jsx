@@ -26,10 +26,10 @@ const GoalTrackerBanner = ({ clients, dateRange }) => {
       display: 'flex', 
       flexDirection: 'column', 
       gap: 20,
-      background: 'linear-gradient(135deg, var(--surface-container), var(--primary-container))',
+      background: 'var(--surface-container-low)',
+      border: '1px solid var(--border-subtle)',
       borderRadius: 'var(--radius-lg)',
       color: 'var(--on-surface)',
-      boxShadow: '0 20px 40px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
       position: 'relative',
       overflow: 'hidden'
     }}>
@@ -56,7 +56,7 @@ const GoalTrackerBanner = ({ clients, dateRange }) => {
       </div>
       
       {/* Progress Bar Container */}
-      <div style={{ height: 16, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 8, overflow: 'hidden', position: 'relative', zIndex: 1, boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)' }}>
+      <div style={{ height: 12, backgroundColor: 'var(--border-subtle)', borderRadius: 6, overflow: 'hidden', position: 'relative', zIndex: 1 }}>
         <div 
           style={{ 
             position: 'absolute', 
@@ -64,10 +64,9 @@ const GoalTrackerBanner = ({ clients, dateRange }) => {
             left: 0, 
             height: '100%', 
             width: `${percentage}%`, 
-            background: percentage >= 100 ? 'linear-gradient(90deg, #10b981, #34d399)' : 'linear-gradient(90deg, #3b82f6, #8b5cf6)',
-            borderRadius: 8,
-            transition: 'width 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
-            boxShadow: '0 0 20px rgba(139, 92, 246, 0.5)'
+            background: percentage >= 100 ? 'var(--primary)' : 'var(--primary)',
+            borderRadius: 6,
+            transition: 'width 1.5s cubic-bezier(0.4, 0, 0.2, 1)'
           }} 
         >
           {/* Shimmer Effect inside progress bar */}

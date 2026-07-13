@@ -55,10 +55,35 @@ const S = {
     border: '1px solid var(--glass-border)', borderRadius: 14,
     transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)'
   },
+  // Button variants with proper contrast
   btn: {
     display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 14px',
     borderRadius: 8, border: 'none', fontWeight: 600, cursor: 'pointer',
     fontSize: 11, fontFamily: 'Inter, sans-serif', transition: 'all 0.2s'
+  },
+  btnPrimary: {
+    background: 'var(--gradient-primary)', color: '#fff',
+    boxShadow: '0 2px 8px rgba(59,130,246,0.3)'
+  },
+  btnSecondary: {
+    background: 'var(--surface-container)', color: 'var(--on-surface)',
+    border: '1px solid var(--border-subtle)'
+  },
+  btnGhost: {
+    background: 'transparent', color: 'var(--on-surface-variant)',
+    border: '1px solid transparent'
+  },
+  btnDanger: {
+    background: 'var(--error-container)', color: 'var(--error)',
+    border: '1px solid var(--error-container)'
+  },
+  btnOutline: {
+    background: 'transparent', color: 'var(--primary)',
+    border: '1px solid var(--primary)'
+  },
+  btnSuccess: {
+    background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff',
+    boxShadow: '0 2px 8px rgba(16,185,129,0.3)'
   }
 };
 
@@ -104,6 +129,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
   const [refreshing, setRefreshing] = useState(false);
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
+  const dropdownMenuRef = useRef(null);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
 
   const [formData, setFormData] = useState({
@@ -117,7 +143,11 @@ export default function PQRPanel({ session, rawOrders = [] }) {
   useEffect(() => { if (session?.user?.id) fetchCases(); }, [session]);
 
   useEffect(() => {
-    const h = (e) => { if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setShowDropdown(false); };
+    const h = (e) => { 
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target) && dropdownMenuRef.current && !dropdownMenuRef.current.contains(e.target)) {
+        setShowDropdown(false); 
+      }
+    };
     document.addEventListener('mousedown', h);
     return () => document.removeEventListener('mousedown', h);
   }, []);
@@ -128,6 +158,12 @@ export default function PQRPanel({ session, rawOrders = [] }) {
       setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
     }
   };
+
+  useEffect(() => {
+    if (showDropdown) {
+      updateDropdownPos();
+    }
+  }, [showDropdown]);
 
   // Auto-sync from Tiendanube when rawOrders change
   useEffect(() => {
@@ -370,13 +406,13 @@ export default function PQRPanel({ session, rawOrders = [] }) {
               </h2>
               <p style={{ margin: '3px 0 0', fontSize: 11, color: 'var(--on-surface-variant)' }}>{stats.total} casos · {stats.pending} pendientes</p>
             </div>
-            <div style={{ display: 'flex', gap: 4 }}>
+<div style={{ display: 'flex', gap: 4 }}>
               <button onClick={handleBulkRefresh} disabled={refreshing}
-                style={{ ...S.btn, background: 'var(--surface-container)', color: 'var(--on-surface-variant)', border: '1px solid var(--border-subtle)', animation: refreshing ? 'spin 1s linear infinite' : 'none' }}
+                style={{ ...S.btn, ...S.btnSecondary, animation: refreshing ? 'spin 1s linear infinite' : 'none' }}
                 title="Sincronizar todos con Tiendanube">
                 <RefreshCw size={13} />
               </button>
-              <button onClick={handleOpenCreate} style={{ ...S.btn, background: 'var(--gradient-primary)', color: '#fff', boxShadow: '0 2px 8px rgba(59,130,246,0.3)' }}>
+              <button onClick={handleOpenCreate} style={{ ...S.btn, ...S.btnPrimary }}>
                 <Plus size={14} /> Nuevo
               </button>
             </div>
@@ -410,7 +446,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
             <div style={{ display: 'flex', background: 'var(--surface-container)', borderRadius: 8, border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
               {[{ k: 'inbox', i: Inbox, tip: 'Bandeja' }, { k: 'kanban', i: LayoutGrid, tip: 'Kanban' }].map(v => (
                 <button key={v.k} onClick={() => setViewMode(v.k)} title={v.tip}
-                  style={{ padding: '6px 10px', border: 'none', cursor: 'pointer', background: viewMode === v.k ? 'var(--primary)' : 'transparent', color: viewMode === v.k ? '#fff' : 'var(--on-surface-variant)', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }}>
+                  style={{ padding: '6px 10px', border: 'none', cursor: 'pointer', background: viewMode === v.k ? 'var(--primary)' : 'transparent', color: viewMode === v.k ? '#fff' : 'var(--on-surface)', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }}>
                   <v.i size={13} />
                 </button>
               ))}
@@ -421,7 +457,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
           <div style={{ display: 'flex', gap: 3, marginTop: 8 }}>
             {[{ k: 'all', l: 'Todos' }, { k: 'sent_to_us', l: 'Pendientes' }, { k: 'in_warehouse', l: 'Bodega' }, { k: 'sent_to_client', l: 'Resueltos' }].map(f => (
               <button key={f.k} onClick={() => setFilterStatus(f.k)}
-                style={{ padding: '4px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 10, fontWeight: filterStatus === f.k ? 700 : 500, fontFamily: 'Inter, sans-serif', background: filterStatus === f.k ? 'var(--primary)' : 'transparent', color: filterStatus === f.k ? 'var(--on-primary)' : 'var(--on-surface-variant)', transition: 'all 0.2s' }}>
+                style={{ padding: '4px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 10, fontWeight: filterStatus === f.k ? 700 : 500, fontFamily: 'Inter, sans-serif', background: filterStatus === f.k ? 'var(--primary)' : 'var(--surface-container)', color: filterStatus === f.k ? '#fff' : 'var(--on-surface)', transition: 'all 0.2s' }}>
                 {f.l}
               </button>
             ))}
@@ -513,7 +549,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
                         const prods = (order.products || []).map(p => `${p.name} x${p.quantity || 1}`).join(', ');
                         setFormData(prev => ({ ...prev, customer_name: c.name || prev.customer_name, customer_email: c.email || prev.customer_email, customer_phone: c.phone || prev.customer_phone, products_involved: prods || prev.products_involved }));
                       }
-                    }} style={{ ...S.btn, background: 'var(--primary-container)', color: 'var(--primary)', fontSize: 10 }}>
+                    }} style={{ ...S.btn, ...S.btnSecondary, fontSize: 10 }}>
                       <RefreshCw size={10} /> Recargar
                     </button>
                   )}
@@ -544,7 +580,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
               {hasData && (
                 <div style={{ background: 'rgba(16,185,129,0.05)', border: '1px dashed rgba(16,185,129,0.3)', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12, animation: 'slideUp 0.3s ease' }}>
                   <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--gradient-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }}>
-                    <CheckCircle size={16} color="#fff" />
+                    <CheckCircle2 size={16} color="#fff" />
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: '#10b981' }}>Datos cargados desde Tiendanube</div>
@@ -628,8 +664,8 @@ export default function PQRPanel({ session, rawOrders = [] }) {
 
             {/* Footer */}
             <div style={{ padding: '14px 28px', borderTop: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'flex-end', gap: 8, background: 'var(--surface)', position: 'sticky', bottom: 0, backdropFilter: 'var(--glass-blur)' }}>
-              <button onClick={handleClose} style={{ ...S.btn, background: 'transparent', color: 'var(--on-surface)', border: '1px solid var(--border-subtle)' }}>Cancelar</button>
-              <button onClick={handleSave} style={{ ...S.btn, background: 'var(--gradient-primary)', color: '#fff', boxShadow: '0 2px 8px rgba(59,130,246,0.3)' }}>
+              <button onClick={handleClose} style={{ ...S.btn, ...S.btnOutline }}>Cancelar</button>
+              <button onClick={handleSave} style={{ ...S.btn, ...S.btnPrimary }}>
                 <Save size={13} /> {selectedCase ? 'Actualizar' : 'Crear Caso'}
               </button>
             </div>
@@ -655,16 +691,16 @@ export default function PQRPanel({ session, rawOrders = [] }) {
               <div style={{ display: 'flex', gap: 6 }}>
                 <WhatsAppBtn phone={selectedCase.customer_phone} name={selectedCase.customer_name} orderNum={selectedCase.order_number} />
                 {selectedCase.order_number && rawOrders.length > 0 && (
-                  <button onClick={handleRefreshFromTiendanube} style={{ ...S.btn, background: 'rgba(16,185,129,0.08)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(16,185,129,0.15)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(16,185,129,0.08)'}>
+                  <button onClick={handleRefreshFromTiendanube} style={{ ...S.btn, ...S.btnSuccess }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
+                    onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
                     <RefreshCw size={12} /> Actualizar
                   </button>
                 )}
-                <button onClick={handleEdit} style={{ ...S.btn, background: 'var(--primary-container)', color: 'var(--primary)' }}>
+                <button onClick={handleEdit} style={{ ...S.btn, ...S.btnSecondary }}>
                   <Edit3 size={12} /> Editar
                 </button>
-                <button onClick={() => handleDelete(selectedCase.id)} style={{ ...S.btn, background: 'var(--error-container)', color: 'var(--error)' }}>
+                <button onClick={() => handleDelete(selectedCase.id)} style={{ ...S.btn, ...S.btnDanger }}>
                   <Trash2 size={12} />
                 </button>
               </div>
@@ -767,7 +803,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
 
       {/* DROPDOWN PORTAL — fixed positioned, never clipped by overflow */}
       {showDropdown && matchedOrders.length > 0 && (
-        <div style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, background: 'var(--surface)', border: '1px solid var(--border-subtle)', borderRadius: 10, maxHeight: 240, overflowY: 'auto', boxShadow: 'var(--shadow-lg)', zIndex: 9999, animation: 'slideUp 0.2s ease' }}>
+        <div ref={dropdownMenuRef} style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, background: 'var(--surface)', border: '1px solid var(--border-subtle)', borderRadius: 10, maxHeight: 240, overflowY: 'auto', boxShadow: 'var(--shadow-lg)', zIndex: 9999, animation: 'slideUp 0.2s ease' }}>
           {matchedOrders.map(order => (
             <div key={order.id} onClick={(e) => { e.stopPropagation(); handleOrderSelect(order); setShowDropdown(false); }}
               style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border-subtle)', transition: 'all 0.15s' }}

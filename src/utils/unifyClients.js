@@ -39,7 +39,9 @@ export function isInvalidEmail(email) {
   if (atParts.length !== 2 || !atParts[0] || !atParts[1]) return true;
   if (!atParts[1].includes('.')) return true;
 
-  return INVALID_EMAIL_PATTERNS.some((pattern) => lower.includes(pattern));
+  // Check for invalid email patterns - use direct matching to avoid false positives
+  const invalidPatterns = INVALID_EMAIL_PATTERNS;
+  return invalidPatterns.some((pattern) => lower === pattern);
 }
 
 /**

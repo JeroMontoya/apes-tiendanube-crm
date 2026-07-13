@@ -1,0 +1,152 @@
+Quick start script to check and start the app with auto-connection:
+
+# 1. Check current status
+"""
+The system needs to be run with two components:
+- Frontend: Vite development server (port 5173)
+- Backend: APES CRM server (port 3001)
+"""
+
+# 2. Start backend with auto-connection
+Create a file called "start-backend.js":
+
+```javascript
+const express = require('express');
+const cors = require('cors');
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+
+const app = express();
+app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(express.json({ verify: (req, res, buf) => { req.rawBody = buf; } }));
+
+// Connection state persistence
+const loadState = () => {
+  try {
+    if (fs.existsSync('connection_state.json')) {
+      return JSON.parse(fs.readFileSync('connection_state.json', 'utf8'));
+    }
+  } catch (e) {}
+  return { lastStoreId: null, lastToken: null, lastConnected: null };
+};
+
+const saveState = (state) => {
+  try {
+    fs.writeFileSync('connection_state.json', JSON.stringify(state, null, 2));
+  } catch (e) {}
+};
+
+// Persistent connection service
+class PersistentConnection {
+  constructor(storeId, token, intervalMs = 30000) {
+    this.storeId = storeId;
+    this.token = token;
+    this.intervalMs = intervalMs;
+    this.intervalId = null;
+    this.isRunning = false;
+  }
+
+  async start() {
+    if (this.isRunning) return;
+    this.isRunning = true;
+    console.log(`[Persistent] Starting connection for store ${this.storeId}`);
+    await this.syncData();
+    this.intervalId = setInterval(() => this.syncData(), this.intervalMs);
+    saveState({ lastStoreId: this.storeId, lastToken: this.token, lastConnected: new Date().toISOString() });
+  }
+
+  async syncData() {
+    try {
+      const response = await fetch(`https://api.tiendanube.com/v1/${this.storeId}/orders`, {
+        headers: { 'Authentication': `bearer ${this.token}`, 'User-Agent': 'APES CRM' }
+      });
+      if (response.ok) {
+        const orders = await response.json();
+        console.log(`[Persistent] Sync completed: ${orders.length} orders at ${new Date().toISOString()}`);
+      }
+    } catch (err) {
+      console.error(`[Persistent] Error: ${err.message}`);
+    }
+  }
+
+  stop() {
+    if (this.intervalId) clearInterval(this.intervalId);
+    this.isRunning = false;
+  }
+}
+
+const currentConnection = loadState().lastStoreId ? new PersistentConnection(loadState().lastStoreId, loadState().lastToken).start() : null;
+
+// API endpoints for reconnection
+app.post('/api/reconnect', async (req, res) => {
+  try {
+    if (currentConnection) currentConnection.stop();
+    const { storeId, accessToken } = req.body;
+    currentConnection = new PersistentConnection(storeId, accessToken).start();
+    res.json({ success: true, message: 'Persistent connection established' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    persistentConnection: currentConnection ? { isRunning: currentConnection.isRunning } : null
+  });
+});
+
+app.listen(3001, () => {
+  console.log('APES CRM Backend listening on http://localhost:3001');
+});
+```
+
+# 3. Start frontend
+```bash
+# Terminal 1: Backend
+node start-backend.js
+
+# Terminal 2: Frontend
+cd App\ TiendaNueve
+npm run dev
+```
+
+# 4. For testing, you can also use this script:
+Create "test-system.ps1":
+```powershell
+# Check and start the system
+$backendPath = "start-backend.js"
+$frontendPath = "App TiendaNueve"
+
+# Start backend if not running
+$backendProcess = Get-Process -Name node -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like "*start-backend.js*" }
+if (-not $backendProcess) {
+    Write-Host "Starting backend..."
+    Start-Process "node" -ArgumentList $backendPath
+}
+
+# Start frontend if not running
+$frontendProcess = Get-Process -Name node -ErrorAction SilentlyContinue | Where-Object { $_.WorkingDirectory -like "*App TiendaNueve*" }
+if (-not $frontendProcess) {
+    Write-Host "Starting frontend..."
+    Start-Process "cmd" -ArgumentList "/c npm run dev", $frontendPath
+}
+
+Write-Host "System started! Check http://localhost:5175"
+```
+
+# 5. Check status
+```powershell
+# Check running processes
+Get-Process | Where-Object { $_.ProcessName -eq "node" } | Select-Object ID, WorkingDirectory
+
+# Check network ports
+netstat -an | findstr 5173
+netstat -an | findstr 3001
+
+# Test backend health
+Invoke-RestMethod -Uri "http://localhost:3001/api/health" -Method GET
+```
+
+Your auto-connection system is ready! The app will automatically connect and sync when you load it.

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { MetaAPI } from '../api/MetaAPI';
 import { 
-  Plus, Loader2, Edit3, Target, Layers, Image as ImageIcon, ChevronRight, BarChart3, AlertCircle 
+  Plus, Loader2, Edit3, Target, Layers, Image as ImageIcon, ChevronRight, BarChart3, AlertCircle,
+  TrendingUp, TrendingDown, DollarSign, Users, Award, Trophy
 } from 'lucide-react';
 import CampaignDrawer from './MetaAds/CampaignDrawer';
 import AdSetDrawer from './MetaAds/AdSetDrawer';
@@ -10,7 +11,7 @@ import AdDrawer from './MetaAds/AdDrawer';
 const fmt = (v) => parseFloat(v || 0).toLocaleString('es-CO', { minimumFractionDigits: 0 });
 const fmtMoney = (v) => '$' + parseFloat(v || 0).toLocaleString('es-CO', { minimumFractionDigits: 0 });
 
-export default function MetaAdsPanel({ workspace, onRefreshMeta }) {
+export default function MetaAdsPanel({ workspace, onRefreshMeta, clients, metaInsights, allGoogleAdsData, allTiktokData }) {
   const [activeTab, setActiveTab] = useState('campaigns'); // 'campaigns', 'adsets', 'ads'
   
   // Selection State
@@ -33,6 +34,29 @@ export default function MetaAdsPanel({ workspace, onRefreshMeta }) {
     if (!workspace?.meta_ad_account_id || !workspace?.meta_access_token) return null;
     return new MetaAPI(workspace.meta_ad_account_id, workspace.meta_access_token);
   }, [workspace]);
+
+  // Attribution Logic
+  const attribution = useMemo(() => {
+    const metaList = (metaInsights?.campaigns || []);
+    const googleList = (allGoogleAdsData?.campaigns || []);
+    const tiktokList = (allTiktokData?.campaigns || []);
+    const allCampaigns = [
+      ...metaList.map(c => ({ ...c, platform: 'Meta', spend: c.spend || 0 })),
+      ...googleList.map(c => ({ ...c, platform: 'Google', spend: c.cost || 0 })),
+      ...tiktokList.map(c => ({ ...c, platform: 'TikTok', spend: c.spend || 0 })),
+    ];
+    const totalSpend = allCampaigns.reduce((s, c) => s + c.spend, 0);
+    const totalConversions = allCampaigns.reduce((s, c) => s + (c.conversions || c.results || 0), 0);
+    const totalRevenue = allCampaigns.reduce((s, c) => s + (c.revenue || 0), 0);
+    const realROAS = totalSpend > 0 ? totalRevenue / totalSpend : 0;
+    const realCPA = totalConversions > 0 ? totalSpend / totalConversions : 0;
+    const metaSpend = metaList.reduce((s, c) => s + (c.spend || 0), 0);
+    const metaRevenue = metaList.reduce((s, c) => s + (c.revenue || 0), 0);
+    const metaConversions = metaList.reduce((s, c) => s + (c.results || 0), 0);
+    const metaROAS = metaSpend > 0 ? metaRevenue / metaSpend : 0;
+    const metaCPA = metaConversions > 0 ? metaSpend / metaConversions : 0;
+    return { allCampaigns, totalSpend, totalConversions, totalRevenue, realROAS, realCPA, metaSpend, metaRevenue, metaConversions, metaROAS, metaCPA };
+  }, [metaInsights, allGoogleAdsData, allTiktokData]);
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
@@ -217,6 +241,16 @@ export default function MetaAdsPanel({ workspace, onRefreshMeta }) {
             Anuncios
             {selectedAdSet && <span style={{ fontSize: 11, background: 'var(--primary)', color: 'white', padding: '2px 6px', borderRadius: 10, marginLeft: 4 }}>1 Seleccionado</span>}
           </button>
+
+          <ChevronRight size={16} color="var(--on-surface-variant)" style={{ alignSelf: 'center' }} />
+
+          <button 
+            onClick={() => handleTabChange('attribution')}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 8, background: activeTab === 'attribution' ? 'var(--surface-container-high)' : 'transparent', border: 'none', color: activeTab === 'attribution' ? 'var(--on-surface)' : 'var(--on-surface-variant)', fontWeight: 600, cursor: 'pointer' }}
+          >
+            <TrendingUp size={16} /> 
+            Atribución ROAS
+          </button>
         </div>
       </div>
 
@@ -391,6 +425,132 @@ export default function MetaAdsPanel({ workspace, onRefreshMeta }) {
           </table>
         )}
       </div>
+
+      {/* Attribution Tab Content */}
+      {activeTab === 'attribution' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {/* Hero ROAS Gauge */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+            <div style={{ background: 'var(--surface-container)', borderRadius: 16, padding: 24, textAlign: 'center', border: '1px solid var(--border-subtle)' }}>
+              <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginBottom: 8, fontWeight: 600 }}>ROAS REAL (TODAS LAS PLATAFORMAS)</div>
+              <div style={{ fontSize: 48, fontWeight: 900, color: attribution.realROAS >= 4 ? '#10b981' : attribution.realROAS >= 2 ? '#f59e0b' : '#ef4444' }}>
+                {attribution.realROAS.toFixed(2)}x
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginTop: 4 }}>
+                {attribution.realROAS >= 4 ? 'Excelente' : attribution.realROAS >= 2 ? 'Bueno' : 'Necesita Optimización'}
+              </div>
+            </div>
+            <div style={{ background: 'var(--surface-container)', borderRadius: 16, padding: 24, textAlign: 'center', border: '1px solid var(--border-subtle)' }}>
+              <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginBottom: 8, fontWeight: 600 }}>INVERSIÓN TOTAL</div>
+              <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--on-surface)' }}>
+                ${attribution.totalSpend.toLocaleString('es-CO')}
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginTop: 4 }}>
+                {attribution.totalConversions} conversiones
+              </div>
+            </div>
+            <div style={{ background: 'var(--surface-container)', borderRadius: 16, padding: 24, textAlign: 'center', border: '1px solid var(--border-subtle)' }}>
+              <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginBottom: 8, fontWeight: 600 }}>CPA REAL</div>
+              <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--on-surface)' }}>
+                ${attribution.realCPA.toLocaleString('es-CO')}
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginTop: 4 }}>
+                por conversión
+              </div>
+            </div>
+          </div>
+
+          {/* Meta Ads Attribution Detail */}
+          <div style={{ background: 'var(--surface-container)', borderRadius: 16, padding: 24, border: '1px solid var(--border-subtle)' }}>
+            <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 20 }}>📘</span> Meta Ads — Atribución Detallada
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 20 }}>
+              <div style={{ background: 'rgba(99,102,241,0.08)', borderRadius: 12, padding: 16, textAlign: 'center' }}>
+                <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 600 }}>INVERSIÓN</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: '#6366f1' }}>${attribution.metaSpend.toLocaleString('es-CO')}</div>
+              </div>
+              <div style={{ background: 'rgba(16,185,129,0.08)', borderRadius: 12, padding: 16, textAlign: 'center' }}>
+                <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 600 }}>REVENUE</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: '#10b981' }}>${attribution.metaRevenue.toLocaleString('es-CO')}</div>
+              </div>
+              <div style={{ background: 'rgba(245,158,11,0.08)', borderRadius: 12, padding: 16, textAlign: 'center' }}>
+                <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 600 }}>ROAS</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: attribution.metaROAS >= 3 ? '#10b981' : '#f59e0b' }}>{attribution.metaROAS.toFixed(2)}x</div>
+              </div>
+              <div style={{ background: 'rgba(239,68,68,0.08)', borderRadius: 12, padding: 16, textAlign: 'center' }}>
+                <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 600 }}>CPA</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: '#ef4444' }}>${attribution.metaCPA.toLocaleString('es-CO')}</div>
+              </div>
+            </div>
+            {attribution.allCampaigns.filter(c => c.platform === 'Meta').length > 0 && (
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 700, textTransform: 'uppercase', borderBottom: '1px solid var(--border-subtle)' }}>Campaña</th>
+                    <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 700 }}>Inversión</th>
+                    <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 700 }}>Revenue</th>
+                    <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 700 }}>ROAS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {attribution.allCampaigns.filter(c => c.platform === 'Meta').sort((a, b) => b.spend - a.spend).map((c, i) => (
+                    <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                      <td style={{ padding: '10px 12px', fontSize: 13, fontWeight: 600 }}>{c.name}</td>
+                      <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right' }}>${c.spend.toLocaleString('es-CO')}</td>
+                      <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right', color: '#10b981' }}>${(c.revenue || 0).toLocaleString('es-CO')}</td>
+                      <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right', fontWeight: 700, color: (c.roas || 0) >= 3 ? '#10b981' : '#f59e0b' }}>{(c.roas || 0).toFixed(2)}x</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          {/* Cross-platform comparison */}
+          {attribution.allCampaigns.filter(c => c.platform !== 'Meta').length > 0 && (
+            <div style={{ background: 'var(--surface-container)', borderRadius: 16, padding: 24, border: '1px solid var(--border-subtle)' }}>
+              <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700 }}>Comparación Multi-Plataforma</h3>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 700, textTransform: 'uppercase', borderBottom: '1px solid var(--border-subtle)' }}>Plataforma</th>
+                    <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 700 }}>Inversión</th>
+                    <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 700 }}>Conversiones</th>
+                    <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 700 }}>ROAS</th>
+                    <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 700 }}>% del Presupuesto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {['Meta', 'Google', 'TikTok'].map(platform => {
+                    const platCampaigns = attribution.allCampaigns.filter(c => c.platform === platform);
+                    const platSpend = platCampaigns.reduce((s, c) => s + c.spend, 0);
+                    const platConv = platCampaigns.reduce((s, c) => s + (c.conversions || c.results || 0), 0);
+                    const platROAS = platSpend > 0 ? platCampaigns.reduce((s, c) => s + (c.revenue || 0), 0) / platSpend : 0;
+                    const pct = attribution.totalSpend > 0 ? ((platSpend / attribution.totalSpend) * 100).toFixed(1) : 0;
+                    return platCampaigns.length > 0 ? (
+                      <tr key={platform} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                        <td style={{ padding: '10px 12px', fontSize: 13, fontWeight: 700 }}>{platform === 'Meta' ? '📘' : platform === 'Google' ? '🔍' : '🎵'} {platform}</td>
+                        <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right' }}>${platSpend.toLocaleString('es-CO')}</td>
+                        <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right' }}>{platConv}</td>
+                        <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right', fontWeight: 700, color: platROAS >= 3 ? '#10b981' : '#f59e0b' }}>{platROAS.toFixed(2)}x</td>
+                        <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
+                            <div style={{ width: 60, height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 3, overflow: 'hidden' }}>
+                              <div style={{ height: '100%', width: pct + '%', background: platform === 'Meta' ? '#6366f1' : platform === 'Google' ? '#34a853' : '#ff0050', borderRadius: 3 }} />
+                            </div>
+                            {pct}%
+                          </div>
+                        </td>
+                      </tr>
+                    ) : null;
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       <style>{`
         @keyframes slideInRight {

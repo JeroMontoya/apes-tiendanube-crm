@@ -35,6 +35,11 @@ export class MetaAPI {
     if (typeof dateRange === 'string') return `date_preset=${dateRange}`;
     
     // Object: { preset, metaPreset, startDate, endDate }
+    // Always use explicit time_range when we have startDate/endDate to avoid timezone mismatches
+    if (dateRange.startDate && dateRange.endDate) {
+      return `time_range={"since":"${dateRange.startDate}","until":"${dateRange.endDate}"}`;
+    }
+    // Fallback to preset only if no explicit dates
     if (dateRange.preset === 'custom' || dateRange.metaPreset === 'custom') {
       return `time_range={"since":"${dateRange.startDate}","until":"${dateRange.endDate}"}`;
     }
@@ -42,8 +47,8 @@ export class MetaAPI {
   }
 
   // ── Fetch Helper ──────────────────────────────────────────────────────
-  async _fetch(url) {
-    const res = await fetch(url);
+  async _fetch(url, signal) {
+    const res = await fetch(url, { signal });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err?.error?.message || `Meta API Error: ${res.statusText}`);
@@ -52,7 +57,7 @@ export class MetaAPI {
   }
 
   // ── Global + Campaign Insights ────────────────────────────────────────
-  async getInsights(dateRange) {
+  async getInsights(dateRange, signal) {
     try {
       const accountId = this.getFormattedAccountId();
       const dateParams = this._buildDateParams(dateRange);
@@ -64,8 +69,8 @@ export class MetaAPI {
       const campaignUrl = `${this.baseUrl}/${accountId}/insights?level=campaign&fields=${campaignFields}&${dateParams}&access_token=${this.accessToken}`;
 
       const [summaryData, campaignData] = await Promise.all([
-        this._fetch(summaryUrl).catch(() => ({ data: [] })),
-        this._fetch(campaignUrl).catch(() => ({ data: [] }))
+        this._fetch(summaryUrl, signal).catch(() => ({ data: [] })),
+        this._fetch(campaignUrl, signal).catch(() => ({ data: [] }))
       ]);
 
       let global = { spend: 0, impressions: 0, clicks: 0, cpc: 0, cpm: 0, ctr: 0, actions: [], purchase_roas: [] };
@@ -78,7 +83,7 @@ export class MetaAPI {
         campaigns: campaignData.data || []
       };
     } catch (error) {
-      console.error('Error fetching Meta Insights:', error);
+      if (error.name !== 'AbortError') console.error('Error fetching Meta Insights:', error);
       return null;
     }
   }

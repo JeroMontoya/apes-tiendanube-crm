@@ -35,7 +35,8 @@ export const clearCache = async () => {
 
 export const clearStaleCache = async () => {
   try {
-    await localforage.removeItem('unified_clients');
+    // Only clear products cache (can be large and stale)
+    await localforage.removeItem('tiendanube_products');
     await localforage.removeItem('last_sync');
   } catch (err) {
     console.error('Error limpiando caché stale:', err);

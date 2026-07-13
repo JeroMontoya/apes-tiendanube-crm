@@ -523,7 +523,7 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
                                   onClick={() => updateBatchStatus(batch.id, s.key)}
                                   style={{
                                     display: 'flex', alignItems: 'center', gap: 6,
-                                    padding: '8px 12px', borderRadius: 10, border: 'none',
+                                    padding: '8px 12px', borderRadius: 10,
                                     background: isCurrent ? s.bg : 'rgba(255,255,255,0.03)',
                                     border: isCurrent ? `1.5px solid ${s.color}` : '1.5px solid transparent',
                                     color: isCurrent ? s.color : isPast ? 'var(--on-surface-variant)' : 'var(--on-surface-variant)',

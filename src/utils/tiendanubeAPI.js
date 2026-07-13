@@ -95,17 +95,8 @@ export class TiendanubeAPI {
     }
     this._lastRequestAt = Date.now();
 
-    // ── Convert /api/tn-proxy/{storeId}/path → /api/tn-proxy?tnpath={storeId}/path&...
-    let proxyUrl = url;
-    if (url.startsWith(API_BASE + '/')) {
-      const afterBase = url.slice(API_BASE.length + 1);
-      const qIdx = afterBase.indexOf('?');
-      const pathPart = qIdx >= 0 ? afterBase.slice(0, qIdx) : afterBase;
-      const queryPart = qIdx >= 0 ? afterBase.slice(qIdx + 1) : '';
-      const params = new URLSearchParams(queryPart);
-      params.set('tnpath', pathPart);
-      proxyUrl = `${API_BASE}?${params.toString()}`;
-    }
+    // Usar la URL directamente, el proxy de Vite maneja la reescritura
+    const proxyUrl = url;
 
     try {
       const response = await fetch(proxyUrl, {
@@ -417,12 +408,21 @@ export function mapTiendanubeDataToUnified(customers = [], orders = []) {
       quantity: p.quantity || 1,
     }));
 
+    // Fulfillment / Shipping data from Tiendanube
+    const fulfillmentStatus = order.fulfillment_status || 'pending';
+    const shippingLines = order.shipping_lines || [];
+    const primaryShipping = shippingLines[0] || {};
+    const trackingNumber = primaryShipping.tracking_number || null;
+    const trackingUrl = primaryShipping.tracking_url || null;
+    const carrier = primaryShipping.carrier || primaryShipping.service || null;
+    const shippingStatus = primaryShipping.status || fulfillmentStatus;
+
     return {
       id: order.id,
       number: order.number || order.id,
       state: order.status || order.state || 'open',
       payment_status: order.payment_status || 'pending',
-      fulfillment_status: order.fulfillment_status || null,
+      fulfillment_status: fulfillmentStatus,
       coupon: order.coupon || order.discount_coupon || [],
       contact_name: order.contact_name,
       contact_email: order.contact_email,
@@ -453,6 +453,13 @@ export function mapTiendanubeDataToUnified(customers = [], orders = []) {
       shipping_address: order.shipping_address || null,
       billing_address: order.billing_address || null,
       products,
+      // Shipping / Fulfillment fields (match Tiendanube exactly)
+      fulfillment_status: fulfillmentStatus,
+      shipping_lines: shippingLines,
+      tracking_number: trackingNumber,
+      tracking_url: trackingUrl,
+      carrier: carrier,
+      shipping_status: shippingStatus,
     };
   });
 }

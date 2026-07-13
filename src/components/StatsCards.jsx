@@ -1,7 +1,8 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { 
   DollarSign, Users, ShoppingCart, Repeat, 
-  Star, Package, TrendingUp, Rocket, Globe, ArrowUpRight, ArrowDownRight, Target
+  Star, Package, TrendingUp, Rocket, Globe, ArrowUpRight, Target,
+  RefreshCw
 } from 'lucide-react';
 
 function formatCurrency(value) {
@@ -74,7 +75,7 @@ const CARD_CONFIG = [
   { key: 'retention', icon: Repeat, label: 'Tasa Retención', color: '#8b5cf6', span: 'bento-span-3' },
 ];
 
-export default function StatsCards({ clients, metaInsights, ga4Insights }) {
+export default function StatsCards({ clients, metaInsights, ga4Insights, metaInsightsLoading }) {
   const [hoveredCard, setHoveredCard] = useState(null);
 
   const stats = useMemo(() => {
@@ -88,6 +89,7 @@ export default function StatsCards({ clients, metaInsights, ga4Insights }) {
     const retention = withPurchases > 0 ? ((vipCount / withPurchases) * 100) : 0;
     const avgTicket = totalOrders > 0 ? (revenue / totalOrders) : 0;
 
+    // Use last known metaSpend if loading to prevent flickering
     const metaSpend = metaInsights?.global ? parseFloat(metaInsights.global.spend || 0) : 0;
     const roas = metaSpend > 0 ? (revenue / metaSpend) : 0;
     const cpa = total > 0 ? (metaSpend / total) : 0;
@@ -132,26 +134,25 @@ export default function StatsCards({ clients, metaInsights, ga4Insights }) {
   }, [clients, metaInsights, ga4Insights]);
 
   return (
-    <div className="bento-grid" style={{ gridAutoRows: 'auto' }}>
+    <div className="bento-grid">
       {CARD_CONFIG.map((cfg) => {
         const isHovered = hoveredCard === cfg.key;
         const data = stats[cfg.key];
         const Icon = cfg.icon;
+        const isMetaLoading = metaInsightsLoading && (cfg.key === 'roas' || cfg.key === 'cpa' || cfg.key === 'metaSpend');
         return (
           <div
             key={cfg.key}
             className={`glass-card ${cfg.span}`}
             style={{
-              padding: '20px 24px',
-              cursor: 'default',
-              position: 'relative',
-              overflow: 'hidden',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
               minHeight: 130,
-              transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-              ...(isHovered ? { borderColor: `${cfg.color}33`, boxShadow: `0 0 30px ${cfg.color}15, 0 8px 32px rgba(0,0,0,0.15)` } : {}),
+              cursor: 'default',
+              opacity: isMetaLoading ? 0.6 : 1,
+              transition: 'opacity 0.2s ease',
+              ...(isHovered ? { borderColor: `${cfg.color}33`, boxShadow: `0 0 30px ${cfg.color}15, var(--shadow-md)` } : {}),
             }}
             onMouseEnter={() => setHoveredCard(cfg.key)}
             onMouseLeave={() => setHoveredCard(null)}
@@ -184,12 +185,18 @@ export default function StatsCards({ clients, metaInsights, ga4Insights }) {
               <div style={{ opacity: isHovered ? 1 : 0, transition: 'opacity 0.3s' }}>
                 <ArrowUpRight size={16} color="#10b981" />
               </div>
+              {isMetaLoading && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: 'var(--on-surface-variant)' }}>
+                  <RefreshCw size={12} style={{ animation: 'spin 1s linear infinite' }} />
+                  <span>Actualizando...</span>
+                </div>
+              )}
             </div>
             
             {/* Value + Sparkline */}
             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, position: 'relative', zIndex: 1 }}>
               <div className="stat-value" style={{ fontSize: cfg.span === 'bento-span-4' ? 28 : 24 }}>
-                <AnimatedValue value={data.value} />
+                <AnimatedValue value={isMetaLoading ? '---' : data.value} />
               </div>
               <Sparkline data={data.sparkData} color={cfg.color} width={70} height={28} />
             </div>
