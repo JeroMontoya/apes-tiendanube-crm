@@ -921,7 +921,7 @@ app.get('/api/cron/sync', async (req, res) => {
 
     if (upsertErr) console.error('[Cron] Upsert error:', upsertErr.message);
 
-    res.json({ status: 'ok', duration, customers: customers.length, orders: orders.length, products: products.length, errors });
+    res.json({ status: 'ok', duration, customers: customers.length, orders: orders.length, products: products.length, errors, debug: { saPresent: !!sa, ga4Prop: config.ga4_property_id, mcMerchant: config.merchant_center_merchant_id, gscSite: config.search_console_site_url, metaAcct: config.meta_ad_account_id } });
   } catch (err) {
     console.error('[Cron] Fatal:', err.message);
     const duration = Date.now() - startTime;
