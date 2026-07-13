@@ -696,7 +696,7 @@ async function ga4GetAccessToken(sa) {
   const jwt = await new SignJWT({ iss: sa.client_email, scope: 'https://www.googleapis.com/auth/analytics.readonly', aud: 'https://oauth2.googleapis.com/token' })
     .setProtectedHeader({ alg: 'RS256', typ: 'JWT' }).setIssuedAt().setExpirationTime('1h').sign(pk);
   const r = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt }) });
-  if (!r.ok) throw new Error('GA4 token failed');
+  if (!r.ok) { const errBody = await r.text().catch(() => ''); throw new Error(`GA4 token failed (${r.status}): ${errBody.substring(0, 200)}`); }
   const j = await r.json();
   return j.access_token;
 }
@@ -727,7 +727,7 @@ async function mcGetAccessToken(sa) {
   const jwt = await new SignJWT({ iss: sa.client_email, scope: 'https://www.googleapis.com/auth/content', aud: 'https://oauth2.googleapis.com/token' })
     .setProtectedHeader({ alg: 'RS256', typ: 'JWT' }).setIssuedAt().setExpirationTime('1h').sign(pk);
   const r = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt }) });
-  if (!r.ok) throw new Error('MC token failed');
+  if (!r.ok) { const errBody = await r.text().catch(() => ''); throw new Error(`MC token failed (${r.status}): ${errBody.substring(0, 200)}`); }
   return (await r.json()).access_token;
 }
 
