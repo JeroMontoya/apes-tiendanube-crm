@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
 const SSE_URL = '/api/sync/stream';
@@ -8,134 +8,130 @@ const MAX_RECONNECT = 10;
 export function useRealtimeSync({ onConfigChange, onOrderChange, onProductChange, onBroadcast }) {
   const eventSourceRef = useRef(null);
   const reconnectCount = useRef(0);
-  const channelRef = useRef(null);
+  const broadcastChannelRef = useRef(null);
   const [connected, setConnected] = useState(false);
   const [lastEvent, setLastEvent] = useState(null);
 
-  // SSE connection for server-pushed events
-  const connectSSE = useCallback(() => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
+  // Use refs to avoid stale closures and reconnect loops
+  const callbacksRef = useRef({ onConfigChange, onOrderChange, onProductChange, onBroadcast });
+  callbacksRef.current = { onConfigChange, onOrderChange, onProductChange, onBroadcast };
+
+  // SSE connection
+  useEffect(() => {
+    let alive = true;
+
+    function connect() {
+      if (!alive) return;
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+
+      try {
+        const es = new EventSource(SSE_URL + '?channel=global');
+        eventSourceRef.current = es;
+
+        es.onopen = () => {
+          if (!alive) return;
+          setConnected(true);
+          reconnectCount.current = 0;
+        };
+
+        es.onmessage = (event) => {
+          if (!alive) return;
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'connected') return; // Initial handshake
+            setLastEvent(data);
+            const cbs = callbacksRef.current;
+            if (data.type === 'config-changed' && cbs.onConfigChange) cbs.onConfigChange(data);
+            if (data.type === 'order-changed' && cbs.onOrderChange) cbs.onOrderChange(data);
+            if (data.type === 'product-changed' && cbs.onProductChange) cbs.onProductChange(data);
+            if ((data.type === 'db-change' || data.type === 'tn-event' || data.type === 'workspace-changed') && cbs.onBroadcast) cbs.onBroadcast(data);
+          } catch (err) {
+            console.warn('[SSE] Parse error:', err);
+          }
+        };
+
+        es.onerror = () => {
+          if (!alive) return;
+          setConnected(false);
+          es.close();
+          eventSourceRef.current = null;
+
+          if (reconnectCount.current < MAX_RECONNECT) {
+            reconnectCount.current++;
+            const delay = RECONNECT_DELAY * Math.min(reconnectCount.current, 5);
+            setTimeout(connect, delay);
+          }
+        };
+      } catch (err) {
+        console.warn('[SSE] Connection failed:', err);
+      }
     }
 
-    try {
-      const es = new EventSource(SSE_URL + '?channel=global');
-      eventSourceRef.current = es;
+    connect();
 
-      es.onopen = () => {
-        setConnected(true);
-        reconnectCount.current = 0;
-      };
-
-      es.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          setLastEvent(data);
-
-          if (data.type === 'config-changed' && onConfigChange) onConfigChange(data);
-          if (data.type === 'order-changed' && onOrderChange) onOrderChange(data);
-          if (data.type === 'product-changed' && onProductChange) onProductChange(data);
-          if (data.type === 'db-change' && onBroadcast) onBroadcast(data);
-          if (data.type === 'tn-event' && onBroadcast) onBroadcast(data);
-        } catch (err) {
-          console.warn('[SSE] Parse error:', err);
-        }
-      };
-
-      es.onerror = () => {
-        setConnected(false);
-        es.close();
+    return () => {
+      alive = false;
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
         eventSourceRef.current = null;
+      }
+    };
+  }, []); // Empty deps - only connect once
 
-        if (reconnectCount.current < MAX_RECONNECT) {
-          reconnectCount.current++;
-          const delay = RECONNECT_DELAY * Math.min(reconnectCount.current, 5);
-          setTimeout(connectSSE, delay);
-        }
-      };
-    } catch (err) {
-      console.warn('[SSE] Connection failed:', err);
-    }
-  }, [onConfigChange, onOrderChange, onProductChange, onBroadcast]);
+  // Supabase Broadcast channel for cross-tab/cross-device sync (FREE tier)
+  // NOTE: postgres_changes requires Pro plan - we only use Broadcast
+  useEffect(() => {
+    let alive = true;
 
-  // Supabase Realtime subscription for DB changes
-  const subscribeRealtime = useCallback(() => {
-    try {
-      const channel = supabase
-        .channel('realtime-sync')
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'system_config' },
-          (payload) => {
-            setLastEvent({ type: 'db-change', table: 'system_config', event: payload.eventType });
-            if (onConfigChange) onConfigChange(payload);
-          }
-        )
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'workspaces' },
-          (payload) => {
-            setLastEvent({ type: 'db-change', table: 'workspaces', event: payload.eventType });
-            if (onConfigChange) onConfigChange(payload);
-          }
-        )
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'activity_log' },
-          (payload) => {
-            setLastEvent({ type: 'db-change', table: 'activity_log', event: payload.eventType });
-            if (onBroadcast) onBroadcast(payload);
-          }
-        )
-        .subscribe();
-
-      channelRef.current = channel;
-    } catch (err) {
-      console.warn('[Realtime] Subscription failed:', err);
-    }
-  }, [onConfigChange, onBroadcast]);
-
-  // Broadcast channel for cross-tab communication
-  const broadcastChannel = useCallback(() => {
     try {
       const channel = supabase.channel('cross-tab-sync');
 
       channel
         .on('broadcast', { event: 'data-changed' }, (payload) => {
-          setLastEvent({ type: 'broadcast', ...payload.payload });
-          if (onBroadcast) onBroadcast(payload.payload);
+          if (!alive) return;
+          const data = payload.payload;
+          setLastEvent({ type: 'broadcast', ...data });
+          const cbs = callbacksRef.current;
+          if (cbs.onBroadcast) cbs.onBroadcast(data);
         })
-        .subscribe();
+        .on('broadcast', { event: 'config-changed' }, (payload) => {
+          if (!alive) return;
+          setLastEvent({ type: 'broadcast-config', ...payload.payload });
+          const cbs = callbacksRef.current;
+          if (cbs.onConfigChange) cbs.onConfigChange(payload.payload);
+        })
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('[Broadcast] Subscribed to cross-tab-sync');
+          }
+        });
 
-      return channel;
+      broadcastChannelRef.current = channel;
     } catch (err) {
       console.warn('[Broadcast] Subscription failed:', err);
-      return null;
     }
-  }, [onBroadcast]);
 
-  // Send broadcast to other tabs/devices
-  const broadcast = useCallback(async (event, payload) => {
-    if (channelRef.current) {
-      await channelRef.current.send({
+    return () => {
+      alive = false;
+      if (broadcastChannelRef.current) {
+        supabase.removeChannel(broadcastChannelRef.current);
+        broadcastChannelRef.current = null;
+      }
+    };
+  }, []); // Empty deps - only subscribe once
+
+  // Broadcast function to send events to other tabs/devices
+  const broadcast = async (event, payload) => {
+    if (broadcastChannelRef.current) {
+      await broadcastChannelRef.current.send({
         type: 'broadcast',
         event: event,
         payload: payload,
       });
     }
-  }, []);
-
-  useEffect(() => {
-    connectSSE();
-    subscribeRealtime();
-    const bc = broadcastChannel();
-
-    return () => {
-      if (eventSourceRef.current) eventSourceRef.current.close();
-      if (channelRef.current) supabase.removeChannel(channelRef.current);
-      if (bc) supabase.removeChannel(bc);
-    };
-  }, [connectSSE, subscribeRealtime, broadcastChannel]);
+  };
 
   return { connected, lastEvent, broadcast };
 }
