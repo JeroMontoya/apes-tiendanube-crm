@@ -867,33 +867,52 @@ app.get('/api/cron/sync', async (req, res) => {
     // 5. Fetch external APIs in parallel
     console.log('[Cron] Fetching external APIs...');
     let ga4 = null, meta = null, mc = [], gsc = { queries: [], pages: [], performance: null };
+    const debugLogs = [];
 
     const sa = config.ga4_credentials_json || config.merchant_center_credentials_json;
-    console.log('[Cron] SA creds:', sa ? `present (${sa.client_email || 'no email'})` : 'null');
-    console.log('[Cron] GA4 prop:', config.ga4_property_id || 'none');
-    console.log('[Cron] MC merchant:', config.merchant_center_merchant_id || 'none');
-    console.log('[Cron] GSC site:', config.search_console_site_url || 'none');
-    console.log('[Cron] Meta account:', config.meta_ad_account_id || 'none');
+    debugLogs.push(`sa=${!!sa} email=${sa?.client_email || 'none'} hasKey=${!!sa?.private_key}`);
+    debugLogs.push(`ga4Prop=${config.ga4_property_id} mcMerchant=${config.merchant_center_merchant_id} gscSite=${config.search_console_site_url} metaAcct=${config.meta_ad_account_id}`);
 
-    const [ga4Res, mcRes, gscRes] = await Promise.allSettled([
-      ga4GetInsights(sa, config.ga4_property_id, sd, ed),
-      mcFetchProducts(sa, config.merchant_center_merchant_id),
-      gscFetch(config.search_console_site_url, sa, sd, ed),
-    ]);
-    if (ga4Res.status === 'fulfilled') { ga4 = ga4Res.value; console.log('[Cron] GA4 result:', ga4 ? 'data' : 'null'); }
-    else { console.error('[Cron] GA4 rejected:', ga4Res.reason?.message); errors.push({ api: 'ga4', msg: ga4Res.reason?.message }); }
-    if (mcRes.status === 'fulfilled') { mc = mcRes.value; console.log('[Cron] MC result:', mc?.length || 0, 'products'); }
-    else { console.error('[Cron] MC rejected:', mcRes.reason?.message); errors.push({ api: 'mc', msg: mcRes.reason?.message }); }
-    if (gscRes.status === 'fulfilled') { gsc = gscRes.value; console.log('[Cron] GSC result:', gsc.queries?.length || 0, 'queries'); }
-    else { console.error('[Cron] GSC rejected:', gscRes.reason?.message); errors.push({ api: 'gsc', msg: gscRes.reason?.message }); }
+    // Test GA4 token first
+    if (sa && config.ga4_property_id) {
+      try {
+        const token = await ga4GetAccessToken(sa);
+        debugLogs.push(`ga4_token=ok(${token?.substring(0, 10)}...)`);
+        const r = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${config.ga4_property_id}:runReport`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dateRanges: [{ startDate: sd, endDate: ed }], metrics: [{ name: 'totalUsers' }, { name: 'sessions' }], dimensions: [{ name: 'date' }] }),
+        });
+        if (r.ok) { ga4 = await r.json(); debugLogs.push(`ga4=http_ok(rows=${ga4?.rowCount || 0})`); }
+        else { const b = await r.text().catch(() => ''); debugLogs.push(`ga4=http_${r.status}(${b.substring(0, 200)})`); }
+      } catch (e) { debugLogs.push(`ga4_error=${e.message}`); }
+    } else {
+      debugLogs.push('ga4=skipped(no_creds)');
+    }
 
-    // Meta (simple: just use token directly)
+    // Test MC
+    if (sa && config.merchant_center_merchant_id) {
+      try {
+        const token = await mcGetAccessToken(sa);
+        debugLogs.push(`mc_token=ok`);
+        const r = await fetch(`https://shoppingcontent.googleapis.com/content/v2.1/${config.merchant_center_merchant_id}/products?maxResults=5`, { headers: { Authorization: `Bearer ${token}` } });
+        if (r.ok) { const j = await r.json(); mc = j.resources || []; debugLogs.push(`mc=http_ok(products=${mc.length})`); }
+        else { const b = await r.text().catch(() => ''); debugLogs.push(`mc=http_${r.status}(${b.substring(0, 200)})`); }
+      } catch (e) { debugLogs.push(`mc_error=${e.message}`); }
+    } else {
+      debugLogs.push('mc=skipped(no_creds)');
+    }
+
+    // Test Meta
     if (config.meta_ad_account_id && config.meta_access_token) {
       try {
         const metaUrl = `https://graph.facebook.com/v21.0/act_${config.meta_ad_account_id}/insights?fields=impressions,clicks,spend,actions,cost_per_action_type&date_preset=max_30d&access_token=${config.meta_access_token}`;
         const mr = await fetch(metaUrl);
-        if (mr.ok) { const md = await mr.json(); meta = md.data?.[0] || null; }
-      } catch (e) { errors.push({ api: 'meta', msg: e.message }); }
+        if (mr.ok) { const md = await mr.json(); meta = md.data?.[0] || null; debugLogs.push(`meta=http_ok(data=${!!meta})`); }
+        else { const b = await mr.text().catch(() => ''); debugLogs.push(`meta=http_${mr.status}(${b.substring(0, 200)})`); }
+      } catch (e) { debugLogs.push(`meta_error=${e.message}`); }
+    } else {
+      debugLogs.push('meta=skipped(no_creds)');
     }
 
     // 6. Save to server_cache
@@ -922,7 +941,7 @@ app.get('/api/cron/sync', async (req, res) => {
 
     if (upsertErr) console.error('[Cron] Upsert error:', upsertErr.message);
 
-    res.json({ status: 'ok', duration, customers: customers.length, orders: orders.length, products: products.length, errors, debug: { saPresent: !!sa, ga4Prop: config.ga4_property_id, mcMerchant: config.merchant_center_merchant_id, gscSite: config.search_console_site_url, metaAcct: config.meta_ad_account_id } });
+    res.json({ status: 'ok', duration, customers: customers.length, orders: orders.length, products: products.length, errors, ga4: !!ga4, meta: !!meta, mcCount: mc.length, debug: debugLogs });
   } catch (err) {
     console.error('[Cron] Fatal:', err.message);
     const duration = Date.now() - startTime;
