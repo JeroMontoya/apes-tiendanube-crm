@@ -184,7 +184,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
         if (order.tracking_number && !pqr.original_tracking) upd.original_tracking = order.tracking_number;
         if (Object.keys(upd).length > 0) {
           changed = true;
-          await supabase.from('pqr_cases').update(upd).eq('id', pqr.id).eq('user_id', session.user.id);
+          await supabase.from('pqr_cases').update(upd).eq('id', pqr.id);
         }
       }
       if (changed) fetchCases();
@@ -195,7 +195,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
   const fetchCases = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.from('pqr_cases').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('pqr_cases').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       setCases(data || []);
     } catch (e) {
@@ -269,7 +269,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
     try {
       const dbFields = { ...formData };
       if (isCreating && selectedCase) {
-        const { error } = await supabase.from('pqr_cases').update(dbFields).eq('id', selectedCase.id).eq('user_id', session.user.id);
+        const { error } = await supabase.from('pqr_cases').update(dbFields).eq('id', selectedCase.id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from('pqr_cases').insert([{ ...dbFields, user_id: session.user.id }]);
@@ -287,7 +287,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
   const handleDelete = async (id) => {
     if (!window.confirm('¿Eliminar este caso permanentemente?')) return;
     try {
-      await supabase.from('pqr_cases').delete().eq('id', id).eq('user_id', session.user.id);
+      await supabase.from('pqr_cases').delete().eq('id', id);
       setSelectedCase(null); fetchCases();
     } catch (e) { console.error('Error deleting PQR case:', e); }
   };
@@ -295,7 +295,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
   const handleStatusChange = async (newStatus) => {
     if (!selectedCase) return;
     try {
-      const { error } = await supabase.from('pqr_cases').update({ tracker_status: newStatus }).eq('id', selectedCase.id).eq('user_id', session.user.id);
+      const { error } = await supabase.from('pqr_cases').update({ tracker_status: newStatus }).eq('id', selectedCase.id);
       if (error) throw error;
       setSelectedCase(prev => ({ ...prev, tracker_status: newStatus }));
       fetchCases();
@@ -326,7 +326,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
       original_tracking: order.tracking_number || selectedCase.original_tracking
     };
     try {
-      const { error } = await supabase.from('pqr_cases').update(updates).eq('id', selectedCase.id).eq('user_id', session.user.id);
+      const { error } = await supabase.from('pqr_cases').update(updates).eq('id', selectedCase.id);
       if (error) throw error;
       setSelectedCase(prev => ({ ...prev, ...updates })); fetchCases();
     } catch (e) { console.error('Error refreshing:', e); }
@@ -376,7 +376,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
       if (prods) upd.products_involved = prods;
       if (order.tracking_number) upd.original_tracking = order.tracking_number;
       if (Object.keys(upd).length > 0) {
-        await supabase.from('pqr_cases').update(upd).eq('id', pqr.id).eq('user_id', session.user.id);
+        await supabase.from('pqr_cases').update(upd).eq('id', pqr.id);
         updated++;
       }
     }
