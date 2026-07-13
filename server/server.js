@@ -355,6 +355,7 @@ function proxyToExternal(targetHost, pathRewrite) {
         'Content-Type': req.headers['content-type'] || 'application/json',
         'Authentication': auth,
         'Accept': 'application/json',
+        'User-Agent': req.headers['user-agent'] || 'APES CRM (contact@apesdigital.com)',
       },
     };
 
@@ -562,6 +563,67 @@ app.get('/api/diag', async (req, res) => {
       supabase_url: process.env.VITE_SUPABASE_URL ? 'SET' : 'MISSING',
       has_service_role: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Seed endpoint: saves TiendaNueve credentials into system_config
+// Uses user's JWT for authenticated writes
+app.post('/api/seed/credentials', express.json(), async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ error: 'No auth token' });
+
+  const token = authHeader.replace('Bearer ', '');
+  const userSupabase = createClient(
+    process.env.VITE_SUPABASE_URL || '',
+    process.env.VITE_SUPABASE_ANON_KEY || '',
+    { global: { headers: { Authorization: `Bearer ${token}` } } }
+  );
+
+  // Accept from body OR from env vars (server-side only)
+  const { tiendanube_store_id, tiendanube_access_token, meta_ad_account_id, meta_access_token, ga4_property_id } = req.body;
+  const storeId = tiendanube_store_id || process.env.TN_STORE_ID || null;
+  const storeToken = tiendanube_access_token || process.env.TN_ACCESS_TOKEN || null;
+
+  try {
+    // Try system_config first (requires admin role)
+    const { error: scErr } = await userSupabase
+      .from('system_config')
+      .upsert({
+        id: 'main',
+        tiendanube_store_id: storeId,
+        tiendanube_access_token: storeToken,
+        meta_ad_account_id: meta_ad_account_id || process.env.META_AD_ACCOUNT_ID || null,
+        meta_access_token: meta_access_token || process.env.META_ACCESS_TOKEN || null,
+        ga4_property_id: ga4_property_id || process.env.GA4_PROPERTY_ID || null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'id' });
+
+    if (!scErr) {
+      return res.json({ saved: 'system_config', error: null });
+    }
+
+    // Fallback: save to workspaces (requires user_id)
+    const { data: { user } } = await userSupabase.auth.getUser();
+    if (!user) return res.status(401).json({ error: 'Not authenticated' });
+
+    const { error: wsErr } = await userSupabase
+      .from('workspaces')
+      .upsert({
+        user_id: user.id,
+        tiendanube_store_id: storeId,
+        tiendanube_access_token: storeToken,
+        meta_ad_account_id: meta_ad_account_id || process.env.META_AD_ACCOUNT_ID || null,
+        meta_access_token: meta_access_token || process.env.META_ACCESS_TOKEN || null,
+        ga4_property_id: ga4_property_id || process.env.GA4_PROPERTY_ID || null,
+      }, { onConflict: 'user_id' });
+
+    if (wsErr) {
+      return res.json({ saved: null, system_config_error: scErr.message, workspaces_error: wsErr.message });
+    }
+
+    return res.json({ saved: 'workspaces', system_config_error: scErr.message, error: null });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

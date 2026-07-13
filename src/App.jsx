@@ -326,6 +326,36 @@ export default function App() {
       if (currentStore && currentToken) {
         setStoreId(currentStore);
         await fetchRealData(currentStore, currentToken);
+      } else {
+        // No credentials in DB — auto-seed from server endpoint
+        try {
+          const { data: { session: authSession } } = await supabase.auth.getSession();
+          if (authSession?.access_token) {
+            const seedRes = await fetch('/api/seed/credentials', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authSession.access_token}`,
+              },
+              body: JSON.stringify({}),
+            });
+            const seedData = await seedRes.json();
+            console.log('[Seed]', seedData);
+            if (seedData.saved) {
+              // Reload workspace data after seeding
+              const { data: newConfig } = await supabase.from('system_config').select('*').eq('id', 'main').single();
+              const { data: newWs } = await supabase.from('workspaces').select('*').eq('user_id', session.user.id).single();
+              const merged = { ...newConfig, ...newWs };
+              if (merged?.tiendanube_store_id && merged?.tiendanube_access_token) {
+                setWorkspaceData(prev => ({ ...prev, ...merged }));
+                setStoreId(merged.tiendanube_store_id);
+                await fetchRealData(merged.tiendanube_store_id, merged.tiendanube_access_token);
+              }
+            }
+          }
+        } catch (seedErr) {
+          console.warn('[Seed] Auto-seed failed:', seedErr);
+        }
       }
       // No credentials → empty state, never mock data
 
