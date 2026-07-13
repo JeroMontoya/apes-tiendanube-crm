@@ -702,9 +702,10 @@ async function ga4GetAccessToken(sa) {
 }
 
 async function ga4GetInsights(sa, propId, startDate, endDate) {
-  if (!sa || !propId) return null;
+  if (!sa || !propId) { console.log('[Cron GA4] Skipping: sa=' + !!sa + ' propId=' + propId); return null; }
   try {
     const token = await ga4GetAccessToken(sa);
+    console.log('[Cron GA4] Token obtained, fetching report...');
     const r = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propId}:runReport`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
