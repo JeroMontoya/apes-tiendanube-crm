@@ -816,15 +816,15 @@ app.get('/api/cron/sync', async (req, res) => {
     console.log('[Cron] Fetching TiendaNueve data...');
     let customers = [], orders = [], products = [];
     try {
-      customers = await tnFetchAll(`/store/${storeId}/customers`, token);
+      customers = await tnFetchAll(`/${storeId}/customers`, token);
     } catch (e) { errors.push({ api: 'tn_customers', msg: e.message }); }
 
     try {
-      orders = await tnFetchAll(`/store/${storeId}/orders`, token);
+      orders = await tnFetchAll(`/${storeId}/orders`, token);
     } catch (e) { errors.push({ api: 'tn_orders', msg: e.message }); }
 
     try {
-      products = await tnFetchAll(`/store/${storeId}/products`, token);
+      products = await tnFetchAll(`/${storeId}/products`, token);
     } catch (e) { errors.push({ api: 'tn_products', msg: e.message }); }
 
     console.log(`[Cron] TN: ${customers.length} customers, ${orders.length} orders, ${products.length} products`);
