@@ -108,8 +108,14 @@ export class TiendanubeAPI {
         const errorBody = await response.text().catch(() => '');
         
         // Tiendanube returns 404 when a collection is empty (e.g. 0 customers)
+        // But only treat as empty if the response came from TiendaNueve API, not a broken proxy
         if (response.status === 404) {
-          return ok([]);
+          const url = response.url || '';
+          if (url.includes('tiendanube.com') || url.includes('/v1/')) {
+            return ok([]);
+          }
+          // 404 from local proxy means routing is broken, not empty data
+          return fail(`API proxy error (404): ${url}`, 404);
         }
 
         return fail(

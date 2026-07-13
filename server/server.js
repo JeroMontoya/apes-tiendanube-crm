@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import crypto from 'crypto';
+import https from 'https';
+import http from 'http';
 import dotenv from 'dotenv';
 import { google } from 'googleapis';
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
@@ -332,6 +334,100 @@ app.get('/api/competitors/seo', async (req, res) => {
 
   res.json({ source, data: seoData });
 });
+
+// === API PROXY ROUTES ===
+// Vite dev server proxies these to external APIs.
+// In production (Vercel), Express must proxy them since vercel.json
+// routes ALL /api/* to this server.
+
+function proxyToExternal(targetHost, pathRewrite) {
+  return (req, res) => {
+    const targetPath = pathRewrite ? pathRewrite(req.path, req.url) : req.url;
+    const auth = req.headers['authentication'] || req.headers['Authorization'] || '';
+    const devToken = req.headers['developer-token'] || '';
+
+    const options = {
+      hostname: targetHost,
+      port: 443,
+      path: targetPath,
+      method: req.method,
+      headers: {
+        'Content-Type': req.headers['content-type'] || 'application/json',
+        'Authentication': auth,
+        'Accept': 'application/json',
+      },
+    };
+
+    if (devToken) options.headers['developer-token'] = devToken;
+
+    const proxyReq = https.request(options, (proxyRes) => {
+      res.writeHead(proxyRes.statusCode, {
+        'Content-Type': proxyRes.headers['content-type'] || 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      });
+      proxyRes.pipe(res);
+    });
+
+    proxyReq.on('error', (err) => {
+      console.error(`[Proxy Error] ${targetHost}${targetPath}:`, err.message);
+      res.status(502).json({ error: 'Proxy error', message: err.message });
+    });
+
+    if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+      req.pipe(proxyReq);
+    } else {
+      proxyReq.end();
+    }
+  };
+}
+
+// TiendaNueve API Proxy: /api/tn-proxy/storeId/path -> /v1/storeId/path@api.tiendanube.com
+app.all('/api/tn-proxy/*', (req, res) => {
+  const tnPath = req.path.replace('/api/tn-proxy/', '');
+  const qs = req.url.includes('?') ? req.url.split('?')[1] : '';
+  const targetPath = `/v1/${tnPath}${qs ? '?' + qs : ''}`;
+  proxyToExternal('api.tiendanube.com', () => targetPath)(req, res);
+});
+
+// TiendaNueve Alt route: /api/tiendanube/* -> /*@api.tiendanube.com
+app.all('/api/tiendanube/*', (req, res) => {
+  const tnPath = req.path.replace('/api/tiendanube', '');
+  const qs = req.url.includes('?') ? req.url.split('?')[1] : '';
+  const targetPath = `${tnPath}${qs ? '?' + qs : ''}`;
+  proxyToExternal('api.tiendanube.com', () => targetPath)(req, res);
+});
+
+// Google Shopping Content: /gapi-content/* -> /*@shoppingcontent.googleapis.com
+app.all('/gapi-content/*', (req, res) => {
+  const targetPath = req.url.split('/gapi-content')[1] || '/';
+  proxyToExternal('shoppingcontent.googleapis.com', () => targetPath)(req, res);
+});
+
+// Google Analytics Data: /gapi-analytics/* -> /*@analyticsdata.googleapis.com
+app.all('/gapi-analytics/*', (req, res) => {
+  const targetPath = req.url.split('/gapi-analytics')[1] || '/';
+  proxyToExternal('analyticsdata.googleapis.com', () => targetPath)(req, res);
+});
+
+// Google OAuth: /gapi-oauth/* -> /*@oauth2.googleapis.com
+app.all('/gapi-oauth/*', (req, res) => {
+  const targetPath = req.url.split('/gapi-oauth')[1] || '/';
+  proxyToExternal('oauth2.googleapis.com', () => targetPath)(req, res);
+});
+
+// Google Search Console: /gapi-webmasters/* -> /*@www.googleapis.com
+app.all('/gapi-webmasters/*', (req, res) => {
+  const targetPath = req.url.split('/gapi-webmasters')[1] || '/';
+  proxyToExternal('www.googleapis.com', () => targetPath)(req, res);
+});
+
+// Google Ads: /gapi-ads/* -> /*@googleads.googleapis.com
+app.all('/gapi-ads/*', (req, res) => {
+  const targetPath = req.url.split('/gapi-ads')[1] || '/';
+  proxyToExternal('googleads.googleapis.com', () => targetPath)(req, res);
+});
+
+// === END API PROXY ROUTES ===
 
 // === REAL-TIME SYNC WEBHOOKS ===
 
