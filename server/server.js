@@ -443,6 +443,34 @@ app.get('/api/sync/health', (req, res) => {
   });
 });
 
+// Diagnostic endpoint to check if Supabase data exists
+app.get('/api/diag', async (req, res) => {
+  try {
+    const { data: config, error: configErr } = await supabaseAdmin
+      .from('system_config')
+      .select('id, tiendanube_store_id, tiendanube_access_token, meta_ad_account_id, meta_access_token')
+      .eq('id', 'main')
+      .single();
+
+    const { data: workspaces, error: wsErr } = await supabaseAdmin
+      .from('workspaces')
+      .select('user_id, tiendanube_store_id, tiendanube_access_token')
+      .limit(5);
+
+    res.json({
+      system_config: config || null,
+      system_config_error: configErr?.message || null,
+      workspaces_count: workspaces?.length || 0,
+      workspaces: workspaces || [],
+      workspaces_error: wsErr?.message || null,
+      supabase_url: process.env.VITE_SUPABASE_URL ? 'SET' : 'MISSING',
+      has_service_role: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // === END REAL-TIME SYNC ===
 
 if (process.env.NODE_ENV !== 'production') {
