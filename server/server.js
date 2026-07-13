@@ -581,24 +581,45 @@ app.post('/api/seed/credentials', express.json(), async (req, res) => {
     { global: { headers: { Authorization: `Bearer ${token}` } } }
   );
 
-  // Accept from body OR from env vars (server-side only)
-  const { tiendanube_store_id, tiendanube_access_token, meta_ad_account_id, meta_access_token, ga4_property_id } = req.body;
-  const storeId = tiendanube_store_id || process.env.TN_STORE_ID || null;
-  const storeToken = tiendanube_access_token || process.env.TN_ACCESS_TOKEN || null;
+  const storeId = process.env.TN_STORE_ID || null;
+  const storeToken = process.env.TN_ACCESS_TOKEN || null;
+  const gaCreds = process.env.GOOGLE_SERVICE_ACCOUNT_JSON || null;
+
+  // Parse Google service account JSON if it's a string
+  let ga4CredsJson = null;
+  let mcCredsJson = null;
+  let scCredsJson = null;
+  if (gaCreds) {
+    try {
+      const parsed = typeof gaCreds === 'string' ? JSON.parse(gaCreds) : gaCreds;
+      ga4CredsJson = parsed;
+      mcCredsJson = parsed;
+      scCredsJson = parsed;
+    } catch (e) {
+      console.warn('[Seed] Failed to parse GOOGLE_SERVICE_ACCOUNT_JSON:', e.message);
+    }
+  }
+
+  const seedData = {
+    id: 'main',
+    tiendanube_store_id: storeId,
+    tiendanube_access_token: storeToken,
+    meta_access_token: process.env.META_ACCESS_TOKEN || null,
+    meta_ad_account_id: process.env.META_AD_ACCOUNT_ID || null,
+    ga4_property_id: process.env.GA4_PROPERTY_ID || null,
+    ga4_credentials_json: ga4CredsJson,
+    merchant_center_merchant_id: process.env.MERCHANT_CENTER_MERCHANT_ID || null,
+    merchant_center_credentials_json: mcCredsJson,
+    search_console_site_url: process.env.SEARCH_CONSOLE_SITE_URL || null,
+    search_console_credentials_json: scCredsJson,
+    updated_at: new Date().toISOString(),
+  };
 
   try {
     // Try system_config first (requires admin role)
     const { error: scErr } = await userSupabase
       .from('system_config')
-      .upsert({
-        id: 'main',
-        tiendanube_store_id: storeId,
-        tiendanube_access_token: storeToken,
-        meta_ad_account_id: meta_ad_account_id || process.env.META_AD_ACCOUNT_ID || null,
-        meta_access_token: meta_access_token || process.env.META_ACCESS_TOKEN || null,
-        ga4_property_id: ga4_property_id || process.env.GA4_PROPERTY_ID || null,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'id' });
+      .upsert(seedData, { onConflict: 'id' });
 
     if (!scErr) {
       return res.json({ saved: 'system_config', error: null });
@@ -614,9 +635,14 @@ app.post('/api/seed/credentials', express.json(), async (req, res) => {
         user_id: user.id,
         tiendanube_store_id: storeId,
         tiendanube_access_token: storeToken,
-        meta_ad_account_id: meta_ad_account_id || process.env.META_AD_ACCOUNT_ID || null,
-        meta_access_token: meta_access_token || process.env.META_ACCESS_TOKEN || null,
-        ga4_property_id: ga4_property_id || process.env.GA4_PROPERTY_ID || null,
+        meta_access_token: seedData.meta_access_token,
+        meta_ad_account_id: seedData.meta_ad_account_id,
+        ga4_property_id: seedData.ga4_property_id,
+        ga4_credentials_json: ga4CredsJson,
+        merchant_center_merchant_id: seedData.merchant_center_merchant_id,
+        merchant_center_credentials_json: mcCredsJson,
+        search_console_site_url: seedData.search_console_site_url,
+        search_console_credentials_json: scCredsJson,
       }, { onConflict: 'user_id' });
 
     if (wsErr) {
