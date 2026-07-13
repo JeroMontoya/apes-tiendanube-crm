@@ -808,6 +808,26 @@ app.get('/api/cron/sync', async (req, res) => {
     const { data: config, error: cfgErr } = await supabaseAdmin.from('system_config').select('*').eq('id', 'main').single();
     if (cfgErr || !config) throw new Error('No system_config found');
 
+    // 1b. Seed missing JSON credentials from env vars (service_role bypasses RLS)
+    const gaCreds = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+    let gaCredsJson = null;
+    if (gaCreds) { try { gaCredsJson = typeof gaCreds === 'string' ? JSON.parse(gaCreds) : gaCreds; } catch (_) {} }
+
+    const updates = {};
+    if (!config.ga4_credentials_json && gaCredsJson) updates.ga4_credentials_json = gaCredsJson;
+    if (!config.merchant_center_credentials_json && gaCredsJson) updates.merchant_center_credentials_json = gaCredsJson;
+    if (!config.search_console_credentials_json && gaCredsJson) updates.search_console_credentials_json = gaCredsJson;
+    if (!config.meta_ad_account_id && process.env.META_AD_ACCOUNT_ID) updates.meta_ad_account_id = process.env.META_AD_ACCOUNT_ID;
+    if (!config.search_console_site_url && process.env.SEARCH_CONSOLE_SITE_URL) updates.search_console_site_url = process.env.SEARCH_CONSOLE_SITE_URL;
+    if (Object.keys(updates).length > 0) {
+      updates.updated_at = new Date().toISOString();
+      await supabaseAdmin.from('system_config').upsert({ id: 'main', ...updates }, { onConflict: 'id' });
+      console.log('[Cron] Seeded missing credentials:', Object.keys(updates).join(', '));
+      // Reload config
+      const { data: refreshed } = await supabaseAdmin.from('system_config').select('*').eq('id', 'main').single();
+      if (refreshed) Object.assign(config, refreshed);
+    }
+
     const storeId = config.tiendanube_store_id;
     const token = config.tiendanube_access_token;
     if (!storeId || !token) throw new Error('No TN credentials');
