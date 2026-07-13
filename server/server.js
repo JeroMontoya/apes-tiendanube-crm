@@ -714,7 +714,7 @@ async function ga4GetInsights(sa, propId, startDate, endDate) {
         dimensions: [{ name: 'date' }],
       }),
     });
-    if (!r.ok) return null;
+    if (!r.ok) { const errBody = await r.text().catch(() => ''); console.error(`[Cron GA4] HTTP ${r.status}: ${errBody}`); return null; }
     return await r.json();
   } catch (e) { console.warn('[Cron GA4]', e.message); return null; }
 }
@@ -738,7 +738,7 @@ async function mcFetchProducts(sa, merchantId) {
     do {
       const url = `https://shoppingcontent.googleapis.com/content/v2.1/${merchantId}/products?maxResults=50${pageToken ? '&pageToken=' + pageToken : ''}`;
       const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-      if (!r.ok) return all;
+      if (!r.ok) { const errBody = await r.text().catch(() => ''); console.error(`[Cron MC] HTTP ${r.status}: ${errBody}`); return all; }
       const j = await r.json();
       all = all.concat(j.resources || []);
       pageToken = j.nextPageToken;
