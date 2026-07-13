@@ -868,14 +868,23 @@ app.get('/api/cron/sync', async (req, res) => {
     let ga4 = null, meta = null, mc = [], gsc = { queries: [], pages: [], performance: null };
 
     const sa = config.ga4_credentials_json || config.merchant_center_credentials_json;
+    console.log('[Cron] SA creds:', sa ? `present (${sa.client_email || 'no email'})` : 'null');
+    console.log('[Cron] GA4 prop:', config.ga4_property_id || 'none');
+    console.log('[Cron] MC merchant:', config.merchant_center_merchant_id || 'none');
+    console.log('[Cron] GSC site:', config.search_console_site_url || 'none');
+    console.log('[Cron] Meta account:', config.meta_ad_account_id || 'none');
+
     const [ga4Res, mcRes, gscRes] = await Promise.allSettled([
       ga4GetInsights(sa, config.ga4_property_id, sd, ed),
       mcFetchProducts(sa, config.merchant_center_merchant_id),
       gscFetch(config.search_console_site_url, sa, sd, ed),
     ]);
-    if (ga4Res.status === 'fulfilled') ga4 = ga4Res.value; else errors.push({ api: 'ga4', msg: ga4Res.reason?.message });
-    if (mcRes.status === 'fulfilled') mc = mcRes.value; else errors.push({ api: 'mc', msg: mcRes.reason?.message });
-    if (gscRes.status === 'fulfilled') gsc = gscRes.value; else errors.push({ api: 'gsc', msg: gscRes.reason?.message });
+    if (ga4Res.status === 'fulfilled') { ga4 = ga4Res.value; console.log('[Cron] GA4 result:', ga4 ? 'data' : 'null'); }
+    else { console.error('[Cron] GA4 rejected:', ga4Res.reason?.message); errors.push({ api: 'ga4', msg: ga4Res.reason?.message }); }
+    if (mcRes.status === 'fulfilled') { mc = mcRes.value; console.log('[Cron] MC result:', mc?.length || 0, 'products'); }
+    else { console.error('[Cron] MC rejected:', mcRes.reason?.message); errors.push({ api: 'mc', msg: mcRes.reason?.message }); }
+    if (gscRes.status === 'fulfilled') { gsc = gscRes.value; console.log('[Cron] GSC result:', gsc.queries?.length || 0, 'queries'); }
+    else { console.error('[Cron] GSC rejected:', gscRes.reason?.message); errors.push({ api: 'gsc', msg: gscRes.reason?.message }); }
 
     // Meta (simple: just use token directly)
     if (config.meta_ad_account_id && config.meta_access_token) {
