@@ -15,14 +15,26 @@ function timeAgo(dateStr) {
   return `Hace ${days}d`;
 }
 
-export default function RecentActivityFeed({ clients, rawOrders }) {
+export default function RecentActivityFeed({ clients, rawOrders, dateRange }) {
   const activities = useMemo(() => {
     const items = [];
 
-    // Recent orders (last 10)
+    // Date range for filtering
+    const start = dateRange?.startDate ? new Date(dateRange.startDate) : null;
+    const end = dateRange?.endDate ? new Date(dateRange.endDate) : null;
+    if (start) start.setHours(0, 0, 0, 0);
+    if (end) end.setHours(23, 59, 59, 999);
+
+    // Recent orders (filtered by date range)
     if (rawOrders?.length) {
-      const sorted = [...rawOrders]
-        .filter(o => o.created_at)
+      let filtered = [...rawOrders].filter(o => o.created_at);
+      if (start && end) {
+        filtered = filtered.filter(o => {
+          const d = new Date(o.created_at);
+          return d >= start && d <= end;
+        });
+      }
+      const sorted = filtered
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 6);
 
@@ -40,10 +52,16 @@ export default function RecentActivityFeed({ clients, rawOrders }) {
       });
     }
 
-    // New clients (registered in last 30 days)
+    // New clients (within date range)
     if (clients?.length) {
-      const recentClients = clients
-        .filter(c => c.created_at && (Date.now() - new Date(c.created_at).getTime()) < 30 * 24 * 60 * 60 * 1000)
+      let recentClients = clients.filter(c => c.created_at);
+      if (start && end) {
+        recentClients = recentClients.filter(c => {
+          const d = new Date(c.created_at);
+          return d >= start && d <= end;
+        });
+      }
+      recentClients = recentClients
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 4);
 
@@ -65,7 +83,7 @@ export default function RecentActivityFeed({ clients, rawOrders }) {
     return items
       .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
       .slice(0, 8);
-  }, [clients, rawOrders]);
+  }, [clients, rawOrders, dateRange]);
 
   return (
     <div className="glass-card" style={{ padding: 24, height: '100%', display: 'flex', flexDirection: 'column' }}>

@@ -882,7 +882,12 @@ setConnectionStatus('connected');
 
     return unifiedClients.map(client => {
       const purchases = client.purchases || [];
-      if (!purchases.length) return client;
+      const allTimeCount = client.purchaseCount || client.totalOrders || purchases.length;
+      const allTimeSpent = client.totalSpent || purchases.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+      
+      if (!purchases.length) {
+        return { ...client, purchaseCount: 0, totalSpent: 0, allTimePurchaseCount: allTimeCount, allTimeTotalSpent: allTimeSpent };
+      }
       
       const filteredPurchases = purchases.filter(purchase => {
         if (!purchase.date) return false;
@@ -895,12 +900,14 @@ setConnectionStatus('connected');
       return {
         ...client,
         purchases,
-        purchaseCount: client.purchaseCount || client.totalOrders || purchases.length,
-        totalSpent: client.totalSpent || purchases.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0),
+        purchaseCount: filteredPurchases.length,
+        totalSpent: filteredTotal,
+        allTimePurchaseCount: allTimeCount,
+        allTimeTotalSpent: allTimeSpent,
         filteredPurchaseCount: filteredPurchases.length,
         filteredTotalSpent: filteredTotal
       };
-    }).filter(client => client.filteredPurchaseCount > 0);
+    });
   }, [unifiedClients, dateRange]);
 
 
@@ -1251,12 +1258,12 @@ function AppViewRenderer({
               <AIInsightsWidget clients={filteredClients} storeId={storeId} />
             </div>
             <div className="bento-span-4" style={{ display: 'flex', flexDirection: 'column' }}>
-              <ChurnRadar clients={unifiedClients} />
+              <ChurnRadar clients={filteredClients} />
             </div>
           </div>
           <div className="bento-grid mt-md">
             <div className="glass-card bento-span-7" style={{ padding: 0, overflow: 'hidden' }}>
-              <FrequencyFunnel clients={unifiedClients} onSelectClient={setSelectedClient} />
+              <FrequencyFunnel clients={filteredClients} onSelectClient={setSelectedClient} />
             </div>
             <div className="glass-card bento-span-5" style={{ padding: 0, overflow: 'hidden' }}>
               <ActiveCampaignsWidget workspace={workspaceData} onRefreshMeta={fetchMetaInsights} />
@@ -1264,7 +1271,7 @@ function AppViewRenderer({
           </div>
           <div className="bento-grid mt-md">
             <div className="bento-span-7">
-              <RecentActivityFeed clients={unifiedClients} rawOrders={rawOrders} />
+              <RecentActivityFeed clients={filteredClients} rawOrders={rawOrders} dateRange={dateRange} />
             </div>
             <div className="glass-card bento-span-5" style={{ padding: 0, display: 'flex', flexDirection: 'column' }}>
               <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
@@ -1298,7 +1305,7 @@ function AppViewRenderer({
             </div>
           </div>
           <div className="glass-card bento-span-12 mt-md" style={{ padding: 0, overflow: 'hidden' }}>
-            <GeoFunnel clients={unifiedClients} onSelectClient={setSelectedClient} />
+            <GeoFunnel clients={filteredClients} onSelectClient={setSelectedClient} />
           </div>
         </>
       );
