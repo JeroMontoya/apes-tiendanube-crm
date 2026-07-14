@@ -804,6 +804,10 @@ async function gscFetch(siteUrl, sa, startDate, endDate) {
 
 function mapToUnified(orders) {
   const clientMap = new Map();
+  // Secondary index: name-based lookup for orders with invalid email + empty phone
+  // This merges orders from the same person when TN merged them under one customer
+  const nameIndex = new Map(); // normalized name → key
+
   for (const o of orders) {
     const cust = o.customer || {};
     // Prefer order-level email/phone over customer-level to avoid TN merge groupings
@@ -820,13 +824,24 @@ function mapToUnified(orders) {
     // When email is invalid and phone is missing/invalid, use unique key to prevent
     // TN-merged customers from grouping unrelated orders together
     const validPhone = phone && phone.replace(/\D/g, '').length >= 8 ? phone : '';
-    const key = validEmail || validPhone || `order_${o.id || Math.random()}`;
+    let key = validEmail || validPhone || '';
 
     // TN API returns customer.name as single string, not first_name/last_name
     // When email is invalid (e.g. onli@), prefer order-level name to avoid TN merge names
     const customerName = emailIsInvalid
       ? (o.contact_name || o.billing_name || cust.name || '')
       : (cust.name || o.contact_name || o.billing_name || '');
+
+    // When email is invalid AND phone is empty, try name-based dedup
+    if (!key && customerName) {
+      const normName = customerName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z ]/g, '').replace(/\s+/g, ' ').trim();
+      if (normName.length >= 3) {
+        key = nameIndex.get(normName) || '';
+      }
+    }
+
+    // Final fallback: unique order key
+    if (!key) key = `order_${o.id || Math.random()}`;
 
     // Extract date properly (TN may return PHP DateTime objects)
     const rawDate = o.completed_at || o.created_at || o.date;
@@ -842,7 +857,7 @@ function mapToUnified(orders) {
 
     if (!clientMap.has(key)) {
       clientMap.set(key, {
-        id: cust.id || key,
+        id: key.startsWith('order_') || emailIsInvalid ? key : (cust.id || key),
         name: customerName || 'Sin nombre',
         email: emailIsInvalid ? orderEmail : email,
         phone,
@@ -853,6 +868,11 @@ function mapToUnified(orders) {
         created_at: orderIsoDate,
         segment: null, segmentTags: [],
       });
+      // Register name for dedup when email/phone are both invalid
+      if (emailIsInvalid && !validPhone && customerName) {
+        const normName = customerName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z ]/g, '').replace(/\s+/g, ' ').trim();
+        if (normName.length >= 3 && !nameIndex.has(normName)) nameIndex.set(normName, key);
+      }
     }
     const c = clientMap.get(key);
 
@@ -876,13 +896,22 @@ function mapToUnified(orders) {
     if (!c.address && orderAddress) c.address = orderAddress;
     const discountTotal = parseFloat(o.discount) || 0;
     const promoDiscount = parseFloat(o.promotional_discount?.total_discount_amount) || 0;
-    const couponCode = (o.coupon && typeof o.coupon === 'object') ? (o.coupon.code || null) : null;
+    const couponCode = Array.isArray(o.coupon) && o.coupon.length > 0 ? (o.coupon[0].code || null) : (o.coupon && typeof o.coupon === 'object' && !Array.isArray(o.coupon) ? (o.coupon.code || null) : null);
+    const couponObj = Array.isArray(o.coupon) && o.coupon.length > 0 ? o.coupon[0] : (o.coupon && typeof o.coupon === 'object' && !Array.isArray(o.coupon) ? o.coupon : null);
+    const couponType = couponObj?.type || null;
+    const couponValue = couponObj?.value || null;
+    const couponSaved = couponType === 'percentage'
+      ? (parseFloat(o.total) || 0) * (parseFloat(couponValue) || 0) / 100
+      : (parseFloat(couponValue) || 0);
     c.purchases.push({
       date: orderDateStr,
       amount: parseFloat(o.total) || 0,
       product: (o.products || []).map(p => p.name).join(' + '),
       productsArray: o.products || [],
       coupon: couponCode,
+      couponType,
+      couponValue,
+      couponSaved: couponCode ? couponSaved : 0,
       hasDiscount: discountTotal > 0 || promoDiscount > 0,
       discountTotal,
       promoDiscountAmount: promoDiscount,
@@ -971,6 +1000,13 @@ app.get('/api/cron/sync', async (req, res) => {
         products: (o.products || []).map(p => ({ name: p.name, quantity: p.quantity, price: p.price })),
         tracking_number: o.tracking_number,
         shipping_address: o.shipping_address || null,
+        coupon: Array.isArray(o.coupon) ? o.coupon : (o.coupon ? [o.coupon] : []),
+        discount: o.discount,
+        promotional_discount: o.promotional_discount,
+        contact_email: o.contact_email,
+        contact_name: o.contact_name,
+        contact_phone: o.contact_phone,
+        billing_name: o.billing_name,
       };
     });
 
