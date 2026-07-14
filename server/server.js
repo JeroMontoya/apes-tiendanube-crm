@@ -1162,12 +1162,11 @@ app.get('/api/data/snapshot', async (req, res) => {
       (sample.orders && !sample.purchases) ||
       (sample.purchases?.length > 0 && !sample.purchases[0].date) ||
       (sample.purchases?.length > 0 && !('couponType' in sample.purchases[0])) ||
-      !sample.couponType && sample.purchases?.some(p => p.coupon) ||
       sample.name === 'Sin nombre' ||
       !sample.created_at ||
       (!sample.city && !sample.province) ||
       rawOrdersStale
-    );
+    ));
     if (needsRegen) {
       console.log('[Snapshot] Regenerating unifiedClients + rawOrders from stored TN orders (stale format detected)');
       // Use tiendanube_orders (full TN order objects) for proper mapping
