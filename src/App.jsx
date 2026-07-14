@@ -121,6 +121,8 @@ export default function App() {
 
   // Last sync timestamps for incremental sync
   const lastSyncTimestamps = useRef({ orders: 0, products: 0, clients: 0 });
+  const snapshotRefreshTimerRef = useRef(null);
+  const lastSyncRef = useRef(null);
   
   // Predictive preload on hover
   const preloadRef = useRef(new Set());
@@ -1020,8 +1022,6 @@ function AppContent({
   });
 
   // ── Snapshot refresh helper (used by realtime + polling) ───────────────
-  const snapshotRefreshTimerRef = useRef(null);
-  const lastSyncRef = useRef(null);
   const refreshSnapshot = useCallback(async () => {
     if (snapshotRefreshTimerRef.current) clearTimeout(snapshotRefreshTimerRef.current);
     snapshotRefreshTimerRef.current = setTimeout(async () => {
