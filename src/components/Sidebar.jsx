@@ -329,7 +329,7 @@ function SidebarProfile({ currentMember, logout, ROLE_COLORS, ROLE_ICONS, ROLE_L
       )}
 
       {open && (
-        <div className="sidebar-profile-dropdown">
+        <div className="sidebar-profile-dropdown" style={{ left: 'auto', right: 0 }}>
           {/* User info header */}
           <div className="dropdown-user-header">
             <div className="dropdown-user-avatar">

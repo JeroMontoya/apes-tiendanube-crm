@@ -564,7 +564,8 @@ a:hover {
 .sidebar-profile-dropdown {
   position: absolute;
   top: calc(100% + 8px);
-  left: 0;
+  right: 0;
+  left: auto;
   width: 240px;
   z-index: 1000;
   background: rgba(22, 26, 36, 0.97);
