@@ -704,18 +704,53 @@ async function ga4GetInsights(sa, propId, startDate, endDate) {
   if (!sa || !propId) { console.log('[Cron GA4] Skipping: sa=' + !!sa + ' propId=' + propId); return null; }
   try {
     const token = await ga4GetAccessToken(sa);
-    console.log('[Cron GA4] Token obtained, fetching report...');
-    const r = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propId}:runReport`, {
+    console.log('[Cron GA4] Token obtained, fetching batch reports...');
+    const r = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propId}:batchRunReports`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        dateRanges: [{ startDate, endDate }],
-        metrics: [{ name: 'totalUsers' }, { name: 'sessions' }, { name: 'screenPageViews' }, { name: 'conversions' }, { name: 'totalRevenue' }],
-        dimensions: [{ name: 'date' }],
+        requests: [
+          { dateRanges: [{ startDate, endDate }], metrics: [{ name: 'sessions' }, { name: 'activeUsers' }, { name: 'bounceRate' }, { name: 'averageSessionDuration' }] },
+          { dateRanges: [{ startDate, endDate }], dimensions: [{ name: 'sessionDefaultChannelGroup' }], metrics: [{ name: 'sessions' }, { name: 'activeUsers' }] },
+          { dateRanges: [{ startDate, endDate }], dimensions: [{ name: 'eventName' }], metrics: [{ name: 'eventCount' }], orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }], limit: 10 },
+          { dateRanges: [{ startDate, endDate }], dimensions: [{ name: 'date' }], metrics: [{ name: 'grossPurchaseRevenue' }, { name: 'ecommercePurchases' }, { name: 'purchaseRevenue' }] },
+          { dateRanges: [{ startDate, endDate }], dimensions: [{ name: 'itemName' }], metrics: [{ name: 'itemRevenue' }, { name: 'itemsPurchased' }], orderBys: [{ metric: { metricName: 'itemRevenue' }, desc: true }], limit: 20 },
+        ],
       }),
     });
     if (!r.ok) { const errBody = await r.text().catch(() => ''); console.error(`[Cron GA4] HTTP ${r.status}: ${errBody}`); return null; }
-    return await r.json();
+    const data = await r.json();
+    const reports = data.reports || [];
+
+    let global = { sessions: 0, activeUsers: 0, bounceRate: 0, averageSessionDuration: 0 };
+    if (reports[0]?.rows?.length > 0) {
+      const m = reports[0].rows[0].metricValues;
+      global = { sessions: parseInt(m[0]?.value||'0',10), activeUsers: parseInt(m[1]?.value||'0',10), bounceRate: parseFloat(m[2]?.value||'0'), averageSessionDuration: parseFloat(m[3]?.value||'0') };
+    }
+
+    let acquisition = [];
+    if (reports[1]?.rows) {
+      acquisition = reports[1].rows.map(r => ({ channel: r.dimensionValues[0].value, sessions: parseInt(r.metricValues[0]?.value||'0',10), activeUsers: parseInt(r.metricValues[1]?.value||'0',10) }));
+    }
+
+    let events = [];
+    if (reports[2]?.rows) {
+      events = reports[2].rows.map(r => ({ eventCount: parseInt(r.metricValues[0]?.value||'0',10), eventName: r.dimensionValues[0].value }));
+    }
+
+    let revenueByDate = [];
+    if (reports[3]?.rows) {
+      revenueByDate = reports[3].rows.map(r => ({ date: r.dimensionValues[0].value, grossRevenue: parseFloat(r.metricValues[0]?.value||'0'), purchases: parseInt(r.metricValues[1]?.value||'0',10), revenue: parseFloat(r.metricValues[2]?.value||'0') }));
+    }
+    const totalRevenue = revenueByDate.reduce((s,r)=>s+r.grossRevenue,0);
+    const totalPurchases = revenueByDate.reduce((s,r)=>s+r.purchases,0);
+
+    let topProducts = [];
+    if (reports[4]?.rows) {
+      topProducts = reports[4].rows.map(r => ({ name: r.dimensionValues[0].value, revenue: parseFloat(r.metricValues[0]?.value||'0'), purchases: parseInt(r.metricValues[1]?.value||'0',10) }));
+    }
+
+    return { global, acquisition, events, ecommerce: { totalRevenue, totalPurchases, averageOrderValue: totalPurchases>0?totalRevenue/totalPurchases:0, revenueByDate, topProducts } };
   } catch (e) { console.warn('[Cron GA4]', e.message); return null; }
 }
 
@@ -896,13 +931,7 @@ app.get('/api/cron/sync', async (req, res) => {
     // GA4
     if (sa && config.ga4_property_id) {
       try {
-        const token = await ga4GetAccessToken(sa);
-        const r = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${config.ga4_property_id}:runReport`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ dateRanges: [{ startDate: sd, endDate: ed }], metrics: [{ name: 'totalUsers' }, { name: 'sessions' }, { name: 'screenPageViews' }, { name: 'conversions' }, { name: 'totalRevenue' }], dimensions: [{ name: 'date' }] }),
-        });
-        if (r.ok) ga4 = await r.json();
+        ga4 = await ga4GetInsights(sa, config.ga4_property_id, sd, ed);
       } catch (e) { errors.push({ api: 'ga4', msg: e.message }); }
     }
 
