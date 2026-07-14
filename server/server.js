@@ -770,8 +770,8 @@ function mapToUnified(orders) {
   const clientMap = new Map();
   for (const o of orders) {
     const cust = o.customer || {};
-    const email = cust.email || '';
-    const phone = cust.phone || '';
+    const email = cust.email || o.contact_email || '';
+    const phone = cust.phone || o.billing_address?.phone || o.shipping_address?.phone || '';
     const key = email || phone || `unknown_${cust.id || Math.random()}`;
     if (!clientMap.has(key)) {
       clientMap.set(key, {
@@ -784,7 +784,8 @@ function mapToUnified(orders) {
     const c = clientMap.get(key);
     c.totalOrders++;
     c.totalSpent += parseFloat(o.total || 0);
-    const orderDate = (o.completed_at || o.created_at || '').substring(0, 10);
+    const rawDate = o.completed_at || o.created_at || o.date;
+    const orderDate = (typeof rawDate === 'string' ? rawDate : rawDate?.date || '').substring(0, 10);
     if (!c.firstOrder || orderDate < c.firstOrder) c.firstOrder = orderDate;
     if (!c.lastOrder || orderDate > c.lastOrder) c.lastOrder = orderDate;
     const discountTotal = parseFloat(o.discount) || 0;
@@ -952,7 +953,7 @@ app.get('/api/cron/sync', async (req, res) => {
     const { error: upsertErr } = await supabaseAdmin.from('server_cache').upsert({
       id: 'main',
       tiendanube_products: products,
-      tiendanube_orders: rawOrders,
+      tiendanube_orders: orders,
       tiendanube_customers: customers,
       unified_clients: unifiedClients,
       raw_orders: rawOrders,
@@ -1014,7 +1015,8 @@ app.get('/api/data/snapshot', async (req, res) => {
     // Auto-regenerate unifiedClients if stored format uses 'orders' instead of 'purchases'
     let unifiedClients = data.unified_clients || [];
     if (unifiedClients.length > 0 && unifiedClients[0].orders && !unifiedClients[0].purchases) {
-      unifiedClients = mapToUnified(data.raw_orders || data.tiendanube_orders || []);
+      // Use tiendanube_orders (full TN order objects) for proper mapping
+      unifiedClients = mapToUnified(data.tiendanube_orders || data.raw_orders || []);
       // Update cache in background
       supabaseAdmin.from('server_cache').upsert({ id: 'main', unified_clients: unifiedClients, updated_at: new Date().toISOString() }, { onConflict: 'id' }).then(() => {}).catch(() => {});
     }
