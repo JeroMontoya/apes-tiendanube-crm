@@ -806,11 +806,19 @@ function mapToUnified(orders) {
   const clientMap = new Map();
   for (const o of orders) {
     const cust = o.customer || {};
-    const email = cust.email || o.contact_email || '';
-    const phone = cust.phone || o.billing_address?.phone || o.shipping_address?.phone || '';
+    // Prefer order-level email/phone over customer-level to avoid TN merge groupings
+    const orderEmail = o.contact_email || '';
+    const custEmail = cust.email || '';
+    const email = orderEmail || custEmail;
+    const orderPhone = o.contact_phone || o.billing_address?.phone || o.shipping_address?.phone || '';
+    const custPhone = cust.phone || '';
+    const phone = orderPhone || custPhone;
     // Skip invalid emails as grouping key (e.g. onli@gmail.com) — fall back to phone
     const validEmail = email && !isInvalidEmail(email) ? email : '';
-    const key = validEmail || phone || `unknown_${cust.id || Math.random()}`;
+    // When email is invalid and phone is missing/invalid, use unique key to prevent
+    // TN-merged customers from grouping unrelated orders together
+    const validPhone = phone && phone.replace(/\D/g, '').length >= 8 ? phone : '';
+    const key = validEmail || validPhone || `order_${o.id || Math.random()}`;
 
     // TN API returns customer.name as single string, not first_name/last_name
     const customerName = cust.name || o.contact_name || o.billing_name || '';
