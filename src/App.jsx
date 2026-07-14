@@ -123,9 +123,7 @@ export default function App() {
 
   // Last sync timestamps for incremental sync
   const lastSyncTimestamps = useRef({ orders: 0, products: 0, clients: 0 });
-  const snapshotRefreshTimerRef = useRef(null);
-  const lastSyncRef = useRef(null);
-  
+
   // Predictive preload on hover
   const preloadRef = useRef(new Set());
 
@@ -341,7 +339,6 @@ export default function App() {
           if (snapshot.data.aiInsights) setAiInsights(snapshot.data.aiInsights);
 
           setLastSync(new Date(snapshot.lastSync));
-          lastSyncRef.current = snapshot.lastSync;
           setStoreId(currentStore);
           setConnectionStatus('connected');
           setIsSyncing(false);
@@ -993,6 +990,9 @@ function AppContent({
   fetchMetaInsights, setWorkspaceData, handleManualSync,
 }) {
   const { currentMember, ROLE_LABELS, ROLE_COLORS, ROLE_ICONS } = useTeam();
+
+  const snapshotRefreshTimerRef = useRef(null);
+  const lastSyncRef = useRef(null);
 
   // Real-time sync: SSE + Supabase Realtime + Broadcast
   const handleRealtimeEvent = useCallback((data) => {
