@@ -8,6 +8,7 @@ import { google } from 'googleapis';
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { MetaAdLibraryAPI, getMetaAdLibraryInsights } from '../src/api/MetaAdLibraryAPI.js';
 import { MerchantCenterAPI } from '../src/api/MerchantCenterAPI.js';
+import { isInvalidEmail } from '../src/utils/unifyClients.js';
 import { createClient } from '@supabase/supabase-js';
 dotenv.config();
 
@@ -807,7 +808,9 @@ function mapToUnified(orders) {
     const cust = o.customer || {};
     const email = cust.email || o.contact_email || '';
     const phone = cust.phone || o.billing_address?.phone || o.shipping_address?.phone || '';
-    const key = email || phone || `unknown_${cust.id || Math.random()}`;
+    // Skip invalid emails as grouping key (e.g. onli@gmail.com) — fall back to phone
+    const validEmail = email && !isInvalidEmail(email) ? email : '';
+    const key = validEmail || phone || `unknown_${cust.id || Math.random()}`;
 
     // TN API returns customer.name as single string, not first_name/last_name
     const customerName = cust.name || o.contact_name || o.billing_name || '';
