@@ -1013,8 +1013,13 @@ app.get('/api/data/snapshot', async (req, res) => {
     }
 
     // Auto-regenerate unifiedClients if stored format uses 'orders' instead of 'purchases'
+    // OR if purchases have empty dates (stale generation)
     let unifiedClients = data.unified_clients || [];
-    if (unifiedClients.length > 0 && unifiedClients[0].orders && !unifiedClients[0].purchases) {
+    const needsRegen = unifiedClients.length > 0 && (
+      (unifiedClients[0].orders && !unifiedClients[0].purchases) ||
+      (unifiedClients[0].purchases && unifiedClients[0].purchases.length > 0 && !unifiedClients[0].purchases[0].date)
+    );
+    if (needsRegen) {
       // Use tiendanube_orders (full TN order objects) for proper mapping
       unifiedClients = mapToUnified(data.tiendanube_orders || data.raw_orders || []);
       // Update cache in background
