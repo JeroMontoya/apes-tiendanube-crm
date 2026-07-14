@@ -323,7 +323,7 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
       </div>
 
       {/* ── Stats ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10, marginBottom: 20 }}>
+      <div className="responsive-grid-xs" style={{ marginBottom: 20 }}>
         {[
           { label: 'Lotes Activos', value: stats.active, color: '#f59e0b', icon: Hammer },
           { label: 'Completados', value: stats.completed, color: '#10b981', icon: CheckCircle },

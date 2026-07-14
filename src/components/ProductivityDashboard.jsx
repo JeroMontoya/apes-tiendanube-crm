@@ -49,20 +49,30 @@ export default function ProductivityDashboard() {
         <BarChart3 size={18} /> Rendimiento del Equipo
       </h2>
 
-      {/* Global Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
+      {/* Stats */}
+      <div className="responsive-grid-sm" style={{ marginBottom: 24 }}>
         {[
           { label: 'Acciones Hoy', value: globalStats.todayCount, color: '#10b981', icon: TrendingUp },
           { label: 'Esta Semana', value: globalStats.weekCount, color: '#3b82f6', icon: BarChart3 },
           { label: 'Total Actividad', value: globalStats.totalCount, color: '#8b5cf6', icon: Clock },
-        ].map(s => (
-          <div key={s.label} className="glass-card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 10, background: `${s.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <s.icon size={18} color={s.color} />
+        ].map((s, i) => (
+          <div key={i} className="glass-card" style={{
+            padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12,
+            transition: 'transform 0.3s ease, box-shadow 0.3s ease', cursor: 'default'
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = `0 12px 32px ${s.color}25`; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+          >
+            <div style={{
+              width: 38, height: 38, borderRadius: 'var(--radius-sm)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: `${s.color}15`, color: s.color, flexShrink: 0,
+            }}>
+              <s.icon size={17} />
             </div>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: s.color }}>{s.value}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{s.label}</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--on-surface)', lineHeight: 1.1 }}>{s.value}</div>
             </div>
           </div>
         ))}

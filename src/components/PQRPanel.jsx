@@ -36,10 +36,10 @@ function getWhatsAppUrl(phone, name, orderNum) {
 // ═══════════════════════════════════════════════════════
 const S = {
   input: {
-    width: '100%', padding: '10px 12px', borderRadius: 10,
-    border: '1px solid var(--border-subtle)', background: 'var(--surface)',
+    width: '100%', padding: '10px 14px', borderRadius: 14,
+    border: '1px solid var(--glass-border)', background: 'var(--surface)',
     color: 'var(--on-surface)', fontSize: 13, fontFamily: 'Inter, sans-serif',
-    outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s, box-shadow 0.2s'
+    outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.3s, box-shadow 0.3s'
   },
   label: {
     display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--on-surface-variant)',
@@ -52,38 +52,40 @@ const S = {
   },
   glassCard: {
     background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)',
-    border: '1px solid var(--glass-border)', borderRadius: 14,
-    transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)'
+    WebkitBackdropFilter: 'var(--glass-blur)',
+    border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)',
+    transition: 'transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s ease'
   },
-  // Button variants with proper contrast
+  // Pill-shaped buttons — organic
   btn: {
-    display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 14px',
-    borderRadius: 8, border: 'none', fontWeight: 600, cursor: 'pointer',
-    fontSize: 11, fontFamily: 'Inter, sans-serif', transition: 'all 0.2s'
+    display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px',
+    borderRadius: 9999, border: 'none', fontWeight: 600, cursor: 'pointer',
+    fontSize: 11, fontFamily: 'Inter, sans-serif',
+    transition: 'all 0.25s cubic-bezier(0.16,1,0.3,1)'
   },
   btnPrimary: {
-    background: 'var(--gradient-primary)', color: '#fff',
-    boxShadow: '0 2px 8px rgba(59,130,246,0.3)'
+    background: 'linear-gradient(135deg, #3b82f6, #6366f1)', color: '#fff',
+    boxShadow: '0 4px 16px rgba(59,130,246,0.35)'
   },
   btnSecondary: {
-    background: 'var(--surface-container)', color: 'var(--on-surface)',
-    border: '1px solid var(--border-subtle)'
+    background: 'rgba(255,255,255,0.06)', color: 'var(--on-surface)',
+    border: '1px solid var(--glass-border)'
   },
   btnGhost: {
     background: 'transparent', color: 'var(--on-surface-variant)',
     border: '1px solid transparent'
   },
   btnDanger: {
-    background: 'var(--error-container)', color: 'var(--error)',
-    border: '1px solid var(--error-container)'
+    background: 'rgba(239,68,68,0.12)', color: '#ef4444',
+    border: '1px solid rgba(239,68,68,0.2)'
   },
   btnOutline: {
     background: 'transparent', color: 'var(--primary)',
-    border: '1px solid var(--primary)'
+    border: '1px solid rgba(59,130,246,0.3)'
   },
   btnSuccess: {
     background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff',
-    boxShadow: '0 2px 8px rgba(16,185,129,0.3)'
+    boxShadow: '0 4px 16px rgba(16,185,129,0.3)'
   }
 };
 
@@ -389,17 +391,17 @@ export default function PQRPanel({ session, rawOrders = [] }) {
   //  RENDER
   // ═══════════════════════════════════════════════════════
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 120px)', gap: 0, animation: 'fadeIn 0.4s ease' }}>
+    <div className="pqr-container">
 
       {/* ─── LEFT PANEL ─── */}
-      <div style={{ width: 380, minWidth: 380, display: 'flex', flexDirection: 'column', background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', borderRight: '1px solid var(--border-subtle)', borderRadius: '18px 0 0 18px', overflow: 'hidden' }}>
+      <div className="pqr-left-panel">
 
         {/* Header */}
         <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border-subtle)', background: 'linear-gradient(180deg, rgba(59,130,246,0.04) 0%, transparent 100%)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div>
               <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 9, background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(59,130,246,0.3)' }}>
+                <div style={{ width: 34, height: 34, borderRadius: 'var(--radius-sm)', background: 'linear-gradient(135deg, #3b82f6, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(59,130,246,0.35)' }}>
                   <HeadsetIcon size={16} color="#fff" />
                 </div>
                 Soporte
@@ -509,7 +511,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
       </div>
 
       {/* ─── RIGHT: Detail / Create ─── */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', borderRadius: '0 18px 18px 0', overflow: 'hidden' }}>
+      <div className="pqr-right-panel">
 
         {/* Empty State */}
         {!selectedCase && !isCreating && (
@@ -618,7 +620,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
               {/* CUSTOMER */}
               <div style={{ ...S.glassCard, padding: 18 }}>
                 <div style={S.sectionHead}><User size={12} color="var(--secondary)" /> Información del Cliente</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="responsive-grid" style={{ gap: 12 }}>
                   <div><label style={S.label}>Nombre</label><input name="customer_name" value={formData.customer_name} onChange={handleChange} style={S.input} placeholder="Nombre completo" /></div>
                   <div><label style={S.label}>Email</label><input name="customer_email" value={formData.customer_email} onChange={handleChange} style={S.input} placeholder="email@ejemplo.com" /></div>
                   <div><label style={S.label}>Teléfono</label><input name="customer_phone" value={formData.customer_phone} onChange={handleChange} style={S.input} placeholder="+54 11 1234-5678" /></div>
@@ -629,7 +631,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
               {/* ORDER */}
               <div style={{ ...S.glassCard, padding: 18 }}>
                 <div style={S.sectionHead}><ShoppingBag size={12} color="var(--tertiary)" /> Detalles del Pedido</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="responsive-grid" style={{ gap: 12 }}>
                   <div><label style={S.label}># Pedido</label><input name="order_number" value={formData.order_number} onChange={handleChange} style={S.input} placeholder="#12345" /></div>
                   <div>
                     <label style={S.label}>Motivo</label>
@@ -644,7 +646,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
               {/* TRACKING */}
               <div style={{ ...S.glassCard, padding: 18 }}>
                 <div style={S.sectionHead}><Truck size={12} color="#06b6d4" /> Guías de Envío</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                <div className="responsive-grid" style={{ gap: 12 }}>
                   <div><label style={S.label}>Original</label><input name="original_tracking" value={formData.original_tracking} onChange={handleChange} style={S.input} placeholder="INT-9999" /></div>
                   <div><label style={S.label}>Devolución</label><input name="return_tracking" value={formData.return_tracking} onChange={handleChange} style={S.input} placeholder="INT-8888" /></div>
                   <div><label style={S.label}>Reenvío</label><input name="resend_tracking" value={formData.resend_tracking} onChange={handleChange} style={S.input} placeholder="INT-7777" /></div>
@@ -654,7 +656,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
               {/* NOTES */}
               <div style={{ ...S.glassCard, padding: 18 }}>
                 <div style={S.sectionHead}><MessageSquare size={12} color="#f43f5e" /> Notas</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="responsive-grid" style={{ gap: 12 }}>
                   <div><label style={S.label}>Prendas solicitadas</label><textarea name="requested_items" value={formData.requested_items} onChange={handleChange} rows={2} style={{ ...S.input, resize: 'vertical' }} placeholder="¿Qué prendas?" /></div>
                   <div><label style={S.label}>Mensaje del cliente</label><textarea name="customer_message" value={formData.customer_message} onChange={handleChange} rows={2} style={{ ...S.input, resize: 'vertical' }} placeholder="Mensaje..." /></div>
                   <div style={{ gridColumn: 'span 2' }}><label style={S.label}>Notas internas</label><textarea name="internal_notes" value={formData.internal_notes} onChange={handleChange} rows={2} style={{ ...S.input, resize: 'vertical', background: 'var(--surface-container-low)' }} placeholder="Notas privadas..." /></div>
@@ -736,7 +738,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
                     <div style={S.sectionHead}><User size={12} color="var(--secondary)" /> Cliente</div>
                     {selectedCase.customer_phone && <WhatsAppBtn phone={selectedCase.customer_phone} name={selectedCase.customer_name} orderNum={selectedCase.order_number} size="small" />}
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+                  <div className="responsive-grid" style={{ gap: 16 }}>
                     {selectedCase.customer_name && <div><div style={{ fontSize: 9, fontWeight: 700, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Nombre</div><div style={{ fontSize: 13, fontWeight: 700, color: 'var(--on-surface)' }}>{selectedCase.customer_name}</div></div>}
                     {selectedCase.customer_email && <div><div style={{ fontSize: 9, fontWeight: 700, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Email</div><div style={{ fontSize: 12, color: 'var(--on-surface)' }}>{selectedCase.customer_email}</div></div>}
                     {selectedCase.customer_phone && <div><div style={{ fontSize: 9, fontWeight: 700, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Teléfono</div><div style={{ fontSize: 12, color: 'var(--on-surface)' }}>{selectedCase.customer_phone}</div></div>}
@@ -753,7 +755,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
               )}
 
               {/* Reason & Tracking */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <div className="responsive-grid" style={{ gap: 14 }}>
                 <div style={{ ...S.glassCard, padding: 18 }}>
                   <div style={S.sectionHead}><AlertCircle size={12} color="var(--warning)" /> Motivo</div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--on-surface)' }}>{RETURN_REASONS.find(r => r.id === selectedCase.return_reason)?.label || selectedCase.return_reason}</div>

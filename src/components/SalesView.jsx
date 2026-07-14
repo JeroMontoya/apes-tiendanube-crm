@@ -40,20 +40,32 @@ export default function SalesView({ products, clients }) {
         <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--on-surface-variant)' }}>Disponibilidad de productos y clientes</p>
       </div>
 
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+      {/* ── KPIs Row ── */}
+      <div className="responsive-grid-sm" style={{ marginBottom: 20 }}>
         {[
           { label: 'Productos', value: stats.totalProducts, color: '#3b82f6', icon: Package },
           { label: 'Disponibles', value: stats.totalProducts - stats.outOfStock, color: '#10b981', icon: ShoppingCart },
           { label: 'Sin Stock', value: stats.outOfStock, color: '#ef4444', icon: AlertTriangle },
           { label: 'Stock Bajo', value: stats.lowStock, color: '#f59e0b', icon: TrendingUp },
-        ].map(s => (
-          <div key={s.label} className="glass-card" style={{ padding: '16px 20px', borderLeft: `3px solid ${s.color}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <s.icon size={14} color={s.color} />
-              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>{s.label}</span>
+        ].map((s, i) => (
+          <div key={i} className="glass-card" style={{
+            padding: '14px 16px', borderLeft: `3px solid ${s.color}`,
+            display: 'flex', alignItems: 'center', gap: 12,
+            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+            cursor: 'default',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = `0 12px 32px ${s.color}25`; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+          >
+            <div style={{
+              width: 38, height: 38, borderRadius: 'var(--radius-sm)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: `${s.color}15`, color: s.color, flexShrink: 0,
+            }}><s.icon size={17} /></div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{s.label}</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--on-surface)', lineHeight: 1.1 }}>{s.value}</div>
             </div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: s.color, marginTop: 4 }}>{s.value}</div>
           </div>
         ))}
       </div>

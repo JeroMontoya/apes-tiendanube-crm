@@ -1037,7 +1037,6 @@ function AppContent({
               <div style={{ width: 6, height: 6, borderRadius: '50%', background: syncConnected ? '#10b981' : '#ef4444', animation: syncConnected ? 'pulse 2s infinite' : 'none' }} />
               <span style={{ color: syncConnected ? '#10b981' : '#ef4444' }}>{syncConnected ? 'Sync' : 'Offline'}</span>
             </div>
-            <TeamMemberBadge />
             <NotificationCenter />
           </div>
         </div>

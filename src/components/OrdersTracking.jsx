@@ -327,13 +327,13 @@ function OrderDetailModal({ order, onClose, rawOrders }) {
           <button onClick={onClose} style={{ background: 'var(--surface-container-high)', border: 'none', color: 'var(--on-surface-variant)', cursor: 'pointer', padding: 8, borderRadius: 8, display: 'flex', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--error-container)'} onMouseLeave={e => e.currentTarget.style.background = 'var(--surface-container-high)'}><XCircle size={20} /></button>
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto', padding: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, minWidth: 0 }}>
+        <div className="responsive-grid" style={{ flex: 1, overflow: 'auto', padding: 20, minWidth: 0 }}>
           {/* Left Column */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
             {/* Order Summary */}
             <div className="glass-card" style={{ padding: 20 }}>
               <h4 style={{ margin: '0 0 16px', fontSize: 13, fontWeight: 700, color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: 8 }}><ShoppingCart size={16} color="#3b82f6" /> Resumen del Pedido</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="responsive-grid-xs" style={{ gap: 12 }}>
                 <div><span style={{ fontSize: 10, color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Subtotal</span><div style={{ fontWeight: 700, color: 'var(--on-surface)' }}>{formatCurrency(order.subtotal)}</div></div>
                 <div><span style={{ fontSize: 10, color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Descuento</span><div style={{ fontWeight: 700, color: '#f59e0b' }}>-{formatCurrency(order.discount)}</div></div>
                 <div><span style={{ fontSize: 10, color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Envío</span><div style={{ fontWeight: 700, color: 'var(--on-surface)' }}>{formatCurrency(order.shipping_cost)}</div></div>
@@ -368,7 +368,7 @@ function OrderDetailModal({ order, onClose, rawOrders }) {
             {/* Customer */}
             <div className="glass-card" style={{ padding: 20 }}>
               <h4 style={{ margin: '0 0 16px', fontSize: 13, fontWeight: 700, color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: 8 }}><User size={16} color="#f43f5e" /> Cliente</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="responsive-grid-xs" style={{ gap: 12 }}>
                 <div><span style={{ fontSize: 10, color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Nombre</span><div style={{ fontWeight: 600, color: 'var(--on-surface)' }}>{order.customer?.name || order.contact_name || '—'}</div></div>
                 <div><span style={{ fontSize: 10, color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Email</span><div style={{ fontWeight: 600, color: 'var(--on-surface)' }}>{order.customer?.email || order.contact_email || '—'}</div></div>
                 <div><span style={{ fontSize: 10, color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Teléfono</span><div style={{ fontWeight: 600, color: 'var(--on-surface)' }}>{order.customer?.phone || order.contact_phone || '—'}</div></div>
@@ -384,7 +384,7 @@ function OrderDetailModal({ order, onClose, rawOrders }) {
             {/* Addresses */}
             <div className="glass-card" style={{ padding: 20 }}>
               <h4 style={{ margin: '0 0 16px', fontSize: 13, fontWeight: 700, color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: 8 }}><MapPin size={16} color="#06b6d4" /> Direcciones</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div className="responsive-grid-xs" style={{ gap: 16 }}>
                 {order.shipping_address && (
                   <div style={{ padding: 12, background: 'var(--surface-container)', borderRadius: 10 }}>
                     <div style={{ fontSize: 10, color: 'var(--primary)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Envío</div>
@@ -775,7 +775,7 @@ export default function OrdersTracking({ rawOrders, lastSync, refreshOrders, sto
       </div>
 
       {/* KPIs Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 12, marginBottom: 20 }}>
+      <div className="responsive-grid-sm" style={{ marginBottom: 20 }}>
         {[
           { label: 'Total', value: stats.total, icon: ShoppingCart, color: '#3b82f6', trend: '+5%' },
           { label: 'Pagados', value: stats.paid, icon: CreditCard, color: '#10b981', trend: '+3%' },
@@ -785,21 +785,38 @@ export default function OrdersTracking({ rawOrders, lastSync, refreshOrders, sto
           { label: 'Retrasados', value: stats.late, icon: AlertCircle, color: '#ef4444', trend: '-3%' },
           { label: 'Ingresos', value: formatCurrency(stats.totalRevenue), icon: DollarSign, color: '#06b6d4', trend: '+12%' },
         ].map((s, i) => (
-          <div key={i} style={{ background: 'var(--glass-bg)', borderRadius: 14, padding: '16px 18px', border: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${s.color}18`, color: s.color }}><s.icon size={18} /></div>
-              <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 8, background: `${s.color}20`, color: s.color, fontWeight: 700 }}>{s.trend}</span>
+          <div key={i} style={{
+            background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)',
+            WebkitBackdropFilter: 'var(--glass-blur)',
+            borderRadius: 'var(--radius-md)', padding: '14px 16px',
+            border: '1px solid var(--glass-border)',
+            display: 'flex', alignItems: 'center', gap: 12,
+            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+            cursor: 'default',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = `0 12px 32px ${s.color}25`; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+          >
+            <div style={{
+              width: 38, height: 38, borderRadius: 'var(--radius-sm)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: `${s.color}15`, color: s.color, flexShrink: 0,
+            }}><s.icon size={17} /></div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{s.label}</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--on-surface)', lineHeight: 1.1 }}>{s.value}</div>
             </div>
-            <div>
-              <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{s.label}</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--on-surface)', lineHeight: 1.1 }}>{s.value}</div>
-            </div>
+            <span style={{
+              fontSize: 9, padding: '3px 8px', borderRadius: 9999,
+              background: `${s.color}15`, color: s.color, fontWeight: 700,
+              whiteSpace: 'nowrap',
+            }}>{s.trend}</span>
           </div>
         ))}
 
         {/* Conversion Metrics */}
         <div className="glass-card" style={{ padding: 16, background: 'linear-gradient(135deg, rgba(59,130,246,0.05) 0%, rgba(16,185,129,0.05) 100%)', border: '1px solid var(--glass-border)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+          <div className="responsive-grid-sm" style={{ gap: 16 }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 28, fontWeight: 800, color: '#3b82f6', lineHeight: 1 }}>{stats.conversionRate.toFixed(1)}%</div>
               <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', fontWeight: 600, textTransform: 'uppercase' }}>Conversión Pago</div>
@@ -871,7 +888,7 @@ export default function OrdersTracking({ rawOrders, lastSync, refreshOrders, sto
 
       {viewMode === 'table' && (
         <div className="glass-card" style={{ overflow: 'hidden' }}>
-          <div style={{ overflowX: 'auto', minWidth: 0 }}>
+          <div className="table-responsive">
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 900 }}>
               <thead>
                 <tr style={{ background: 'var(--surface-container-low)' }}>
