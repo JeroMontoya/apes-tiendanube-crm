@@ -811,8 +811,11 @@ function mapToUnified(orders) {
     if (!clientMap.has(key)) {
       clientMap.set(key, {
         id: cust.id || key, name: `${cust.first_name || ''} ${cust.last_name || ''}`.trim() || 'Sin nombre',
-        email, phone, city: cust.city || '', province: cust.province || '',
+        email, phone,
+        city: cust.city || o.shipping_address?.city || o.billing_address?.city || '',
+        province: cust.province || o.shipping_address?.province || o.billing_address?.province || o.shipping_address?.locality || '',
         totalOrders: 0, totalSpent: 0, purchases: [], firstOrder: null, lastOrder: null,
+        created_at: o.completed_at || o.created_at || null,
         segment: null, segmentTags: [],
       });
     }
@@ -823,6 +826,15 @@ function mapToUnified(orders) {
     const orderDate = (typeof rawDate === 'string' ? rawDate : rawDate?.date || '').substring(0, 10);
     if (!c.firstOrder || orderDate < c.firstOrder) c.firstOrder = orderDate;
     if (!c.lastOrder || orderDate > c.lastOrder) c.lastOrder = orderDate;
+    // Upgrade city/province from shipping address if missing
+    if (!c.city) {
+      const orderCity = o.shipping_address?.city || o.billing_address?.city || '';
+      if (orderCity) c.city = orderCity;
+    }
+    if (!c.province) {
+      const orderProv = o.shipping_address?.province || o.billing_address?.province || o.shipping_address?.locality || '';
+      if (orderProv) c.province = orderProv;
+    }
     const discountTotal = parseFloat(o.discount) || 0;
     const promoDiscount = parseFloat(o.promotional_discount?.total_discount_amount) || 0;
     const couponCode = (o.coupon && typeof o.coupon === 'object') ? (o.coupon.code || null) : null;
@@ -909,7 +921,8 @@ app.get('/api/cron/sync', async (req, res) => {
     // 3. Map to unified format
     const unifiedClients = mapToUnified(orders);
     const rawOrders = orders.map(o => ({
-      id: o.id, number: o.number, total: parseFloat(o.total || 0), date: o.completed_at || o.created_at,
+      id: o.id, number: o.number, total: parseFloat(o.total || 0), created_at: o.completed_at || o.created_at,
+      date: o.completed_at || o.created_at,
       status: o.status, customer_id: o.customer?.id,
       customer: o.customer ? { name: o.customer.name, email: o.customer.email, phone: o.customer.phone } : undefined,
       products: (o.products || []).map(p => ({ name: p.name, quantity: p.quantity, price: p.price })),
@@ -1240,6 +1253,159 @@ REGLAS: Sé ESPECÍFICO con números. Prioriza por revenue. HealthScore REALISTA
     res.json({ ok: true, intelligence, timestamp: new Date().toISOString() });
   } catch (err) {
     console.error('[Brand Intelligence] Error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════
+//  WORKSHOP INVENTORY ENDPOINTS
+// ═══════════════════════════════════════════════════════════════════
+
+// POST /api/taller/sync-tn — Pull TiendaNueve products into workshop_inventory
+app.post('/api/taller/sync-tn', async (req, res) => {
+  try {
+    const { data: config } = await supabaseAdmin.from('system_config').select('*').eq('id', 'main').single();
+    const token = config?.tiendanube_access_token;
+    const storeId = config?.tiendanube_store_id;
+    if (!token || !storeId) return res.status(400).json({ error: 'TN credentials missing' });
+
+    // Fetch all products from TN
+    let allProducts = [], pageToken;
+    do {
+      const url = `https://api.tiendanube.com/v1/${storeId}/products?per_page=200${pageToken ? '&page_token=' + pageToken : ''}`;
+      const r = await fetch(url, { headers: { 'Authentication': `Bearer ${token}`, 'User-Agent': 'APES CRM' } });
+      if (!r.ok) break;
+      const products = await r.json();
+      allProducts = allProducts.concat(products);
+      pageToken = r.headers.get('x-next-page-token');
+    } while (pageToken);
+
+    let synced = 0;
+    for (const p of allProducts) {
+      const attrs = p.attributes || [];
+      const colorAttr = attrs.find(a => a.name?.toLowerCase() === 'color');
+      const sizeAttr = attrs.find(a => a.name?.toLowerCase() === 'talla' || a.name?.toLowerCase() === 'size');
+      const imageUrl = p.images?.[0]?.src || '';
+
+      for (const v of (p.variants || [])) {
+        const colorVal = v.values?.find(vv => vv?.option === colorAttr?.id)?.text || '';
+        const sizeVal = v.values?.find(vv => vv?.option === sizeAttr?.id)?.text || '';
+
+        const { error } = await supabaseAdmin.from('workshop_inventory').upsert({
+          source: 'tiendanube',
+          tiendanube_product_id: parseInt(storeId) ? p.id : p.id,
+          tiendanube_variant_id: v.id,
+          sku: v.sku || '',
+          name: p.name?.es || p.name || 'Sin nombre',
+          description: p.description?.es || '',
+          category: 'producto_tn',
+          color: colorVal,
+          size: sizeVal,
+          image_url: imageUrl,
+          sell_price: parseFloat(v.price || '0'),
+          current_stock: v.stock ?? 0,
+          last_synced_at: new Date().toISOString(),
+        }, { onConflict: 'tiendanube_product_id,tiendanube_variant_id' });
+
+        if (!error) synced++;
+      }
+    }
+
+    res.json({ ok: true, products: allProducts.length, variants: synced });
+  } catch (err) {
+    console.error('[Taller Sync]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/taller/inventory — List all inventory items
+app.get('/api/taller/inventory', async (req, res) => {
+  try {
+    const source = req.query.source;
+    let query = supabaseAdmin.from('workshop_inventory').select('*').eq('status', 'active').order('name');
+    if (source) query = query.eq('source', source);
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json({ ok: true, items: data || [] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/taller/inventory — Add local/other_store product
+app.post('/api/taller/inventory', async (req, res) => {
+  try {
+    const item = req.body;
+    const { data, error } = await supabaseAdmin.from('workshop_inventory').insert({
+      source: item.source || 'local',
+      source_store_name: item.source_store_name || '',
+      name: item.name,
+      description: item.description || '',
+      category: item.category || 'otro',
+      color: item.color || '',
+      size: item.size || '',
+      sku: item.sku || '',
+      image_url: item.image_url || '',
+      cost_price: item.cost_price || 0,
+      sell_price: item.sell_price || 0,
+      current_stock: item.current_stock || 0,
+      min_stock: item.min_stock || 0,
+      location: item.location || 'Almacén General',
+      tags: item.tags || [],
+    }).select().single();
+    if (error) throw error;
+    res.json({ ok: true, item: data });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/taller/inventory/:id/adjust — Adjust stock with movement log
+app.post('/api/taller/inventory/:id/adjust', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { quantity, movement_type, to_location, from_location, notes, batch_id, performed_by_name } = req.body;
+
+    const { error: movError } = await supabaseAdmin.from('stock_movements').insert({
+      inventory_item_id: id,
+      movement_type: movement_type || 'adjust',
+      quantity: parseInt(quantity),
+      to_location: to_location || '',
+      from_location: from_location || '',
+      batch_id: batch_id || null,
+      notes: notes || '',
+      performed_by_name: performed_by_name || '',
+    });
+    if (movError) throw movError;
+
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/taller/movements — Recent stock movements
+app.get('/api/taller/movements', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 50;
+    const itemId = req.query.item_id;
+    let query = supabaseAdmin.from('stock_movements').select('*, workshop_inventory(name, sku, color, size, image_url)').order('created_at', { ascending: false }).limit(limit);
+    if (itemId) query = query.eq('inventory_item_id', itemId);
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json({ ok: true, movements: data || [] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/taller/locations — Workshop locations
+app.get('/api/taller/locations', async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin.from('workshop_locations').select('*').eq('is_active', true).order('name');
+    if (error) throw error;
+    res.json({ ok: true, locations: data || [] });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });

@@ -280,6 +280,13 @@ function mergeOrderIntoProfile(profile, order) {
   profile.totalSpent += purchase.amount;
   profile.purchaseCount = profile.purchases.length;
 
+  // Set created_at from earliest order if not already set
+  if (!profile.created_at && order.created_at) {
+    profile.created_at = order.created_at;
+  } else if (profile.created_at && order.created_at && order.created_at < profile.created_at) {
+    profile.created_at = order.created_at;
+  }
+
   // Upgrade email if the existing one is invalid and the order has a valid one
   const orderEmail = order.contact_email;
   if (isInvalidEmail(profile.email) && !isInvalidEmail(orderEmail)) {
@@ -340,6 +347,7 @@ function profileFromOrder(order) {
     purchases: [purchase],
     source: 'tiendanube',
     segment: resolveSegment(purchaseCount),
+    created_at: order.created_at || null,
   };
   
   newProfile.segmentTags = resolveSegmentTags(newProfile);

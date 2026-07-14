@@ -52,7 +52,7 @@ export default function FrequencyFunnel({ clients, onSelectClient }) {
 
   const TIER_COLORS = ['#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981'];
 
-  const formatARS = (v) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(v);
+  const formatCurrency = (v) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v);
 
   return (
     <div style={{
@@ -130,13 +130,13 @@ export default function FrequencyFunnel({ clients, onSelectClient }) {
             <span style={{ textAlign: 'center', fontWeight: 700, fontSize: 15, color: TIER_COLORS[idx] }}>{tier.count}</span>
 
             {/* Revenue */}
-            <span style={{ textAlign: 'right', fontWeight: 600, fontSize: 13, color: 'var(--on-surface)' }}>{formatARS(tier.revenue)}</span>
+            <span style={{ textAlign: 'right', fontWeight: 600, fontSize: 13, color: 'var(--on-surface)' }}>{formatCurrency(tier.revenue)}</span>
 
             {/* Revenue % */}
             <span style={{ textAlign: 'right', fontSize: 12, color: 'var(--on-surface-variant)' }}>{tier.revPct}%</span>
 
             {/* Avg Ticket */}
-            <span style={{ textAlign: 'right', fontSize: 12, color: 'var(--on-surface-variant)' }}>{formatARS(tier.avgTicket)}</span>
+            <span style={{ textAlign: 'right', fontSize: 12, color: 'var(--on-surface-variant)' }}>{formatCurrency(tier.avgTicket)}</span>
           </div>
 
           {/* Expanded Client List */}
@@ -164,7 +164,7 @@ export default function FrequencyFunnel({ clients, onSelectClient }) {
                     onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.color = 'var(--on-surface-variant)'; }}
                   >
                     <span style={{ fontWeight: 500 }}>{c.name || c.email}</span>
-                    <span style={{ color: 'var(--outline)', fontSize: 11 }}>{formatARS(c.totalSpent)}</span>
+                    <span style={{ color: 'var(--outline)', fontSize: 11 }}>{formatCurrency(c.totalSpent)}</span>
                   </button>
                 ))}
                 {tier.clients.length > 20 && (
@@ -187,7 +187,7 @@ export default function FrequencyFunnel({ clients, onSelectClient }) {
             <span>TOTAL</span>
             <span></span>
             <span style={{ textAlign: 'center' }}>{tiers.reduce((s, t) => s + t.count, 0)}</span>
-            <span style={{ textAlign: 'right' }}>{formatARS(tiers.reduce((s, t) => s + t.revenue, 0))}</span>
+            <span style={{ textAlign: 'right' }}>{formatCurrency(tiers.reduce((s, t) => s + t.revenue, 0))}</span>
             <span style={{ textAlign: 'right' }}>100%</span>
             <span></span>
           </div>

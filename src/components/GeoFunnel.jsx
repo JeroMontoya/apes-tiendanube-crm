@@ -76,7 +76,7 @@ export default function GeoFunnel({ clients, onSelectClient }) {
     '#0891B2', '#4F46E5', '#9333EA', '#E11D48', 'var(--on-warning-container)',
   ];
 
-  const formatARS = (v) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(v);
+  const formatCurrency = (v) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v);
 
   return (
     <div style={{
@@ -90,7 +90,7 @@ export default function GeoFunnel({ clients, onSelectClient }) {
             <MapPin size={20} color="#60a5fa" /> Embudo Geográfico de Ventas
           </h3>
           <p style={{ fontSize: 12, color: 'var(--on-surface-variant)', margin: '4px 0 0' }}>
-            ¿De dónde compran tus clientes? — {totalClients} clientes, {formatARS(totalRevenue)} revenue
+            ¿De dónde compran tus clientes? — {totalClients} clientes, {formatCurrency(totalRevenue)} revenue
           </p>
         </div>
 
@@ -182,7 +182,7 @@ export default function GeoFunnel({ clients, onSelectClient }) {
               <span style={{ textAlign: 'center', fontWeight: 700, fontSize: 14, color }}>{item.count}</span>
 
               {/* Revenue */}
-              <span style={{ textAlign: 'right', fontWeight: 600, fontSize: 13, color: 'var(--on-surface)' }}>{formatARS(item.revenue)}</span>
+              <span style={{ textAlign: 'right', fontWeight: 600, fontSize: 13, color: 'var(--on-surface)' }}>{formatCurrency(item.revenue)}</span>
 
               {/* Pct */}
               <span style={{ textAlign: 'right', fontSize: 12, color: 'var(--on-surface-variant)' }}>{item.revPct}%</span>
@@ -210,7 +210,7 @@ export default function GeoFunnel({ clients, onSelectClient }) {
                           <span style={{ fontWeight: 500, color: 'var(--on-surface-variant)' }}>📍 {city.city}</span>
                           <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
                             <span style={{ color: 'var(--on-surface-variant)' }}>{city.count} cliente{city.count !== 1 ? 's' : ''}</span>
-                            <span style={{ fontWeight: 600, color: 'var(--on-surface)' }}>{formatARS(city.revenue)}</span>
+                            <span style={{ fontWeight: 600, color: 'var(--on-surface)' }}>{formatCurrency(city.revenue)}</span>
                           </div>
                         </div>
                       ))}
@@ -238,7 +238,7 @@ export default function GeoFunnel({ clients, onSelectClient }) {
                       onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.color = 'var(--on-surface-variant)'; }}
                     >
                       <span style={{ fontWeight: 500 }}>{c.name || c.email}</span>
-                      <span style={{ color: 'var(--outline)', fontSize: 11 }}>{formatARS(c.totalSpent)}</span>
+                      <span style={{ color: 'var(--outline)', fontSize: 11 }}>{formatCurrency(c.totalSpent)}</span>
                     </button>
                   ))}
                   {item.clients.length > 15 && (
@@ -268,7 +268,7 @@ export default function GeoFunnel({ clients, onSelectClient }) {
             <span>TOTAL ({data.length} {viewMode === 'province' ? 'provincias' : 'ciudades'})</span>
             <span></span>
             <span style={{ textAlign: 'center' }}>{totalClients}</span>
-            <span style={{ textAlign: 'right' }}>{formatARS(totalRevenue)}</span>
+            <span style={{ textAlign: 'right' }}>{formatCurrency(totalRevenue)}</span>
             <span style={{ textAlign: 'right' }}>100%</span>
           </div>
         </div>
