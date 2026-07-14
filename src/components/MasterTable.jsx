@@ -34,7 +34,7 @@ const SOURCE_BADGES = {
 };
 
 function getSegment(client) {
-  const pc = client.purchaseCount ?? 0;
+  const pc = client.allTimePurchaseCount ?? client.purchaseCount ?? 0;
   if (pc === 0) return 'abandoned';
   if (pc === 1) return 'regular';
   return 'vip';
@@ -353,9 +353,9 @@ export default function MasterTable({ clients, onSelectClient }) {
                       <td style={{ ...s.td, fontSize: 12 }}>{client.phone || '—'}</td>
                       <td style={{ ...s.td, fontSize: 12 }}>{client.city || '—'}</td>
                       <td style={{ ...s.td, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
-                        {(client.totalSpent ?? 0).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 })}
+                        {(client.allTimeTotalSpent ?? client.totalSpent ?? 0).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 })}
                       </td>
-                      <td style={{ ...s.td, textAlign: 'center', fontWeight: 600 }}>{client.purchaseCount ?? 0}</td>
+                      <td style={{ ...s.td, textAlign: 'center', fontWeight: 600 }}>{client.allTimePurchaseCount ?? client.purchaseCount ?? 0}</td>
                       <td style={s.td}>
                         <span
                           style={{
