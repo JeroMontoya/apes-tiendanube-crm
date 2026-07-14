@@ -14,8 +14,8 @@ export default function FrequencyFunnel({ clients, onSelectClient }) {
     const groups = {};
 
     arr.forEach(c => {
-      const count = c.purchaseCount ?? 0;
-      if (count === 0) return; // Skip abandoned
+      const count = c.allTimePurchaseCount ?? c.purchaseCount ?? 0;
+      if (count === 0) return;
       const key = count >= 5 ? '5+' : String(count);
       if (!groups[key]) groups[key] = { clients: [], revenue: 0, totalOrders: 0 };
       groups[key].clients.push(c);
@@ -24,7 +24,7 @@ export default function FrequencyFunnel({ clients, onSelectClient }) {
     });
 
     const tierOrder = ['1', '2', '3', '4', '5+'];
-    const totalClients = arr.filter(c => (c.purchaseCount ?? 0) > 0).length;
+    const totalClients = arr.filter(c => (c.allTimePurchaseCount ?? c.purchaseCount ?? 0) > 0).length;
     const totalRevenue = arr.reduce((s, c) => s + (c.totalSpent ?? 0), 0);
     const maxClients = Math.max(...tierOrder.map(k => groups[k]?.clients.length || 0), 1);
 
