@@ -144,6 +144,21 @@ export default function PQRPanel({ session, rawOrders = [] }) {
 
   useEffect(() => { if (session?.user?.id) fetchCases(); }, [session]);
 
+  // ── Supabase Realtime: cross-device PQR sync ───────────────────────────
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    const channel = supabase
+      .channel('pqr-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pqr_cases' }, (payload) => {
+        console.log('[PQR Realtime]', payload.eventType, payload.new?.id || payload.old?.id);
+        fetchCases();
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') console.log('[PQR Realtime] Cross-device sync active');
+      });
+    return () => { supabase.removeChannel(channel); };
+  }, [session]);
+
   useEffect(() => {
     const h = (e) => { 
       if (dropdownRef.current && !dropdownRef.current.contains(e.target) && dropdownMenuRef.current && !dropdownMenuRef.current.contains(e.target)) {

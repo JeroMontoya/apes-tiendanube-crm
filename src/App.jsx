@@ -1018,6 +1018,42 @@ function AppContent({
     onBroadcast: handleRealtimeEvent,
   });
 
+  // ── Supabase Realtime: auto-refresh when server cache updates ──────────
+  const snapshotRefreshTimerRef = useRef(null);
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    const channel = supabase
+      .channel('cache-realtime')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'server_cache', filter: 'id=eq.main' }, (payload) => {
+        console.log('[Cache Realtime] Server cache updated, refreshing snapshot...');
+        if (snapshotRefreshTimerRef.current) clearTimeout(snapshotRefreshTimerRef.current);
+        snapshotRefreshTimerRef.current = setTimeout(async () => {
+          try {
+            const snapshotRes = await fetch('/api/data/snapshot');
+            const snapshot = await snapshotRes.json();
+            if (snapshot.ready && snapshot.data) {
+              if (snapshot.data.unifiedClients?.length) setUnifiedClients(snapshot.data.unifiedClients);
+              if (snapshot.data.rawOrders?.length) setRawOrders(snapshot.data.rawOrders);
+              if (snapshot.data.products?.length) setTiendanubeProducts(snapshot.data.products);
+              if (snapshot.data.ga4Insights) setGa4Insights(snapshot.data.ga4Insights);
+              if (snapshot.data.metaInsights) setMetaInsights(snapshot.data.metaInsights);
+              if (snapshot.data.mcProducts?.length) setMcProducts(snapshot.data.mcProducts);
+              if (snapshot.data.gscQueries?.length) setGscQueries(snapshot.data.gscQueries);
+              if (snapshot.data.gscPages?.length) setGscPages(snapshot.data.gscPages);
+              if (snapshot.data.gscPerformance) setGscPerformance(snapshot.data.gscPerformance);
+              if (snapshot.data.aiInsights) setAiInsights(snapshot.data.aiInsights);
+              setLastSync(new Date(snapshot.lastSync));
+              console.log('[Cache Realtime] Snapshot refreshed successfully');
+            }
+          } catch (err) { console.warn('[Cache Realtime] Refresh failed:', err.message); }
+        }, 2000); // debounce 2s
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') console.log('[Cache Realtime] Watching for server cache updates');
+      });
+    return () => { supabase.removeChannel(channel); if (snapshotRefreshTimerRef.current) clearTimeout(snapshotRefreshTimerRef.current); };
+  }, [session]);
+
   return (
     <div className="app-layout">
       {/* Sidebar Navigation */}
