@@ -1101,11 +1101,29 @@ app.get('/api/data/snapshot', async (req, res) => {
       (!sample.city && !sample.province)
     );
     if (needsRegen) {
-      console.log('[Snapshot] Regenerating unifiedClients from stored TN orders (stale format detected)');
+      console.log('[Snapshot] Regenerating unifiedClients + rawOrders from stored TN orders (stale format detected)');
       // Use tiendanube_orders (full TN order objects) for proper mapping
-      unifiedClients = mapToUnified(data.tiendanube_orders || data.raw_orders || []);
+      const tnOrders = data.tiendanube_orders || [];
+      unifiedClients = mapToUnified(tnOrders);
+      // Also regenerate rawOrders with proper date extraction from PHP DateTime objects
+      if (tnOrders.length > 0) {
+        const freshRawOrders = tnOrders.map(o => {
+          const rawDate = o.completed_at || o.created_at;
+          const dateStr = typeof rawDate === 'string' ? rawDate : rawDate?.date || null;
+          return {
+            id: o.id, number: o.number, total: parseFloat(o.total || 0),
+            created_at: dateStr, date: dateStr,
+            status: o.status, customer_id: o.customer?.id,
+            customer: o.customer ? { name: o.customer.name, email: o.customer.email, phone: o.customer.phone } : undefined,
+            products: (o.products || []).map(p => ({ name: p.name, quantity: p.quantity, price: p.price })),
+            tracking_number: o.tracking_number,
+            shipping_address: o.shipping_address || null,
+          };
+        });
+        data.raw_orders = freshRawOrders;
+      }
       // Update cache in background
-      supabaseAdmin.from('server_cache').upsert({ id: 'main', unified_clients: unifiedClients, updated_at: new Date().toISOString() }, { onConflict: 'id' }).then(() => {}).catch(() => {});
+      supabaseAdmin.from('server_cache').upsert({ id: 'main', unified_clients: unifiedClients, raw_orders: data.raw_orders, updated_at: new Date().toISOString() }, { onConflict: 'id' }).then(() => {}).catch(() => {});
     }
 
     res.json({
