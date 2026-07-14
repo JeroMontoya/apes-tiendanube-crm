@@ -1157,7 +1157,8 @@ app.get('/api/data/snapshot', async (req, res) => {
     const sample = unifiedClients[0];
     const rawSample = rawOrders[0];
     const rawOrdersStale = rawSample && rawSample.date && typeof rawSample.date === 'object';
-    const needsRegen = unifiedClients.length > 0 && (
+    const forceRegen = req.query.force === '1';
+    const needsRegen = forceRegen || (unifiedClients.length > 0 && (
       (sample.orders && !sample.purchases) ||
       (sample.purchases?.length > 0 && !sample.purchases[0].date) ||
       (sample.purchases?.length > 0 && !('couponType' in sample.purchases[0])) ||
