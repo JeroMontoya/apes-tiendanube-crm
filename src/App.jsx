@@ -33,6 +33,7 @@ import RecentActivityFeed from './components/RecentActivityFeed';
 import OrdersTracking from './components/OrdersTracking';
 import MerchantCenterPanel from './components/MerchantCenterPanel';
 import SearchConsolePanel from './components/SearchConsolePanel';
+import LogisticsCenter from './components/LogisticsCenter';
 
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -1403,22 +1404,7 @@ function AppViewRenderer({
       return <PQRPanel session={session} rawOrders={rawOrders} n8nWebhookUrl={workspaceData?.n8n_webhook_url} />;
     case 'taller':
       return (
-        <WorkshopPage
-          products={tiendanubeProducts}
-          onRefresh={refreshStock}
-          isRefreshing={isRefreshingStock}
-          storeId={storeId}
-          session={session}
-          onUpdateStock={async (productId, variantId, newStock) => {
-            if (!storeId) return;
-            const { data: sysCfg } = await supabase.from('system_config').select('tiendanube_access_token').eq('id', 'main').single();
-            const token = sysCfg?.tiendanube_access_token || workspaceData?.tiendanube_access_token;
-            if (!token) return;
-            const api = new TiendanubeAPI(storeId, token);
-            await api.updateVariantStock(productId, variantId, newStock);
-          }}
-          onRefreshStock={refreshStock}
-        />
+        <LogisticsCenter session={session} />
       );
     case 'equipo':
       return <TeamPanel />;

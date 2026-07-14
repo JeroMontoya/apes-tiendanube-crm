@@ -6,7 +6,7 @@ import {
   Settings, Download, Menu, X, Zap, Calendar, Sun, Moon, Warehouse,
   Hammer, BarChart3, Clock, ChevronDown, ChevronRight, MoreHorizontal,
   BarChart2, MessageSquare, Repeat, FileText, Sparkles,
-  Compass, Music, Video, Link, LogOut, Eye
+  Compass, Music, Video, Link, LogOut, Eye, Truck
 } from 'lucide-react';
 
 const NAV_GROUPS = [
@@ -42,7 +42,7 @@ const NAV_GROUPS = [
     id: 'taller',
     label: 'Taller & Producción',
     items: [
-      { id: 'taller', icon: Hammer, label: 'Panel Taller', roles: ['admin', 'taller'] },
+      { id: 'logistics', icon: Truck, label: 'Logística del Taller', roles: ['admin', 'taller'] },
       { id: 'inventario', icon: Warehouse, label: 'Inventario', roles: ['admin', 'taller', 'ventas', 'atencion_cliente'] },
     ],
   },
@@ -392,7 +392,7 @@ function FloatingOrbNav({ activeView, onNavigate, moreOpen, setMoreOpen, theme, 
   const quickNav = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Inicio', color: '#3b82f6' },
     { id: 'clientes', icon: Users, label: 'Clientes', color: '#10b981' },
-    { id: 'taller', icon: Hammer, label: 'Taller', color: '#f59e0b' },
+    { id: 'logistics', icon: Truck, label: 'Taller', color: '#f59e0b' },
     { id: 'marketing', icon: TrendingUp, label: 'Marketing', color: '#ec4899' },
     { id: 'ventas_view', icon: BarChart2, label: 'Ventas', color: '#06b6d4' },
     { id: 'inteligencia_competitiva', icon: Compass, label: 'Int. Competitiva', color: '#8b5cf6' },
