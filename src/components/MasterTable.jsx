@@ -28,7 +28,6 @@ const SEGMENT_BADGES = {
 };
 
 const SOURCE_BADGES = {
-  historic: { bg: 'rgba(139, 111, 71, 0.2)', color: '#A0845C', label: 'Histórico' },
   tiendanube: { bg: 'rgba(121, 82, 179, 0.2)', color: '#A78BFA', label: 'TiendaNube' },
   unified: { bg: 'rgba(45, 139, 78, 0.2)', color: '#34C759', label: 'Unificado' },
 };
@@ -322,7 +321,7 @@ export default function MasterTable({ clients, onSelectClient }) {
               ) : (
                 paged.map((client, idx) => {
                   const segBadge = SEGMENT_BADGES[client.segment] || SEGMENT_BADGES.regular;
-                  const srcBadge = SOURCE_BADGES[client.source] || SOURCE_BADGES.historic;
+                  const srcBadge = SOURCE_BADGES[client.source] || SOURCE_BADGES.tiendanube;
                   return (
                     <tr
                       key={client.email || idx}
