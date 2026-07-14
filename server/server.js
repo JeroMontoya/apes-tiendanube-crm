@@ -808,38 +808,60 @@ function mapToUnified(orders) {
     const email = cust.email || o.contact_email || '';
     const phone = cust.phone || o.billing_address?.phone || o.shipping_address?.phone || '';
     const key = email || phone || `unknown_${cust.id || Math.random()}`;
+
+    // TN API returns customer.name as single string, not first_name/last_name
+    const customerName = cust.name || o.contact_name || o.billing_name || '';
+
+    // Extract date properly (TN may return PHP DateTime objects)
+    const rawDate = o.completed_at || o.created_at || o.date;
+    const orderDateStr = (typeof rawDate === 'string' ? rawDate : rawDate?.date || '').substring(0, 10);
+    const orderIsoDate = (typeof rawDate === 'string' ? rawDate : rawDate?.date || null);
+
+    // Extract shipping address fields
+    const shipAddr = o.shipping_address || {};
+    const billAddr = o.billing_address || {};
+    const orderCity = shipAddr.city || billAddr.city || '';
+    const orderProvince = shipAddr.province || billAddr.province || shipAddr.locality || '';
+    const orderAddress = shipAddr.address || billAddr.address || '';
+
     if (!clientMap.has(key)) {
       clientMap.set(key, {
-        id: cust.id || key, name: `${cust.first_name || ''} ${cust.last_name || ''}`.trim() || 'Sin nombre',
+        id: cust.id || key,
+        name: customerName || 'Sin nombre',
         email, phone,
-        city: cust.city || o.shipping_address?.city || o.billing_address?.city || '',
-        province: cust.province || o.shipping_address?.province || o.billing_address?.province || o.shipping_address?.locality || '',
+        city: cust.city || orderCity,
+        province: cust.province || orderProvince,
+        address: orderAddress,
         totalOrders: 0, totalSpent: 0, purchases: [], firstOrder: null, lastOrder: null,
-        created_at: o.completed_at || o.created_at || null,
+        created_at: orderIsoDate,
         segment: null, segmentTags: [],
       });
     }
     const c = clientMap.get(key);
+
+    // Upgrade name if current is "Sin nombre" and order has a real name
+    if (c.name === 'Sin nombre' && customerName) c.name = customerName;
+
     c.totalOrders++;
     c.totalSpent += parseFloat(o.total || 0);
-    const rawDate = o.completed_at || o.created_at || o.date;
-    const orderDate = (typeof rawDate === 'string' ? rawDate : rawDate?.date || '').substring(0, 10);
-    if (!c.firstOrder || orderDate < c.firstOrder) c.firstOrder = orderDate;
-    if (!c.lastOrder || orderDate > c.lastOrder) c.lastOrder = orderDate;
+
+    if (orderDateStr) {
+      if (!c.firstOrder || orderDateStr < c.firstOrder) c.firstOrder = orderDateStr;
+      if (!c.lastOrder || orderDateStr > c.lastOrder) c.lastOrder = orderDateStr;
+    }
+    // Upgrade created_at to earliest order
+    if (!c.created_at && orderIsoDate) c.created_at = orderIsoDate;
+    else if (c.created_at && orderIsoDate && orderIsoDate < c.created_at) c.created_at = orderIsoDate;
+
     // Upgrade city/province from shipping address if missing
-    if (!c.city) {
-      const orderCity = o.shipping_address?.city || o.billing_address?.city || '';
-      if (orderCity) c.city = orderCity;
-    }
-    if (!c.province) {
-      const orderProv = o.shipping_address?.province || o.billing_address?.province || o.shipping_address?.locality || '';
-      if (orderProv) c.province = orderProv;
-    }
+    if (!c.city && orderCity) c.city = orderCity;
+    if (!c.province && orderProvince) c.province = orderProvince;
+    if (!c.address && orderAddress) c.address = orderAddress;
     const discountTotal = parseFloat(o.discount) || 0;
     const promoDiscount = parseFloat(o.promotional_discount?.total_discount_amount) || 0;
     const couponCode = (o.coupon && typeof o.coupon === 'object') ? (o.coupon.code || null) : null;
     c.purchases.push({
-      date: orderDate,
+      date: orderDateStr,
       amount: parseFloat(o.total) || 0,
       product: (o.products || []).map(p => p.name).join(' + '),
       productsArray: o.products || [],
@@ -920,14 +942,20 @@ app.get('/api/cron/sync', async (req, res) => {
 
     // 3. Map to unified format
     const unifiedClients = mapToUnified(orders);
-    const rawOrders = orders.map(o => ({
-      id: o.id, number: o.number, total: parseFloat(o.total || 0), created_at: o.completed_at || o.created_at,
-      date: o.completed_at || o.created_at,
-      status: o.status, customer_id: o.customer?.id,
-      customer: o.customer ? { name: o.customer.name, email: o.customer.email, phone: o.customer.phone } : undefined,
-      products: (o.products || []).map(p => ({ name: p.name, quantity: p.quantity, price: p.price })),
-      tracking_number: o.tracking_number,
-    }));
+    const rawOrders = orders.map(o => {
+      const rawDate = o.completed_at || o.created_at;
+      const dateStr = typeof rawDate === 'string' ? rawDate : rawDate?.date || null;
+      return {
+        id: o.id, number: o.number, total: parseFloat(o.total || 0),
+        created_at: dateStr,
+        date: dateStr,
+        status: o.status, customer_id: o.customer?.id,
+        customer: o.customer ? { name: o.customer.name, email: o.customer.email, phone: o.customer.phone } : undefined,
+        products: (o.products || []).map(p => ({ name: p.name, quantity: p.quantity, price: p.price })),
+        tracking_number: o.tracking_number,
+        shipping_address: o.shipping_address || null,
+      };
+    });
 
     // 4. Date range for analytics (last 30 days)
     const end = new Date();
@@ -1057,14 +1085,23 @@ app.get('/api/data/snapshot', async (req, res) => {
       return res.json({ ready: false, message: 'Cache not initialized yet. First sync pending.' });
     }
 
-    // Auto-regenerate unifiedClients if stored format uses 'orders' instead of 'purchases'
-    // OR if purchases have empty dates (stale generation)
+    // Auto-regenerate unifiedClients if stored format is stale:
+    // - uses 'orders' instead of 'purchases'
+    // - purchases have empty dates
+    // - client names are "Sin nombre" (old bug with first_name/last_name)
+    // - client missing created_at
+    // - client missing city/province (shipping address not extracted)
     let unifiedClients = data.unified_clients || [];
+    const sample = unifiedClients[0];
     const needsRegen = unifiedClients.length > 0 && (
-      (unifiedClients[0].orders && !unifiedClients[0].purchases) ||
-      (unifiedClients[0].purchases && unifiedClients[0].purchases.length > 0 && !unifiedClients[0].purchases[0].date)
+      (sample.orders && !sample.purchases) ||
+      (sample.purchases?.length > 0 && !sample.purchases[0].date) ||
+      sample.name === 'Sin nombre' ||
+      !sample.created_at ||
+      (!sample.city && !sample.province)
     );
     if (needsRegen) {
+      console.log('[Snapshot] Regenerating unifiedClients from stored TN orders (stale format detected)');
       // Use tiendanube_orders (full TN order objects) for proper mapping
       unifiedClients = mapToUnified(data.tiendanube_orders || data.raw_orders || []);
       // Update cache in background
