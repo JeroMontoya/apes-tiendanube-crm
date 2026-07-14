@@ -6,7 +6,7 @@ import {
   Settings, Download, Menu, X, Zap, Calendar, Sun, Moon, Warehouse,
   Hammer, BarChart3, Clock, ChevronDown, ChevronRight, MoreHorizontal,
   BarChart2, MessageSquare, Repeat, FileText, Sparkles,
-  Compass, Music, Video, Link, LogOut
+  Compass, Music, Video, Link, LogOut, Eye
 } from 'lucide-react';
 
 const NAV_GROUPS = [
@@ -16,6 +16,7 @@ const NAV_GROUPS = [
     items: [
       { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['admin', 'taller', 'ventas', 'atencion_cliente'] },
       { id: 'marketing_center', icon: Brain, label: 'Centro de Marketing', roles: ['admin'] },
+      { id: 'inteligencia', icon: Eye, label: 'Inteligencia de Marca', roles: ['admin'] },
       { id: 'calendario', icon: Calendar, label: 'Calendario', roles: ['admin'] },
     ],
   },

@@ -8,6 +8,7 @@ import StatsCards from './components/StatsCards';
 import MasterTable from './components/MasterTable';
 import ClassificationTree from './components/ClassificationTree';
 import AnalyticsPanel from './components/AnalyticsPanel';
+import BrandIntelligenceCenter from './components/BrandIntelligenceCenter';
 import ExportPanel from './components/ExportPanel';
 import SettingsPanel from './components/SettingsPanel';
 import ClientDetailModal from './components/ClientDetailModal';
@@ -1340,6 +1341,8 @@ function AppViewRenderer({
           <ClassificationTree clients={filteredClients} />
         </>
       );
+    case 'inteligencia':
+      return <BrandIntelligenceCenter session={session} />;
     case 'analitica':
       return (
         <>

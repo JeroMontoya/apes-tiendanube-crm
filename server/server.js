@@ -1088,7 +1088,162 @@ app.get('/api/data/snapshot', async (req, res) => {
   }
 });
 
-// POST /api/cron/sync-manual — authenticated user triggers immediate sync
+// ═══════════════════════════════════════════════════════════════════
+//  POST /api/ai/brand-intelligence — Deep cross-channel brand analysis
+// ═══════════════════════════════════════════════════════════════════
+app.post('/api/ai/brand-intelligence', async (req, res) => {
+  try {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: 'GEMINI_API_KEY not configured' });
+
+    const { data: cache } = await supabaseAdmin
+      .from('server_cache').select('*').eq('id', 'main').single();
+
+    if (!cache) return res.status(500).json({ error: 'No data cached yet' });
+
+    const clients = cache.unified_clients || [];
+    const orders = cache.raw_orders || [];
+    const products = cache.tiendanube_products || [];
+    const ga4 = cache.ga4_insights;
+    const meta = cache.meta_insights;
+    const mc = cache.mc_products || [];
+    const gsc = { queries: cache.gsc_queries || [], pages: cache.gsc_pages || [], performance: cache.gsc_performance };
+
+    const totalClients = clients.length;
+    const buyers = clients.filter(c => (c.purchaseCount || 0) > 0);
+    const totalRevenue = buyers.reduce((s, c) => s + (c.totalSpent || 0), 0);
+    const avgTicket = buyers.length > 0 ? totalRevenue / buyers.length : 0;
+    const repeatBuyers = buyers.filter(c => (c.purchaseCount || 0) > 1).length;
+    const repeatRate = buyers.length > 0 ? (repeatBuyers / buyers.length * 100) : 0;
+
+    const segments = {};
+    clients.forEach(c => { const seg = c.segment || 'unknown'; segments[seg] = (segments[seg] || 0) + 1; });
+
+    const geos = {};
+    clients.forEach(c => { const prov = c.province || 'N/A'; geos[prov] = (geos[prov] || 0) + 1; });
+    const topGeos = Object.entries(geos).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+    const productSummary = products.slice(0, 30).map(p => ({
+      name: p.name?.substring(0, 50), price: p.variants?.[0]?.price, stock: p.stock_quantity, status: p.status
+    }));
+
+    let ga4Summary = 'Sin datos';
+    if (ga4?.global) {
+      ga4Summary = `Sesiones: ${ga4.global.sessions}, Usuarios activos: ${ga4.global.activeUsers}, Bounce: ${(ga4.global.bounceRate * 100).toFixed(1)}%, Duración promedio: ${ga4.global.averageSessionDuration.toFixed(0)}s`;
+      if (ga4.acquisition?.length) ga4Summary += `\nCanales: ${ga4.acquisition.map(a => `${a.channel}(${a.sessions})`).join(', ')}`;
+    }
+
+    let metaSummary = 'Sin datos';
+    if (meta?.data?.length) {
+      const mSpend = meta.data.reduce((s, d) => s + (parseFloat(d.spend) || 0), 0);
+      const mResults = meta.data.reduce((s, d) => s + (parseInt(d.results) || 0), 0);
+      const mImpressions = meta.data.reduce((s, d) => s + (parseInt(d.impressions) || 0), 0);
+      const mClicks = meta.data.reduce((s, d) => s + (parseInt(d.clicks) || 0), 0);
+      metaSummary = `Inversión: $${mSpend.toLocaleString()}, Conversiones: ${mResults}, CTR: ${mImpressions > 0 ? (mClicks / mImpressions * 100).toFixed(2) : 0}%, CPC: $${mClicks > 0 ? (mSpend / mClicks).toFixed(0) : 0}`;
+    }
+
+    let gscSummary = 'Sin datos';
+    if (gsc.queries.length > 0) {
+      const totalClicks = gsc.queries.reduce((s, q) => s + (q.clicks || 0), 0);
+      const totalImpressions = gsc.queries.reduce((s, q) => s + (q.impressions || 0), 0);
+      gscSummary = `Queries: ${gsc.queries.length}, Clics: ${totalClicks}, Impresiones: ${totalImpressions}, CTR: ${totalImpressions > 0 ? (totalClicks / totalImpressions * 100).toFixed(2) : 0}%`;
+    }
+
+    let mcSummary = 'Sin datos';
+    if (mc.length > 0) {
+      const approved = mc.filter(p => p.productStatus === 'active').length;
+      mcSummary = `Productos: ${mc.length}, Activos: ${approved}, Rechazados/Pendientes: ${mc.length - approved}`;
+    }
+
+    const recentOrders = orders.filter(o => {
+      const d = o.date?.date || o.date;
+      if (!d) return false;
+      return new Date(d) >= new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    });
+
+    const prompt = `
+Eres un Chief Digital Officer y Data Scientist senior. Analiza TODA la información de esta marca de e-commerce y genera un reporte de inteligencia de marca digital COMPLETO.
+
+=== CLIENTES (${totalClients} total, ${buyers.length} compradores) ===
+Revenue total: $${totalRevenue.toLocaleString()}
+Ticket promedio: $${avgTicket.toFixed(0)}
+Compradores repetidos: ${repeatBuyers} (${repeatRate.toFixed(1)}%)
+Segmentos: ${JSON.stringify(segments)}
+Top ubicaciones: ${topGeos.map(([g, n]) => `${g}(${n})`).join(', ')}
+
+=== PEDIDOS (últimos 30 días: ${recentOrders.length} pedidos, $${recentOrders.reduce((s,o) => s + (o.total||0), 0).toLocaleString()} revenue) ===
+Total pedidos en cache: ${orders.length}
+
+=== PRODUCTOS (${products.length} total) ===
+${JSON.stringify(productSummary)}
+
+=== GOOGLE ANALYTICS 4 ===
+${ga4Summary}
+
+=== META ADS ===
+${metaSummary}
+
+=== GOOGLE SEARCH CONSOLE ===
+${gscSummary}
+
+=== GOOGLE MERCHANT CENTER ===
+${mcSummary}
+
+Genera un JSON con esta estructura EXACTA:
+{
+  "brandHealthScore": {
+    "score": 0-100,
+    "label": "Excelente|Bueno|Regular|Necesita atención|Crítico",
+    "breakdown": { "acquisition": 0-100, "retention": 0-100, "revenue": 0-100, "seo": 0-100, "ads": 0-100, "products": 0-100 }
+  },
+  "executiveSummary": "Resumen ejecutivo de 4-6 líneas con hallazgos clave y tendencias",
+  "growthTrends": [
+    {"metric": "...", "current": "...", "trend": "up|down|stable", "insight": "...", "forecast": "..."}
+  ],
+  "criticalAlerts": [
+    {"severity": "critical|warning|info", "category": "revenue|traffic|seo|ads|inventory|customers", "title": "...", "detail": "...", "recommendedAction": "..."}
+  ],
+  "opportunities": [
+    {"area": "acquisition|retention|conversion|aov|seo|ads|products|geography", "title": "...", "description": "...", "estimatedImpact": "COP X", "effort": "low|medium|high", "priority": 1-10, "timeframe": "inmediato|1-2 semanas|1-3 meses"}
+  ],
+  "channelAnalysis": {
+    "ecommerce": {"summary": "...", "strengths": ["..."], "weaknesses": ["..."]},
+    "seo": {"summary": "...", "strengths": ["..."], "weaknesses": ["..."]},
+    "ads": {"summary": "...", "strengths": ["..."], "weaknesses": ["..."]},
+    "shoppingFeed": {"summary": "...", "strengths": ["..."], "weaknesses": ["..."]}
+  },
+  "competitivePosition": "Análisis de posición competitiva",
+  "actionPlan": [
+    {"phase": "inmediato|corto_plazo|mediano_plazo", "action": "...", "owner": "marketing|ventas|tech|operaciones", "impact": "high|medium|low", "effort": "low|medium|high", "kpi": "..."}
+  ],
+  "aiAnalysis": "Análisis profundo de patrones y correlaciones ocultas en los datos"
+}
+REGLAS: Sé ESPECÍFICO con números. Prioriza por revenue. HealthScore REALISTA. Conecta datos de fuentes diferentes. SOLO JSON válido.
+`;
+
+    const { GoogleGenerativeAI } = await import('@google/generative-ai');
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash', generationConfig: { temperature: 0.5, maxOutputTokens: 8192 } });
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+
+    let intelligence;
+    try {
+      const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      intelligence = JSON.parse(cleaned);
+    } catch (parseErr) {
+      console.error('[Brand Intelligence] Parse error:', parseErr.message);
+      intelligence = { executiveSummary: text, brandHealthScore: { score: 50, label: 'Análisis parcial' }, criticalAlerts: [], opportunities: [], channelAnalysis: {}, actionPlan: [], aiAnalysis: text };
+    }
+
+    res.json({ ok: true, intelligence, timestamp: new Date().toISOString() });
+  } catch (err) {
+    console.error('[Brand Intelligence] Error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/cron/sync-manual', async (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ error: 'No auth token' });
