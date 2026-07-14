@@ -327,16 +327,16 @@ export default function App() {
           console.log(`[Snapshot] Loaded from server cache. Last sync: ${snapshot.lastSync} (${snapshot.syncDuration}ms)`);
           
           // Set all data from cache instantly
-          if (snapshot.data.unifiedClients?.length) setUnifiedClients(snapshot.data.unifiedClients);
-          if (snapshot.data.rawOrders?.length) setRawOrders(snapshot.data.rawOrders);
-          if (snapshot.data.products?.length) setTiendanubeProducts(snapshot.data.products);
-          if (snapshot.data.ga4Insights) setGa4Insights(snapshot.data.ga4Insights);
-          if (snapshot.data.metaInsights) setMetaInsights(snapshot.data.metaInsights);
-          if (snapshot.data.mcProducts?.length) setMcProducts(snapshot.data.mcProducts);
-          if (snapshot.data.gscQueries?.length) setGscQueries(snapshot.data.gscQueries);
-          if (snapshot.data.gscPages?.length) setGscPages(snapshot.data.gscPages);
-          if (snapshot.data.gscPerformance) setGscPerformance(snapshot.data.gscPerformance);
-          if (snapshot.data.aiInsights) setAiInsights(snapshot.data.aiInsights);
+          setUnifiedClients(snapshot.data.unifiedClients || []);
+          setRawOrders(snapshot.data.rawOrders || []);
+          setTiendanubeProducts(snapshot.data.products || []);
+          setGa4Insights(snapshot.data.ga4Insights || null);
+          setMetaInsights(snapshot.data.metaInsights || null);
+          setMcProducts(snapshot.data.mcProducts || []);
+          setGscQueries(snapshot.data.gscQueries || []);
+          setGscPages(snapshot.data.gscPages || []);
+          setGscPerformance(snapshot.data.gscPerformance || null);
+          setAiInsights(snapshot.data.aiInsights || null);
 
           setLastSync(new Date(snapshot.lastSync));
           setStoreId(currentStore);
@@ -391,6 +391,31 @@ export default function App() {
       return null;
     }
   }, [workspaceData?.meta_ad_account_id, workspaceData?.meta_access_token, dateRange]);
+
+  // ── Centralized snapshot refresher (used by AppContent realtime/polling) ──
+  const refreshSnapshot = useCallback(async () => {
+    try {
+      const snapshotRes = await fetch('/api/data/snapshot');
+      const snapshot = await snapshotRes.json();
+      if (snapshot.ready && snapshot.data) {
+        setUnifiedClients(snapshot.data.unifiedClients || []);
+        setRawOrders(snapshot.data.rawOrders || []);
+        setTiendanubeProducts(snapshot.data.products || []);
+        setGa4Insights(snapshot.data.ga4Insights || null);
+        setMetaInsights(snapshot.data.metaInsights || null);
+        setMcProducts(snapshot.data.mcProducts || []);
+        setGscQueries(snapshot.data.gscQueries || []);
+        setGscPages(snapshot.data.gscPages || []);
+        setGscPerformance(snapshot.data.gscPerformance || null);
+        setAiInsights(snapshot.data.aiInsights || null);
+        setLastSync(new Date(snapshot.lastSync));
+        saveToCache('unified_clients', snapshot.data.unifiedClients || []);
+        saveToCache('raw_orders', snapshot.data.rawOrders || []);
+        saveToCache('tiendanube_products', snapshot.data.products || []);
+        saveToCache('last_sync', snapshot.lastSync);
+      }
+    } catch (err) { console.warn('[Snapshot] Refresh failed:', err.message); }
+  }, []);
 
   // ── Fetch Insights when dateRange or workspace changes ────────────────
   const insightsFetchedRef = useRef(false);
@@ -533,15 +558,15 @@ export default function App() {
         const snapshotRes = await fetch('/api/data/snapshot');
         const snapshot = await snapshotRes.json();
         if (snapshot.ready && snapshot.data) {
-          if (snapshot.data.unifiedClients?.length) setUnifiedClients(snapshot.data.unifiedClients);
-          if (snapshot.data.rawOrders?.length) setRawOrders(snapshot.data.rawOrders);
-          if (snapshot.data.products?.length) setTiendanubeProducts(snapshot.data.products);
-          if (snapshot.data.ga4Insights) setGa4Insights(snapshot.data.ga4Insights);
-          if (snapshot.data.metaInsights) setMetaInsights(snapshot.data.metaInsights);
-          if (snapshot.data.mcProducts?.length) setMcProducts(snapshot.data.mcProducts);
-          if (snapshot.data.gscQueries?.length) setGscQueries(snapshot.data.gscQueries);
-          if (snapshot.data.gscPages?.length) setGscPages(snapshot.data.gscPages);
-          if (snapshot.data.gscPerformance) setGscPerformance(snapshot.data.gscPerformance);
+          setUnifiedClients(snapshot.data.unifiedClients || []);
+          setRawOrders(snapshot.data.rawOrders || []);
+          setTiendanubeProducts(snapshot.data.products || []);
+          setGa4Insights(snapshot.data.ga4Insights || null);
+          setMetaInsights(snapshot.data.metaInsights || null);
+          setMcProducts(snapshot.data.mcProducts || []);
+          setGscQueries(snapshot.data.gscQueries || []);
+          setGscPages(snapshot.data.gscPages || []);
+          setGscPerformance(snapshot.data.gscPerformance || null);
           setLastSync(new Date(snapshot.lastSync));
           saveToCache('unified_clients', snapshot.data.unifiedClients || []);
           saveToCache('raw_orders', snapshot.data.rawOrders || []);
@@ -561,24 +586,7 @@ export default function App() {
       await fetch('/api/cron/sync', { method: 'GET' }).catch(() => {});
       // Wait a moment for sync to complete, then load snapshot
       await new Promise(r => setTimeout(r, 2000));
-      const snapshotRes = await fetch('/api/data/snapshot');
-      const snapshot = await snapshotRes.json();
-      if (snapshot.ready && snapshot.data) {
-        if (snapshot.data.unifiedClients?.length) setUnifiedClients(snapshot.data.unifiedClients);
-        if (snapshot.data.rawOrders?.length) setRawOrders(snapshot.data.rawOrders);
-        if (snapshot.data.products?.length) setTiendanubeProducts(snapshot.data.products);
-        if (snapshot.data.ga4Insights) setGa4Insights(snapshot.data.ga4Insights);
-        if (snapshot.data.metaInsights) setMetaInsights(snapshot.data.metaInsights);
-        if (snapshot.data.mcProducts?.length) setMcProducts(snapshot.data.mcProducts);
-        if (snapshot.data.gscQueries?.length) setGscQueries(snapshot.data.gscQueries);
-        if (snapshot.data.gscPages?.length) setGscPages(snapshot.data.gscPages);
-        if (snapshot.data.gscPerformance) setGscPerformance(snapshot.data.gscPerformance);
-        setLastSync(new Date(snapshot.lastSync));
-        saveToCache('unified_clients', snapshot.data.unifiedClients || []);
-        saveToCache('raw_orders', snapshot.data.rawOrders || []);
-        saveToCache('tiendanube_products', snapshot.data.products || []);
-        saveToCache('last_sync', snapshot.lastSync);
-      }
+      await refreshSnapshot();
       setConnectionStatus('connected');
     } catch (e) {
       console.error('[ManualSync] Error:', e);
@@ -880,8 +888,6 @@ setConnectionStatus('connected');
     const startDate = dateRange.startDate || '';
     const endDate = dateRange.endDate || '';
 
-    console.log(`[filteredClients] Filtering ${unifiedClients.length} clients: ${startDate} → ${endDate}`);
-
     return unifiedClients.map(client => {
       const purchases = client.purchases || [];
       const allTimeCount = client.purchaseCount || client.totalOrders || purchases.length;
@@ -980,6 +986,7 @@ setConnectionStatus('connected');
         fetchMetaInsights={fetchMetaInsights}
         setWorkspaceData={setWorkspaceData}
         handleManualSync={handleManualSync}
+        refreshSnapshot={refreshSnapshot}
       />
 </TeamProvider>
       </ErrorBoundary>
@@ -996,7 +1003,7 @@ function AppContent({
   syncProgress, setSyncProgress,
   competitors, landscape, insights, aiInsights, ciLoading,
   onRefreshCompetitive, onAddCompetitor, onAnalyzeCompetitor, onRemoveCompetitor,
-  fetchMetaInsights, setWorkspaceData, handleManualSync,
+  fetchMetaInsights, setWorkspaceData, handleManualSync, refreshSnapshot,
 }) {
   const { currentMember, ROLE_LABELS, ROLE_COLORS, ROLE_ICONS } = useTeam();
 
@@ -1032,31 +1039,13 @@ function AppContent({
     onBroadcast: handleRealtimeEvent,
   });
 
-  // ── Snapshot refresh helper (used by realtime + polling) ───────────────
-  const refreshSnapshot = useCallback(async () => {
+  // ── Snapshot refresh helper (debounced, delegates to App-level refreshSnapshot) ─
+  const debouncedRefresh = useCallback(() => {
     if (snapshotRefreshTimerRef.current) clearTimeout(snapshotRefreshTimerRef.current);
-    snapshotRefreshTimerRef.current = setTimeout(async () => {
-      try {
-        const snapshotRes = await fetch('/api/data/snapshot');
-        const snapshot = await snapshotRes.json();
-        if (snapshot.ready && snapshot.data) {
-          if (snapshot.data.unifiedClients?.length) setUnifiedClients(snapshot.data.unifiedClients);
-          if (snapshot.data.rawOrders?.length) setRawOrders(snapshot.data.rawOrders);
-          if (snapshot.data.products?.length) setTiendanubeProducts(snapshot.data.products);
-          if (snapshot.data.ga4Insights) setGa4Insights(snapshot.data.ga4Insights);
-          if (snapshot.data.metaInsights) setMetaInsights(snapshot.data.metaInsights);
-          if (snapshot.data.mcProducts?.length) setMcProducts(snapshot.data.mcProducts);
-          if (snapshot.data.gscQueries?.length) setGscQueries(snapshot.data.gscQueries);
-          if (snapshot.data.gscPages?.length) setGscPages(snapshot.data.gscPages);
-          if (snapshot.data.gscPerformance) setGscPerformance(snapshot.data.gscPerformance);
-          if (snapshot.data.aiInsights) setAiInsights(snapshot.data.aiInsights);
-          setLastSync(new Date(snapshot.lastSync));
-          lastSyncRef.current = snapshot.lastSync;
-          console.log('[Snapshot] Refreshed successfully');
-        }
-      } catch (err) { console.warn('[Snapshot] Refresh failed:', err.message); }
-    }, 1500); // debounce 1.5s
-  }, []);
+    snapshotRefreshTimerRef.current = setTimeout(() => {
+      refreshSnapshot();
+    }, 1500);
+  }, [refreshSnapshot]);
 
   // ── Supabase Realtime: auto-refresh when server cache updates ──────────
   useEffect(() => {
@@ -1067,7 +1056,7 @@ function AppContent({
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'server_cache', filter: 'id=eq.main' }, (payload) => {
         console.log('[Cache Realtime] Server cache updated, refreshing snapshot...');
         realtimeActive = true;
-        refreshSnapshot();
+        debouncedRefresh();
       })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') console.log('[Cache Realtime] Watching for server cache updates');
@@ -1080,14 +1069,14 @@ function AppContent({
         const { data } = await supabase.from('server_cache').select('last_sync').eq('id', 'main').single();
         if (data?.last_sync && lastSyncRef.current && data.last_sync > lastSyncRef.current) {
           console.log('[Cache Poll] Server cache updated, refreshing snapshot...');
-          refreshSnapshot();
+          debouncedRefresh();
         }
         if (data?.last_sync) lastSyncRef.current = data.last_sync;
       } catch {}
     }, 60000);
 
     return () => { supabase.removeChannel(channel); clearInterval(pollInterval); if (snapshotRefreshTimerRef.current) clearTimeout(snapshotRefreshTimerRef.current); };
-  }, [session]);
+  }, [session, debouncedRefresh]);
 
   return (
     <div className="app-layout">

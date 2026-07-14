@@ -227,8 +227,11 @@ export default function MasterTable({ clients, onSelectClient }) {
 
     // Sort
     arr.sort((a, b) => {
-      let va = a[sortCol] ?? '';
-      let vb = b[sortCol] ?? '';
+      let sortKey = sortCol;
+      if (sortCol === 'totalSpent') sortKey = 'allTimeTotalSpent';
+      if (sortCol === 'purchaseCount') sortKey = 'allTimePurchaseCount';
+      let va = a[sortKey] ?? '';
+      let vb = b[sortKey] ?? '';
       if (typeof va === 'number' && typeof vb === 'number') {
         return sortDir === 'asc' ? va - vb : vb - va;
       }
