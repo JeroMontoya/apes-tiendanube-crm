@@ -1162,6 +1162,75 @@ app.get('/api/data/snapshot', async (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════
+//  GET /api/data/diagnostic — lightweight data integrity check
+// ═══════════════════════════════════════════════════════════════════
+app.get('/api/data/diagnostic', async (req, res) => {
+  const supabaseAdmin = createClient(
+    process.env.VITE_SUPABASE_URL || '',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''
+  );
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('server_cache')
+      .select('unified_clients, raw_orders, tiendanube_orders, tiendanube_customers, last_sync, sync_status, error_log')
+      .eq('id', 'main')
+      .single();
+    if (error || !data) return res.json({ error: 'No data in server_cache' });
+
+    const clients = data.unified_clients || [];
+    const rawOrders = data.raw_orders || [];
+    const tnOrders = data.tiendanube_orders || [];
+    const tnCustomers = data.tiendanube_customers || [];
+
+    const sample = clients[0] || {};
+    const hasPurchases = sample.purchases && sample.purchases.length > 0;
+    const samplePurchase = hasPurchases ? sample.purchases[0] : null;
+
+    const clientsWithPurchases = clients.filter(c => c.purchases && c.purchases.length > 0).length;
+    const clientsWithoutPurchases = clients.filter(c => !c.purchases || c.purchases.length === 0).length;
+    const totalPurchases = clients.reduce((s, c) => s + (c.purchases?.length || 0), 0);
+
+    res.json({
+      lastSync: data.last_sync,
+      syncStatus: data.sync_status,
+      errors: data.error_log || [],
+      counts: {
+        unifiedClients: clients.length,
+        rawOrders: rawOrders.length,
+        tnOrders: tnOrders.length,
+        tnCustomers: tnCustomers.length,
+        clientsWithPurchases,
+        clientsWithoutPurchases,
+        totalPurchases,
+      },
+      sampleClient: sample ? {
+        name: sample.name,
+        email: sample.email,
+        purchaseCount: sample.purchaseCount,
+        totalSpent: sample.totalSpent,
+        purchasesCount: sample.purchases?.length || 0,
+        firstPurchaseDate: samplePurchase?.date || null,
+        hasProducts: !!samplePurchase?.product,
+        created_at: sample.created_at,
+        city: sample.city,
+        province: sample.province,
+      } : null,
+      sampleOrder: tnOrders[0] ? {
+        id: tnOrders[0].id,
+        number: tnOrders[0].number,
+        total: tnOrders[0].total,
+        created_at_type: typeof tnOrders[0].created_at,
+        created_at_value: typeof tnOrders[0].created_at === 'object' ? tnOrders[0].created_at?.date : String(tnOrders[0].created_at).substring(0, 20),
+        hasCustomer: !!tnOrders[0].customer,
+        customerName: tnOrders[0].customer?.name,
+      } : null,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════
 //  POST /api/ai/brand-intelligence — Deep cross-channel brand analysis
 // ═══════════════════════════════════════════════════════════════════
 app.post('/api/ai/brand-intelligence', async (req, res) => {
