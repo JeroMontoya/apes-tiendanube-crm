@@ -20,6 +20,11 @@ const INVALID_EMAIL_PATTERNS = [
   'noemail@',
   'test@test',
   '@example.com',
+  'nn@',
+  '@gmail.cpm',
+  '@hotmail.cpm',
+  '@yahoo.cpm',
+  'lis@atomico',
 ];
 
 /**
@@ -37,6 +42,12 @@ export function isInvalidEmail(email) {
   // Basic structure check — must have exactly one @ with text on both sides
   const atParts = lower.split('@');
   if (atParts.length !== 2 || !atParts[0] || !atParts[1]) return true;
+  if (!atParts[1].includes('.')) return true;
+
+  // Reject numeric-only local part (e.g. 123456@noinformado.com)
+  if (/^\d+$/.test(atParts[0])) return true;
+
+  // Reject single-word domains (e.g. lis@atomico.pin)
   if (!atParts[1].includes('.')) return true;
 
   // Check for invalid email patterns — use includes for substring matching

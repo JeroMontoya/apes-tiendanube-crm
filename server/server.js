@@ -812,7 +812,9 @@ function mapToUnified(orders) {
     const email = orderEmail || custEmail;
     const orderPhone = o.contact_phone || o.billing_address?.phone || o.shipping_address?.phone || '';
     const custPhone = cust.phone || '';
-    const phone = orderPhone || custPhone;
+    const emailIsInvalid = email && isInvalidEmail(email);
+    // When email is invalid (TN merge), do NOT fall back to cust.phone — it's the merged phone
+    const phone = emailIsInvalid ? orderPhone : (orderPhone || custPhone);
     // Skip invalid emails as grouping key (e.g. onli@gmail.com) — fall back to phone
     const validEmail = email && !isInvalidEmail(email) ? email : '';
     // When email is invalid and phone is missing/invalid, use unique key to prevent
@@ -822,7 +824,6 @@ function mapToUnified(orders) {
 
     // TN API returns customer.name as single string, not first_name/last_name
     // When email is invalid (e.g. onli@), prefer order-level name to avoid TN merge names
-    const emailIsInvalid = email && isInvalidEmail(email);
     const customerName = emailIsInvalid
       ? (o.contact_name || o.billing_name || cust.name || '')
       : (cust.name || o.contact_name || o.billing_name || '');
