@@ -132,6 +132,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
   const dropdownMenuRef = useRef(null);
+  const lastPqrUpdateRef = useRef(null);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
 
   const [formData, setFormData] = useState({
@@ -147,6 +148,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
   // ── Supabase Realtime: cross-device PQR sync ───────────────────────────
   useEffect(() => {
     if (!session?.user?.id) return;
+    let realtimeActive = false;
     const channel = supabase
       .channel('pqr-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'pqr_cases' }, (payload) => {
@@ -154,9 +156,20 @@ export default function PQRPanel({ session, rawOrders = [] }) {
         fetchCases();
       })
       .subscribe((status) => {
-        if (status === 'SUBSCRIBED') console.log('[PQR Realtime] Cross-device sync active');
+        if (status === 'SUBSCRIBED') { realtimeActive = true; console.log('[PQR Realtime] Cross-device sync active'); }
       });
-    return () => { supabase.removeChannel(channel); };
+    // Polling fallback: check every 30s if realtime isn't active
+    const pollInterval = setInterval(async () => {
+      if (realtimeActive) return;
+      try {
+        const { data } = await supabase.from('pqr_cases').select('id, updated_at').order('updated_at', { ascending: false }).limit(1).maybeSingle();
+        if (data && (!lastPqrUpdateRef.current || data.updated_at > lastPqrUpdateRef.current)) {
+          if (lastPqrUpdateRef.current) fetchCases();
+          lastPqrUpdateRef.current = data.updated_at;
+        }
+      } catch {}
+    }, 30000);
+    return () => { supabase.removeChannel(channel); clearInterval(pollInterval); };
   }, [session]);
 
   useEffect(() => {
