@@ -391,8 +391,15 @@ export default function App() {
   }, [workspaceData?.meta_ad_account_id, workspaceData?.meta_access_token, dateRange]);
 
   // ── Fetch Insights when dateRange or workspace changes ────────────────
+  const insightsFetchedRef = useRef(false);
   useEffect(() => {
     if (!workspaceData) return;
+    // Skip first fire if snapshot already loaded data (avoid overwriting cache)
+    if (!insightsFetchedRef.current && metaInsights && ga4Insights) {
+      insightsFetchedRef.current = true;
+      return;
+    }
+    insightsFetchedRef.current = true;
 
     const fetchInsights = async () => {
       // Cancel any in-flight request

@@ -151,7 +151,8 @@ export default function PQRPanel({ session, rawOrders = [] }) {
       }
     };
     document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
+    document.addEventListener('touchstart', h);
+    return () => { document.removeEventListener('mousedown', h); document.removeEventListener('touchstart', h); };
   }, []);
 
   const updateDropdownPos = () => {

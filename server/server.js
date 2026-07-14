@@ -874,8 +874,11 @@ app.get('/api/cron/sync', async (req, res) => {
     // 3. Map to unified format
     const unifiedClients = mapToUnified(orders);
     const rawOrders = orders.map(o => ({
-      id: o.id, total: parseFloat(o.total || 0), date: o.completed_at || o.created_at,
+      id: o.id, number: o.number, total: parseFloat(o.total || 0), date: o.completed_at || o.created_at,
       status: o.status, customer_id: o.customer?.id,
+      customer: o.customer ? { name: o.customer.name, email: o.customer.email, phone: o.customer.phone } : undefined,
+      products: (o.products || []).map(p => ({ name: p.name, quantity: p.quantity, price: p.price })),
+      tracking_number: o.tracking_number,
     }));
 
     // 4. Date range for analytics (last 30 days)
