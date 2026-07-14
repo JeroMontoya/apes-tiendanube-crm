@@ -892,9 +892,10 @@ setConnectionStatus('connected');
       const purchases = client.purchases || [];
       const allTimeCount = client.purchaseCount || client.totalOrders || purchases.length;
       const allTimeSpent = client.totalSpent || purchases.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+      const uiSegment = allTimeCount === 0 ? 'abandoned' : allTimeCount === 1 ? 'regular' : 'vip';
 
       if (!purchases.length) {
-        return { ...client, purchaseCount: 0, totalSpent: 0, allTimePurchaseCount: allTimeCount, allTimeTotalSpent: allTimeSpent };
+        return { ...client, purchaseCount: 0, totalSpent: 0, allTimePurchaseCount: allTimeCount, allTimeTotalSpent: allTimeSpent, segment: uiSegment };
       }
 
       const filteredPurchases = purchases.filter(purchase => {
@@ -913,7 +914,8 @@ setConnectionStatus('connected');
         allTimePurchaseCount: allTimeCount,
         allTimeTotalSpent: allTimeSpent,
         filteredPurchaseCount: filteredPurchases.length,
-        filteredTotalSpent: filteredTotal
+        filteredTotalSpent: filteredTotal,
+        segment: uiSegment,
       };
     });
   }, [unifiedClients, dateRange.startDate, dateRange.endDate]);

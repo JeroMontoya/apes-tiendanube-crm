@@ -34,10 +34,7 @@ const SOURCE_BADGES = {
 };
 
 function getSegment(client) {
-  const pc = client.allTimePurchaseCount ?? client.purchaseCount ?? 0;
-  if (pc === 0) return 'abandoned';
-  if (pc === 1) return 'regular';
-  return 'vip';
+  return client.segment || 'abandoned';
 }
 
 const s = {
