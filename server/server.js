@@ -691,8 +691,7 @@ async function tnFetchAll(path, token) {
 
 async function ga4GetAccessToken(sa) {
   const { SignJWT, importPKCS8 } = await import('jose');
-  const cleaned = sa.private_key.replace(/\\n/g, '\n').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
-  const pk = await importPKCS8(cleaned, 'RS256');
+  const pk = await importPKCS8(sa.private_key, 'RS256');
   const jwt = await new SignJWT({ iss: sa.client_email, scope: 'https://www.googleapis.com/auth/analytics.readonly', aud: 'https://oauth2.googleapis.com/token' })
     .setProtectedHeader({ alg: 'RS256', typ: 'JWT' }).setIssuedAt().setExpirationTime('1h').sign(pk);
   const r = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt }) });
@@ -722,8 +721,7 @@ async function ga4GetInsights(sa, propId, startDate, endDate) {
 
 async function mcGetAccessToken(sa) {
   const { SignJWT, importPKCS8 } = await import('jose');
-  const cleaned = sa.private_key.replace(/\\n/g, '\n').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
-  const pk = await importPKCS8(cleaned, 'RS256');
+  const pk = await importPKCS8(sa.private_key, 'RS256');
   const jwt = await new SignJWT({ iss: sa.client_email, scope: 'https://www.googleapis.com/auth/content', aud: 'https://oauth2.googleapis.com/token' })
     .setProtectedHeader({ alg: 'RS256', typ: 'JWT' }).setIssuedAt().setExpirationTime('1h').sign(pk);
   const r = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt }) });
@@ -865,54 +863,64 @@ app.get('/api/cron/sync', async (req, res) => {
     const ed = end.toISOString().split('T')[0];
 
     // 5. Fetch external APIs in parallel
-    console.log('[Cron] Fetching external APIs...');
     let ga4 = null, meta = null, mc = [], gsc = { queries: [], pages: [], performance: null };
-    const debugLogs = [];
 
     const sa = config.ga4_credentials_json || config.merchant_center_credentials_json;
-    debugLogs.push(`sa=${!!sa} email=${sa?.client_email || 'none'} hasKey=${!!sa?.private_key}`);
-    debugLogs.push(`ga4Prop=${config.ga4_property_id} mcMerchant=${config.merchant_center_merchant_id} gscSite=${config.search_console_site_url} metaAcct=${config.meta_ad_account_id}`);
 
-    // Test GA4 token first
+    // GA4
     if (sa && config.ga4_property_id) {
       try {
         const token = await ga4GetAccessToken(sa);
-        debugLogs.push(`ga4_token=ok(${token?.substring(0, 10)}...)`);
         const r = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${config.ga4_property_id}:runReport`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ dateRanges: [{ startDate: sd, endDate: ed }], metrics: [{ name: 'totalUsers' }, { name: 'sessions' }], dimensions: [{ name: 'date' }] }),
+          body: JSON.stringify({ dateRanges: [{ startDate: sd, endDate: ed }], metrics: [{ name: 'totalUsers' }, { name: 'sessions' }, { name: 'screenPageViews' }, { name: 'conversions' }, { name: 'totalRevenue' }], dimensions: [{ name: 'date' }] }),
         });
-        if (r.ok) { ga4 = await r.json(); debugLogs.push(`ga4=http_ok(rows=${ga4?.rowCount || 0})`); }
-        else { const b = await r.text().catch(() => ''); debugLogs.push(`ga4=http_${r.status}(${b.substring(0, 200)})`); }
-      } catch (e) { debugLogs.push(`ga4_error=${e.message}`); }
-    } else {
-      debugLogs.push('ga4=skipped(no_creds)');
+        if (r.ok) ga4 = await r.json();
+      } catch (e) { errors.push({ api: 'ga4', msg: e.message }); }
     }
 
-    // Test MC
+    // Merchant Center
     if (sa && config.merchant_center_merchant_id) {
       try {
         const token = await mcGetAccessToken(sa);
-        debugLogs.push(`mc_token=ok`);
-        const r = await fetch(`https://shoppingcontent.googleapis.com/content/v2.1/${config.merchant_center_merchant_id}/products?maxResults=5`, { headers: { Authorization: `Bearer ${token}` } });
-        if (r.ok) { const j = await r.json(); mc = j.resources || []; debugLogs.push(`mc=http_ok(products=${mc.length})`); }
-        else { const b = await r.text().catch(() => ''); debugLogs.push(`mc=http_${r.status}(${b.substring(0, 200)})`); }
-      } catch (e) { debugLogs.push(`mc_error=${e.message}`); }
-    } else {
-      debugLogs.push('mc=skipped(no_creds)');
+        let allProducts = [], pageToken;
+        do {
+          const url = `https://shoppingcontent.googleapis.com/content/v2.1/${config.merchant_center_merchant_id}/products?maxResults=50${pageToken ? '&pageToken=' + pageToken : ''}`;
+          const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+          if (r.ok) { const j = await r.json(); allProducts = allProducts.concat(j.resources || []); pageToken = j.nextPageToken; } else { pageToken = undefined; }
+        } while (pageToken);
+        mc = allProducts;
+      } catch (e) { errors.push({ api: 'mc', msg: e.message }); }
     }
 
-    // Test Meta
+    // Search Console
+    if (sa && config.search_console_site_url) {
+      try {
+        const token = await ga4GetAccessToken(sa);
+        const siteEnc = encodeURIComponent(config.search_console_site_url);
+        const body = JSON.stringify({ startDate: sd, endDate: ed, dimensions: ['query'], rowLimit: 50 });
+        const [qr, pr] = await Promise.all([
+          fetch(`https://www.googleapis.com/webmasters/v3/sites/${siteEnc}/searchAnalytics/query`, { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body }),
+          fetch(`https://www.googleapis.com/webmasters/v3/sites/${siteEnc}/searchAnalytics/query`, { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ startDate: sd, endDate: ed, dimensions: ['page'], rowLimit: 50 }) }),
+        ]);
+        const qData = qr.ok ? await qr.json() : { rows: [] };
+        const pData = pr.ok ? await pr.json() : { rows: [] };
+        gsc = {
+          queries: (qData.rows || []).map(r => ({ query: r.keys[0], clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position })),
+          pages: (pData.rows || []).map(r => ({ page: r.keys[0], clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position })),
+          performance: { totalClicks: (qData.rows || []).reduce((s, r) => s + r.clicks, 0), totalImpressions: (qData.rows || []).reduce((s, r) => s + r.impressions, 0) },
+        };
+      } catch (e) { errors.push({ api: 'gsc', msg: e.message }); }
+    }
+
+    // Meta Ads
     if (config.meta_ad_account_id && config.meta_access_token) {
       try {
         const metaUrl = `https://graph.facebook.com/v21.0/act_${config.meta_ad_account_id}/insights?fields=impressions,clicks,spend,actions,cost_per_action_type&date_preset=max_30d&access_token=${config.meta_access_token}`;
         const mr = await fetch(metaUrl);
-        if (mr.ok) { const md = await mr.json(); meta = md.data?.[0] || null; debugLogs.push(`meta=http_ok(data=${!!meta})`); }
-        else { const b = await mr.text().catch(() => ''); debugLogs.push(`meta=http_${mr.status}(${b.substring(0, 200)})`); }
-      } catch (e) { debugLogs.push(`meta_error=${e.message}`); }
-    } else {
-      debugLogs.push('meta=skipped(no_creds)');
+        if (mr.ok) { const md = await mr.json(); meta = md.data?.[0] || null; }
+      } catch (e) { errors.push({ api: 'meta', msg: e.message }); }
     }
 
     // 6. Save to server_cache
@@ -941,7 +949,7 @@ app.get('/api/cron/sync', async (req, res) => {
 
     if (upsertErr) console.error('[Cron] Upsert error:', upsertErr.message);
 
-    res.json({ status: 'ok', duration, customers: customers.length, orders: orders.length, products: products.length, errors, ga4: !!ga4, meta: !!meta, mcCount: mc.length, debug: debugLogs });
+    res.json({ status: 'ok', duration, customers: customers.length, orders: orders.length, products: products.length, errors });
   } catch (err) {
     console.error('[Cron] Fatal:', err.message);
     const duration = Date.now() - startTime;
