@@ -821,7 +821,11 @@ function mapToUnified(orders) {
     const key = validEmail || validPhone || `order_${o.id || Math.random()}`;
 
     // TN API returns customer.name as single string, not first_name/last_name
-    const customerName = cust.name || o.contact_name || o.billing_name || '';
+    // When email is invalid (e.g. onli@), prefer order-level name to avoid TN merge names
+    const emailIsInvalid = email && isInvalidEmail(email);
+    const customerName = emailIsInvalid
+      ? (o.contact_name || o.billing_name || cust.name || '')
+      : (cust.name || o.contact_name || o.billing_name || '');
 
     // Extract date properly (TN may return PHP DateTime objects)
     const rawDate = o.completed_at || o.created_at || o.date;
@@ -839,7 +843,8 @@ function mapToUnified(orders) {
       clientMap.set(key, {
         id: cust.id || key,
         name: customerName || 'Sin nombre',
-        email, phone,
+        email: emailIsInvalid ? orderEmail : email,
+        phone,
         city: cust.city || orderCity,
         province: cust.province || orderProvince,
         address: orderAddress,
