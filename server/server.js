@@ -777,18 +777,40 @@ function mapToUnified(orders) {
       clientMap.set(key, {
         id: cust.id || key, name: `${cust.first_name || ''} ${cust.last_name || ''}`.trim() || 'Sin nombre',
         email, phone, city: cust.city || '', province: cust.province || '',
-        totalOrders: 0, totalSpent: 0, orders: [], firstOrder: null, lastOrder: null,
+        totalOrders: 0, totalSpent: 0, purchases: [], firstOrder: null, lastOrder: null,
+        segment: null, segmentTags: [],
       });
     }
     const c = clientMap.get(key);
     c.totalOrders++;
     c.totalSpent += parseFloat(o.total || 0);
-    const orderDate = o.completed_at || o.created_at;
+    const orderDate = (o.completed_at || o.created_at || '').substring(0, 10);
     if (!c.firstOrder || orderDate < c.firstOrder) c.firstOrder = orderDate;
     if (!c.lastOrder || orderDate > c.lastOrder) c.lastOrder = orderDate;
-    c.orders.push({ id: o.id, total: parseFloat(o.total || 0), date: orderDate, status: o.status });
+    const discountTotal = parseFloat(o.discount) || 0;
+    const promoDiscount = parseFloat(o.promotional_discount?.total_discount_amount) || 0;
+    const couponCode = (o.coupon && typeof o.coupon === 'object') ? (o.coupon.code || null) : null;
+    c.purchases.push({
+      date: orderDate,
+      amount: parseFloat(o.total) || 0,
+      product: (o.products || []).map(p => p.name).join(' + '),
+      productsArray: o.products || [],
+      coupon: couponCode,
+      hasDiscount: discountTotal > 0 || promoDiscount > 0,
+      discountTotal,
+      promoDiscountAmount: promoDiscount,
+      benefitType: couponCode ? 'coupon' : promoDiscount > 0 ? 'promo_auto' : discountTotal > 0 ? 'manual' : 'normal',
+    });
   }
-  return Array.from(clientMap.values());
+  const result = Array.from(clientMap.values());
+  for (const c of result) {
+    c.purchaseCount = c.purchases.length;
+    if (c.purchaseCount >= 6) c.segment = 'VIP';
+    else if (c.purchaseCount >= 3) c.segment = 'Fiel';
+    else if (c.purchaseCount === 2) c.segment = 'Recurrente';
+    else c.segment = 'Ocasional';
+  }
+  return result;
 }
 
 // GET /api/cron/sync — on-demand server-side data refresh
@@ -1002,7 +1024,11 @@ app.get('/api/data/snapshot', async (req, res) => {
         rawOrders: data.raw_orders || [],
         ga4Insights: data.ga4_insights,
         metaInsights: data.meta_insights,
-        mcProducts: data.mc_products || [],
+        mcProducts: (data.mc_products || []).map(p => ({
+          id: p.id, title: p.title, link: p.link, imageLink: p.imageLink,
+          availability: p.availability, price: p.price, brand: p.brand,
+          condition: p.condition, customLabel0: p.customLabel0,
+        })),
         gscQueries: data.gsc_queries || [],
         gscPages: data.gsc_pages || [],
         gscPerformance: data.gsc_performance,

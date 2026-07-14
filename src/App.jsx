@@ -872,21 +872,22 @@ setConnectionStatus('connected');
     end.setHours(23, 59, 59, 999);
 
     return unifiedClients.map(client => {
-      if (!client.purchases) return client;
+      const purchases = client.purchases || [];
+      if (!purchases.length) return client;
       
-      const filteredPurchases = client.purchases.filter(purchase => {
+      const filteredPurchases = purchases.filter(purchase => {
         if (!purchase.date) return false;
-        const purchaseDate = new Date(purchase.date);
-        return purchaseDate >= start && purchaseDate <= end;
+        const d = new Date(purchase.date);
+        return d >= start && d <= end;
       });
 
       const filteredTotal = filteredPurchases.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
       
       return {
         ...client,
-        purchases: filteredPurchases,
-        purchaseCount: client.purchases.length,
-        totalSpent: client.totalSpent || client.purchases.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0),
+        purchases,
+        purchaseCount: client.purchaseCount || client.totalOrders || purchases.length,
+        totalSpent: client.totalSpent || purchases.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0),
         filteredPurchaseCount: filteredPurchases.length,
         filteredTotalSpent: filteredTotal
       };
