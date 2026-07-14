@@ -337,6 +337,7 @@ export default function App() {
           if (snapshot.data.aiInsights) setAiInsights(snapshot.data.aiInsights);
 
           setLastSync(new Date(snapshot.lastSync));
+          setStoreId(currentStore);
           setConnectionStatus('connected');
           setIsSyncing(false);
 
