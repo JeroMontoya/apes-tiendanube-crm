@@ -1091,14 +1091,19 @@ app.get('/api/data/snapshot', async (req, res) => {
     // - client names are "Sin nombre" (old bug with first_name/last_name)
     // - client missing created_at
     // - client missing city/province (shipping address not extracted)
+    // Also check rawOrders: stale format has date as PHP DateTime object instead of string
     let unifiedClients = data.unified_clients || [];
+    let rawOrders = data.raw_orders || [];
     const sample = unifiedClients[0];
+    const rawSample = rawOrders[0];
+    const rawOrdersStale = rawSample && rawSample.date && typeof rawSample.date === 'object';
     const needsRegen = unifiedClients.length > 0 && (
       (sample.orders && !sample.purchases) ||
       (sample.purchases?.length > 0 && !sample.purchases[0].date) ||
       sample.name === 'Sin nombre' ||
       !sample.created_at ||
-      (!sample.city && !sample.province)
+      (!sample.city && !sample.province) ||
+      rawOrdersStale
     );
     if (needsRegen) {
       console.log('[Snapshot] Regenerating unifiedClients + rawOrders from stored TN orders (stale format detected)');
@@ -1120,10 +1125,10 @@ app.get('/api/data/snapshot', async (req, res) => {
             shipping_address: o.shipping_address || null,
           };
         });
-        data.raw_orders = freshRawOrders;
+        rawOrders = freshRawOrders;
       }
       // Update cache in background
-      supabaseAdmin.from('server_cache').upsert({ id: 'main', unified_clients: unifiedClients, raw_orders: data.raw_orders, updated_at: new Date().toISOString() }, { onConflict: 'id' }).then(() => {}).catch(() => {});
+      supabaseAdmin.from('server_cache').upsert({ id: 'main', unified_clients: unifiedClients, raw_orders: rawOrders, updated_at: new Date().toISOString() }, { onConflict: 'id' }).then(() => {}).catch(() => {});
     }
 
     res.json({
@@ -1136,7 +1141,7 @@ app.get('/api/data/snapshot', async (req, res) => {
         orders: data.tiendanube_orders || [],
         customers: data.tiendanube_customers || [],
         unifiedClients,
-        rawOrders: data.raw_orders || [],
+        rawOrders,
         ga4Insights: data.ga4_insights,
         metaInsights: data.meta_insights,
         mcProducts: (data.mc_products || []).map(p => ({
