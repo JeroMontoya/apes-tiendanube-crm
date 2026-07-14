@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   FileText,
   Download,
@@ -19,6 +19,7 @@ import {
   Printer,
   Sparkles,
 } from 'lucide-react';
+import '../report-responsive.css';
 
 const TEMPLATES = {
   ejecutivo: {
@@ -335,68 +336,35 @@ function SectionCard({ id, active, onToggle }) {
 
 function KPICard({ label, value, color }) {
   return (
-    <div
-      style={{
-        flex: '1 1 200px',
-        padding: '20px',
-        borderRadius: '10px',
-        border: `2px solid ${color}`,
-        background: color + '10',
-      }}
-    >
-      <div style={{ fontSize: '12px', color: '#666', marginBottom: '6px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</div>
-      <div style={{ fontSize: '28px', fontWeight: 800, color: '#1a1a2e' }}>{value}</div>
+    <div className="report-kpi-card" style={{ borderColor: color, background: color + '10' }}>
+      <div style={{ fontSize: 11, color: '#666', marginBottom: 4, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</div>
+      <div className="report-kpi-card-value">{value}</div>
     </div>
   );
 }
 
 function DataTable({ headers, rows }) {
   return (
-    <div style={{ overflowX: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+    <div className="report-table-wrap">
+      <table className="report-table">
         <thead>
           <tr>
             {headers.map((h, i) => (
-              <th
-                key={i}
-                style={{
-                  padding: '10px 14px',
-                  textAlign: 'left',
-                  borderBottom: '2px solid #e5e7eb',
-                  fontWeight: 700,
-                  color: '#374151',
-                  fontSize: '12px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {h}
-              </th>
+              <th key={i}>{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {rows.map((row, ri) => (
-            <tr key={ri} style={{ background: ri % 2 === 0 ? '#f9fafb' : '#fff' }}>
+            <tr key={ri}>
               {row.map((cell, ci) => (
-                <td
-                  key={ci}
-                  style={{
-                    padding: '10px 14px',
-                    borderBottom: '1px solid #f0f0f0',
-                    color: '#374151',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {cell}
-                </td>
+                <td key={ci}>{cell}</td>
               ))}
             </tr>
           ))}
           {rows.length === 0 && (
             <tr>
-              <td colSpan={headers.length} style={{ padding: '20px', textAlign: 'center', color: '#999', fontStyle: 'italic' }}>
+              <td colSpan={headers.length} className="report-empty-cell">
                 Sin datos disponibles
               </td>
             </tr>
@@ -409,15 +377,9 @@ function DataTable({ headers, rows }) {
 
 function SectionDivider({ title }) {
   return (
-    <div
-      style={{
-        padding: '16px 24px',
-        borderBottom: '3px solid #6366f1',
-        background: '#f8f9ff',
-      }}
-    >
-      <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: '#1a1a2e', display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ width: '4px', height: '20px', background: '#6366f1', borderRadius: '2px', display: 'inline-block' }} />
+    <div className="report-divider">
+      <h2>
+        <span style={{ width: 4, height: 18, background: '#6366f1', borderRadius: 2, display: 'inline-block' }} />
         {title}
       </h2>
     </div>
@@ -426,15 +388,13 @@ function SectionDivider({ title }) {
 
 function HeaderSection({ title, dateRange }) {
   return (
-    <div style={{ padding: '40px', background: 'linear-gradient(135deg, #1a1a2e 0%, #2d1b69 50%, #6366f1 100%)', color: '#fff', textAlign: 'center' }}>
-      <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'rgba(255,255,255,0.15)', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
-        <FileText size={32} color="#fff" />
+    <div className="report-header-section">
+      <div style={{ width: 56, height: 56, borderRadius: 14, background: 'rgba(255,255,255,0.15)', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
+        <FileText size={28} color="#fff" />
       </div>
-      <h1 style={{ margin: '0 0 8px', fontSize: '28px', fontWeight: 800, letterSpacing: '-0.5px' }}>{title || 'Reporte de Marketing'}</h1>
-      <p style={{ margin: 0, fontSize: '14px', opacity: 0.8, fontWeight: 500 }}>
-        {dateRange?.startDate || 'N/A'} — {dateRange?.endDate || 'N/A'}
-      </p>
-      <div style={{ marginTop: '16px', fontSize: '11px', opacity: 0.5, textTransform: 'uppercase', letterSpacing: '2px' }}>
+      <h1>{title || 'Reporte de Marketing'}</h1>
+      <p>{dateRange?.startDate || 'N/A'} — {dateRange?.endDate || 'N/A'}</p>
+      <div style={{ marginTop: 12, fontSize: 10, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '2px' }}>
         Análisis Integral de Plataformas
       </div>
     </div>
@@ -443,11 +403,11 @@ function HeaderSection({ title, dateRange }) {
 
 function FooterSection() {
   return (
-    <div style={{ padding: '20px 40px', borderTop: '1px solid #e5e7eb', textAlign: 'center', color: '#999', fontSize: '11px' }}>
+    <div className="report-footer">
       <p style={{ margin: 0 }}>
         Generado el {new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
       </p>
-      <p style={{ margin: '4px 0 0', fontSize: '10px', color: '#bbb' }}>
+      <p style={{ margin: '4px 0 0', fontSize: 10, color: '#bbb' }}>
         © {new Date().getFullYear()} — Reporte generado automáticamente
       </p>
     </div>
@@ -500,8 +460,8 @@ function ExecutiveSummary({ allData }) {
   return (
     <div className="report-section">
       <SectionDivider title="Resumen Ejecutivo" />
-      <div style={{ padding: '24px' }}>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+      <div style={{ padding: 20 }}>
+        <div className="report-kpi-grid">
           <KPICard label="Gasto Total" value={formatCurrency(totalSpend)} color="#ef4444" />
           <KPICard label="Conversiones" value={formatNumber(totalConversions)} color="#22c55e" />
           <KPICard label="ROAS General" value={roas + 'x'} color="#3b82f6" />
@@ -725,18 +685,18 @@ function AIAnalysisSection({ allData }) {
   return (
     <div className="report-section">
       <SectionDivider title="Análisis e Inteligencia" />
-      <div style={{ padding: '24px' }}>
-        <div style={{ background: '#f0f4ff', borderRadius: '10px', padding: '24px', borderLeft: '4px solid #6366f1' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Sparkles size={18} color="#fff" />
+      <div style={{ padding: 20 }}>
+        <div className="report-ai-box">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Sparkles size={16} color="#fff" />
             </div>
-            <h3 style={{ margin: 0, fontSize: '16px', color: '#1a1a2e', fontWeight: 700 }}>Conclusiones Automáticas</h3>
+            <h3 style={{ margin: 0, fontSize: 15, color: '#1a1a2e', fontWeight: 700 }}>Conclusiones Automáticas</h3>
           </div>
-          <ul style={{ margin: 0, padding: '0 0 0 20px', listStyle: 'none' }}>
+          <ul className="report-ai-list">
             {insights.map((point, i) => (
-              <li key={i} style={{ padding: '6px 0', color: '#374151', fontSize: '13px', lineHeight: 1.6, display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                <span style={{ color: '#6366f1', marginTop: '2px', flexShrink: 0 }}>▸</span>
+              <li key={i}>
+                <span style={{ color: '#6366f1', marginTop: 2, flexShrink: 0 }}>&#9656;</span>
                 {point}
               </li>
             ))}
@@ -778,53 +738,48 @@ export default function ReportGenerator({ allData, dateRange }) {
     <div style={styles.container}>
       <style>{previewStyles}</style>
 
-      <div className="report-builder" style={styles.toolbar}>
-        <div style={styles.toolbarLeft}>
-          <FileText size={22} style={{ color: '#6366f1' }} />
-          <span style={styles.toolbarTitle}>Generador de Reportes</span>
+      <div className="report-toolbar">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <FileText size={20} style={{ color: '#6366f1' }} />
+          <span className="report-toolbar-title">Generador de Reportes</span>
         </div>
-        <div style={styles.toolbarRight}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
           <button
-            style={{ ...styles.btn, ...styles.btnGhost }}
+            style={{ ...styles.btn, ...styles.btnGhost, fontSize: 12, padding: '6px 12px' }}
             onClick={() => setShowPreview(!showPreview)}
           >
-            {showPreview ? <EyeOff size={15} /> : <Eye size={15} />}
-            {showPreview ? 'Editor' : 'Vista Previa'}
+            {showPreview ? <EyeOff size={14} /> : <Eye size={14} />}
+            <span className="btn-label-desktop">{showPreview ? 'Editor' : 'Vista Previa'}</span>
           </button>
           <button
-            style={{ ...styles.btn, ...styles.btnSecondary }}
+            style={{ ...styles.btn, ...styles.btnSecondary, fontSize: 12, padding: '6px 12px' }}
             onClick={handlePrint}
           >
-            <Printer size={15} />
-            Exportar PDF
+            <Printer size={14} />
+            <span className="btn-label-desktop">Exportar PDF</span>
           </button>
         </div>
       </div>
 
       {!showPreview ? (
-        <div style={styles.layout}>
-          <div style={styles.sidebar}>
+        <div className="report-layout">
+          <div className="report-sidebar">
             <input
-              style={styles.titleInput}
+              className="report-title-input"
               value={reportTitle}
               onChange={(e) => setReportTitle(e.target.value)}
               placeholder="Título del reporte..."
             />
 
-            <div style={{ marginBottom: '16px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--on-surface-variant, #999)', marginBottom: '10px' }}>
-                Plantillas Rápidas
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--on-surface-variant, #999)', marginBottom: 8 }}>
+                Plantillas
               </div>
-              <div style={styles.templateBar}>
+              <div className="report-templates">
                 {Object.entries(TEMPLATES).map(([key, tpl]) => (
                   <button
                     key={key}
-                    style={{
-                      ...styles.templateBtn,
-                      ...(selectedTemplate === key
-                        ? { background: '#6366f1', color: '#fff', borderColor: '#6366f1' }
-                        : {}),
-                    }}
+                    className={`report-template-btn ${selectedTemplate === key ? 'active' : ''}`}
                     onClick={() => applyTemplate(key)}
                   >
                     {tpl.label}
@@ -833,15 +788,15 @@ export default function ReportGenerator({ allData, dateRange }) {
               </div>
             </div>
 
-            <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--on-surface-variant, #999)' }}>
-                Secciones del Reporte
+            <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--on-surface-variant, #999)' }}>
+                Secciones ({activeSections.length}/{ALL_SECTIONS.length})
               </div>
               <button
                 style={{
                   ...styles.btn,
-                  padding: '4px 8px',
-                  fontSize: '11px',
+                  padding: '3px 8px',
+                  fontSize: 11,
                   background: 'transparent',
                   color: '#6366f1',
                   border: 'none',
@@ -855,31 +810,47 @@ export default function ReportGenerator({ allData, dateRange }) {
                   setSelectedTemplate(null);
                 }}
               >
-                {activeSections.length === ALL_SECTIONS.length ? 'Ocultar todas' : 'Mostrar todas'}
+                {activeSections.length === ALL_SECTIONS.length ? 'Ocultar' : 'Mostrar todas'}
               </button>
             </div>
 
-            {ALL_SECTIONS.map((id) => (
-              <SectionCard
-                key={id}
-                id={id}
-                active={activeSections.includes(id)}
-                onToggle={() => toggleSection(id)}
-              />
-            ))}
+            {ALL_SECTIONS.map((id) => {
+              const meta = SECTION_META[id];
+              const Icon = meta.icon;
+              const active = activeSections.includes(id);
+              return (
+                <div
+                  key={id}
+                  className={`report-section-card ${active ? 'active' : ''}`}
+                  onClick={() => toggleSection(id)}
+                >
+                  <button
+                    className="report-section-toggle"
+                    style={{ background: active ? '#6366f1' : '#444' }}
+                    onClick={(e) => { e.stopPropagation(); toggleSection(id); }}
+                  >
+                    <span className="report-section-toggle-knob" style={{ left: active ? '19px' : '3px' }} />
+                  </button>
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600 }}>
+                    <Icon size={15} style={{ color: active ? '#6366f1' : '#666' }} />
+                    <span style={{ color: active ? '#e0e0e0' : '#777' }}>{meta.label}</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
-          <div style={styles.main}>
+          <div className="report-main">
             <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--on-surface-variant, #999)' }}>
-              <Eye size={48} style={{ opacity: 0.3, marginBottom: '16px' }} />
-              <p style={{ fontSize: '16px', fontWeight: 600 }}>Vista previa del reporte</p>
-              <p style={{ fontSize: '13px', opacity: 0.6 }}>Active las secciones y haga clic en "Vista Previa" para ver el resultado</p>
+              <Eye size={48} style={{ opacity: 0.3, marginBottom: 16 }} />
+              <p style={{ fontSize: 16, fontWeight: 600 }}>Vista previa del reporte</p>
+              <p style={{ fontSize: 13, opacity: 0.6 }}>Active las secciones y haga clic en "Vista Previa"</p>
             </div>
           </div>
         </div>
       ) : (
-        <div style={{ background: '#2a2a3e', padding: '32px 24px', minHeight: 'calc(100vh - 60px)' }}>
-          <div className="report-preview" style={styles.previewWrapper}>
+        <div className="report-preview-container">
+          <div className="report-preview-wrapper report-preview">
             {sortedSections.includes('header') && (
               <HeaderSection title={reportTitle} dateRange={dateRange} />
             )}
