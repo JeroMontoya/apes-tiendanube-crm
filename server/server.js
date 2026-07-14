@@ -804,8 +804,7 @@ async function gscFetch(siteUrl, sa, startDate, endDate) {
 
 function mapToUnified(orders) {
   const clientMap = new Map();
-  // Secondary index: name-based lookup for orders with invalid email + empty phone
-  // This merges orders from the same person when TN merged them under one customer
+  // Name-based index: when email is invalid (TN merge), group by normalized name
   const nameIndex = new Map(); // normalized name → key
 
   for (const o of orders) {
@@ -819,12 +818,6 @@ function mapToUnified(orders) {
     const emailIsInvalid = email && isInvalidEmail(email);
     // When email is invalid (TN merge), do NOT fall back to cust.phone — it's the merged phone
     const phone = emailIsInvalid ? orderPhone : (orderPhone || custPhone);
-    // Skip invalid emails as grouping key (e.g. onli@gmail.com) — fall back to phone
-    const validEmail = email && !isInvalidEmail(email) ? email : '';
-    // When email is invalid and phone is missing/invalid, use unique key to prevent
-    // TN-merged customers from grouping unrelated orders together
-    const validPhone = phone && phone.replace(/\D/g, '').length >= 8 ? phone : '';
-    let key = validEmail || validPhone || '';
 
     // TN API returns customer.name as single string, not first_name/last_name
     // When email is invalid (e.g. onli@), prefer order-level name to avoid TN merge names
@@ -832,12 +825,27 @@ function mapToUnified(orders) {
       ? (o.contact_name || o.billing_name || cust.name || '')
       : (cust.name || o.contact_name || o.billing_name || '');
 
-    // When email is invalid AND phone is empty, try name-based dedup
-    if (!key && customerName) {
-      const normName = customerName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z ]/g, '').replace(/\s+/g, ' ').trim();
+    // Normalize name for dedup
+    const normName = customerName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z ]/g, '').replace(/\s+/g, ' ').trim();
+
+    let key = '';
+    if (emailIsInvalid) {
+      // When email is invalid (TN merge), the name is the PRIMARY key
+      // This ensures same person with different phones still groups together (e.g. Bayam)
+      // and different people with different names don't merge even if phone is same
       if (normName.length >= 3) {
         key = nameIndex.get(normName) || '';
       }
+      // Secondary fallback: phone (only if no name match yet)
+      if (!key) {
+        const validPhone = phone && phone.replace(/\D/g, '').length >= 8 ? phone : '';
+        if (validPhone) key = validPhone;
+      }
+    } else {
+      // When email is valid, email is the primary key
+      const validEmail = email || '';
+      const validPhone = phone && phone.replace(/\D/g, '').length >= 8 ? phone : '';
+      key = validEmail || validPhone || '';
     }
 
     // Final fallback: unique order key
@@ -868,11 +876,10 @@ function mapToUnified(orders) {
         created_at: orderIsoDate,
         segment: null, segmentTags: [],
       });
-      // Register name for dedup when email/phone are both invalid
-      if (emailIsInvalid && !validPhone && customerName) {
-        const normName = customerName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z ]/g, '').replace(/\s+/g, ' ').trim();
-        if (normName.length >= 3 && !nameIndex.has(normName)) nameIndex.set(normName, key);
-      }
+        // Register name for dedup when email is invalid (TN merge)
+        if (emailIsInvalid && normName.length >= 3 && !nameIndex.has(normName)) {
+          nameIndex.set(normName, key);
+        }
     }
     const c = clientMap.get(key);
 
