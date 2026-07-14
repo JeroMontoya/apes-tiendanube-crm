@@ -1011,6 +1011,14 @@ app.get('/api/data/snapshot', async (req, res) => {
       return res.json({ ready: false, message: 'Cache not initialized yet. First sync pending.' });
     }
 
+    // Auto-regenerate unifiedClients if stored format uses 'orders' instead of 'purchases'
+    let unifiedClients = data.unified_clients || [];
+    if (unifiedClients.length > 0 && unifiedClients[0].orders && !unifiedClients[0].purchases) {
+      unifiedClients = mapToUnified(data.raw_orders || data.tiendanube_orders || []);
+      // Update cache in background
+      supabaseAdmin.from('server_cache').upsert({ id: 'main', unified_clients: unifiedClients, updated_at: new Date().toISOString() }, { onConflict: 'id' }).then(() => {}).catch(() => {});
+    }
+
     res.json({
       ready: data.sync_status === 'ok' || data.sync_status === 'partial',
       lastSync: data.last_sync,
@@ -1020,7 +1028,7 @@ app.get('/api/data/snapshot', async (req, res) => {
         products: data.tiendanube_products || [],
         orders: data.tiendanube_orders || [],
         customers: data.tiendanube_customers || [],
-        unifiedClients: data.unified_clients || [],
+        unifiedClients,
         rawOrders: data.raw_orders || [],
         ga4Insights: data.ga4_insights,
         metaInsights: data.meta_insights,
