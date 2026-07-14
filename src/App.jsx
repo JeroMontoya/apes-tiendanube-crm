@@ -1271,7 +1271,11 @@ function AppViewRenderer({
                 </h3>
               </div>
               <div style={{ flex: 1, overflowY: 'auto' }}>
-                {filteredClients.slice(0, 8).map((client, i) => (
+                {[...filteredClients]
+                  .filter(c => (c.purchaseCount ?? 0) > 0)
+                  .sort((a, b) => (b.totalSpent ?? 0) - (a.totalSpent ?? 0))
+                  .slice(0, 8)
+                  .map((client, i) => (
                   <div 
                     key={client.id} 
                     className="top-client-item"
