@@ -917,7 +917,7 @@ app.get('/api/cron/sync', async (req, res) => {
     // Meta Ads
     if (config.meta_ad_account_id && config.meta_access_token) {
       try {
-        const metaUrl = `https://graph.facebook.com/v21.0/act_${config.meta_ad_account_id}/insights?fields=impressions,clicks,spend,actions,cost_per_action_type&date_preset=max_30d&access_token=${config.meta_access_token}`;
+        const metaUrl = `https://graph.facebook.com/v21.0/act_${config.meta_ad_account_id}/insights?fields=impressions,clicks,spend,actions,cost_per_action_type&date_preset=last_30d&access_token=${config.meta_access_token}`;
         const mr = await fetch(metaUrl);
         if (mr.ok) { const md = await mr.json(); meta = md.data?.[0] || null; }
       } catch (e) { errors.push({ api: 'meta', msg: e.message }); }
