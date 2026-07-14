@@ -1027,7 +1027,7 @@ app.get('/api/data/snapshot', async (req, res) => {
     }
 
     res.json({
-      ready: data.sync_status === 'ok' || data.sync_status === 'partial',
+      ready: unifiedClients.length > 0 || (data.tiendanube_orders?.length > 0),
       lastSync: data.last_sync,
       syncStatus: data.sync_status,
       syncDuration: data.sync_duration_ms,
