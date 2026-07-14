@@ -1160,6 +1160,7 @@ app.get('/api/data/snapshot', async (req, res) => {
     const needsRegen = unifiedClients.length > 0 && (
       (sample.orders && !sample.purchases) ||
       (sample.purchases?.length > 0 && !sample.purchases[0].date) ||
+      (sample.purchases?.length > 0 && !('couponType' in sample.purchases[0])) ||
       sample.name === 'Sin nombre' ||
       !sample.created_at ||
       (!sample.city && !sample.province) ||
@@ -1183,6 +1184,13 @@ app.get('/api/data/snapshot', async (req, res) => {
             products: (o.products || []).map(p => ({ name: p.name, quantity: p.quantity, price: p.price })),
             tracking_number: o.tracking_number,
             shipping_address: o.shipping_address || null,
+            coupon: Array.isArray(o.coupon) ? o.coupon : (o.coupon ? [o.coupon] : []),
+            discount: o.discount,
+            promotional_discount: o.promotional_discount,
+            contact_email: o.contact_email,
+            contact_name: o.contact_name,
+            contact_phone: o.contact_phone,
+            billing_name: o.billing_name,
           };
         });
         rawOrders = freshRawOrders;
