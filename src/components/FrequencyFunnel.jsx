@@ -14,27 +14,26 @@ export default function FrequencyFunnel({ clients, onSelectClient }) {
     const groups = {};
 
     arr.forEach(c => {
-      const count = c.allTimePurchaseCount ?? c.purchaseCount ?? 0;
+      const count = c.purchaseCount ?? 0;
       if (count === 0) return;
       const key = count >= 5 ? '5+' : String(count);
-      if (!groups[key]) groups[key] = { clients: [], revenue: 0, filteredOrders: 0, allTimeOrders: 0 };
+      if (!groups[key]) groups[key] = { clients: [], revenue: 0, totalOrders: 0 };
       groups[key].clients.push(c);
       groups[key].revenue += c.totalSpent ?? 0;
-      groups[key].filteredOrders += c.filteredPurchaseCount ?? c.purchaseCount ?? 0;
-      groups[key].allTimeOrders += count;
+      groups[key].totalOrders += count;
     });
 
     const tierOrder = ['1', '2', '3', '4', '5+'];
-    const totalClients = arr.filter(c => (c.allTimePurchaseCount ?? c.purchaseCount ?? 0) > 0).length;
+    const totalClients = arr.filter(c => (c.purchaseCount ?? 0) > 0).length;
     const totalRevenue = arr.reduce((s, c) => s + (c.totalSpent ?? 0), 0);
     const maxClients = Math.max(...tierOrder.map(k => groups[k]?.clients.length || 0), 1);
 
     return tierOrder.map(key => {
-      const g = groups[key] || { clients: [], revenue: 0, filteredOrders: 0, allTimeOrders: 0 };
+      const g = groups[key] || { clients: [], revenue: 0, totalOrders: 0 };
       const count = g.clients.length;
       const pct = totalClients > 0 ? ((count / totalClients) * 100).toFixed(1) : '0.0';
       const revPct = totalRevenue > 0 ? ((g.revenue / totalRevenue) * 100).toFixed(1) : '0.0';
-      const avgTicket = g.filteredOrders > 0 ? g.revenue / g.filteredOrders : 0;
+      const avgTicket = g.totalOrders > 0 ? g.revenue / g.totalOrders : 0;
       const barWidth = (count / maxClients) * 100;
 
       return {
