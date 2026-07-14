@@ -1137,10 +1137,25 @@ app.get('/api/data/snapshot', async (req, res) => {
       syncStatus: data.sync_status,
       syncDuration: data.sync_duration_ms,
       data: {
-        products: data.tiendanube_products || [],
-        orders: data.tiendanube_orders || [],
-        customers: data.tiendanube_customers || [],
-        unifiedClients,
+        products: (data.tiendanube_products || []).map(p => ({
+          id: p.id, name: p.name, sku: p.sku, price: p.variants?.[0]?.price || p.price,
+        })),
+        unifiedClients: unifiedClients.map(c => ({
+          ...c,
+          purchases: (c.purchases || []).map(p => ({
+            date: p.date,
+            amount: p.amount,
+            product: p.product,
+            coupon: p.coupon,
+            hasDiscount: p.hasDiscount,
+            discountTotal: p.discountTotal,
+            promoDiscountAmount: p.promoDiscountAmount,
+            benefitType: p.benefitType,
+            productsArray: (p.productsArray || []).map(pa => ({
+              id: pa.id, name: pa.name, quantity: pa.quantity, price: pa.price,
+            })),
+          })),
+        })),
         rawOrders,
         ga4Insights: data.ga4_insights,
         metaInsights: data.meta_insights,
