@@ -19,19 +19,17 @@ export default function RecentActivityFeed({ clients, rawOrders, dateRange }) {
   const activities = useMemo(() => {
     const items = [];
 
-    // Date range for filtering
-    const start = dateRange?.startDate ? new Date(dateRange.startDate) : null;
-    const end = dateRange?.endDate ? new Date(dateRange.endDate) : null;
-    if (start) start.setHours(0, 0, 0, 0);
-    if (end) end.setHours(23, 59, 59, 999);
+    // Date range for filtering (string comparison for YYYY-MM-DD)
+    const startDate = dateRange?.startDate || '';
+    const endDate = dateRange?.endDate || '';
 
     // Recent orders (filtered by date range)
     if (rawOrders?.length) {
       let filtered = [...rawOrders].filter(o => o.created_at);
-      if (start && end) {
+      if (startDate && endDate) {
         filtered = filtered.filter(o => {
-          const d = new Date(o.created_at);
-          return d >= start && d <= end;
+          const d = (typeof o.created_at === 'string' ? o.created_at : '').substring(0, 10);
+          return d >= startDate && d <= endDate;
         });
       }
       const sorted = filtered
@@ -55,10 +53,10 @@ export default function RecentActivityFeed({ clients, rawOrders, dateRange }) {
     // New clients (within date range)
     if (clients?.length) {
       let recentClients = clients.filter(c => c.created_at);
-      if (start && end) {
+      if (startDate && endDate) {
         recentClients = recentClients.filter(c => {
-          const d = new Date(c.created_at);
-          return d >= start && d <= end;
+          const d = (typeof c.created_at === 'string' ? c.created_at : '').substring(0, 10);
+          return d >= startDate && d <= endDate;
         });
       }
       recentClients = recentClients

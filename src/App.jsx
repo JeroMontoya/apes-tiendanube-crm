@@ -872,31 +872,33 @@ setConnectionStatus('connected');
   }, [session, authLoading]);
 
   // ── Filter Clients locally based on Date Picker ──────────────────────
+  // Uses string comparison (YYYY-MM-DD is lexicographically sortable)
+  // to avoid timezone issues with new Date() parsing.
   const filteredClients = React.useMemo(() => {
     if (!unifiedClients || unifiedClients.length === 0) return [];
-    
-    const start = new Date(dateRange.startDate);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(dateRange.endDate);
-    end.setHours(23, 59, 59, 999);
+
+    const startDate = dateRange.startDate || '';
+    const endDate = dateRange.endDate || '';
+
+    console.log(`[filteredClients] Filtering ${unifiedClients.length} clients: ${startDate} → ${endDate}`);
 
     return unifiedClients.map(client => {
       const purchases = client.purchases || [];
       const allTimeCount = client.purchaseCount || client.totalOrders || purchases.length;
       const allTimeSpent = client.totalSpent || purchases.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
-      
+
       if (!purchases.length) {
         return { ...client, purchaseCount: 0, totalSpent: 0, allTimePurchaseCount: allTimeCount, allTimeTotalSpent: allTimeSpent };
       }
-      
+
       const filteredPurchases = purchases.filter(purchase => {
         if (!purchase.date) return false;
-        const d = new Date(purchase.date);
-        return d >= start && d <= end;
+        const d = typeof purchase.date === 'string' ? purchase.date.substring(0, 10) : '';
+        return d >= startDate && d <= endDate;
       });
 
       const filteredTotal = filteredPurchases.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
-      
+
       return {
         ...client,
         purchases,
@@ -908,7 +910,7 @@ setConnectionStatus('connected');
         filteredTotalSpent: filteredTotal
       };
     });
-  }, [unifiedClients, dateRange]);
+  }, [unifiedClients, dateRange.startDate, dateRange.endDate]);
 
 
   if (authLoading) {
