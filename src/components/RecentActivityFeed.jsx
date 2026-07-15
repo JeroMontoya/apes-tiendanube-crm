@@ -1,11 +1,12 @@
-import React, { useMemo } from 'react';
-import { ShoppingBag, UserPlus, Package, TrendingUp, Clock } from 'lucide-react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { ShoppingBag, UserPlus, Clock } from 'lucide-react';
 
 function timeAgo(dateStr) {
   if (!dateStr) return '';
   const now = Date.now();
   const then = new Date(dateStr).getTime();
   const diffMs = now - then;
+  if (diffMs < 0) return 'Ahora';
   const mins = Math.floor(diffMs / 60000);
   if (mins < 1) return 'Justo ahora';
   if (mins < 60) return `Hace ${mins} min`;
@@ -15,72 +16,73 @@ function timeAgo(dateStr) {
   return `Hace ${days}d`;
 }
 
-export default function RecentActivityFeed({ clients, rawOrders, dateRange }) {
-  const activities = useMemo(() => {
-    const items = [];
+function parseDate(str) {
+  if (!str) return 0;
+  const s = typeof str === 'string' ? str : String(str);
+  return new Date(s).getTime() || 0;
+}
 
-    // Date range for filtering (string comparison for YYYY-MM-DD)
+export default function RecentActivityFeed({ clients, rawOrders, dateRange }) {
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => setTick(t => t + 1), 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const activities = useMemo(() => {
     const startDate = dateRange?.startDate || '';
     const endDate = dateRange?.endDate || '';
+    const items = [];
 
-    // Recent orders (filtered by date range)
     if (rawOrders?.length) {
-      let filtered = [...rawOrders].filter(o => o.created_at);
-      if (startDate && endDate) {
-        filtered = filtered.filter(o => {
-          const d = (typeof o.created_at === 'string' ? o.created_at : '').substring(0, 10);
-          return d >= startDate && d <= endDate;
-        });
-      }
-      const sorted = filtered
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        .slice(0, 6);
-
-      sorted.forEach(order => {
+      let best = null;
+      let count = 0;
+      const limit = 6;
+      for (let i = rawOrders.length - 1; i >= 0 && count < limit; i--) {
+        const o = rawOrders[i];
+        if (!o.created_at) continue;
+        const d = typeof o.created_at === 'string' ? o.created_at.substring(0, 10) : '';
+        if (startDate && endDate && (d < startDate || d > endDate)) continue;
         items.push({
-          id: `order-${order.id}`,
+          id: `order-${o.id}`,
           type: 'order',
           icon: ShoppingBag,
-          color: '#10b981',
-          title: `Pedido #${order.number}`,
-          subtitle: order.customer?.name || 'Cliente',
-          amount: order.total ? `$${parseFloat(order.total).toLocaleString()}` : null,
-          time: order.created_at,
+          color: '#34D399',
+          title: `Pedido #${o.number || o.id}`,
+          subtitle: o.customer?.name || o.contact_name || 'Cliente',
+          amount: o.total ? `$${parseFloat(o.total).toLocaleString()}` : null,
+          time: o.created_at,
         });
-      });
+        count++;
+      }
     }
 
-    // New clients (within date range)
     if (clients?.length) {
-      let recentClients = clients.filter(c => c.created_at);
-      if (startDate && endDate) {
-        recentClients = recentClients.filter(c => {
-          const d = (typeof c.created_at === 'string' ? c.created_at : '').substring(0, 10);
-          return d >= startDate && d <= endDate;
-        });
-      }
-      recentClients = recentClients
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        .slice(0, 4);
-
-      recentClients.forEach(client => {
+      let count = 0;
+      const limit = 4;
+      for (let i = clients.length - 1; i >= 0 && count < limit; i--) {
+        const c = clients[i];
+        if (!c.created_at) continue;
+        const d = typeof c.created_at === 'string' ? c.created_at.substring(0, 10) : '';
+        if (startDate && endDate && (d < startDate || d > endDate)) continue;
         items.push({
-          id: `client-${client.id}`,
+          id: `client-${c.id}`,
           type: 'client',
           icon: UserPlus,
-          color: '#3b82f6',
+          color: '#60A5FA',
           title: 'Nuevo cliente',
-          subtitle: client.name || client.email || 'Desconocido',
+          subtitle: c.name || c.email || 'Desconocido',
           amount: null,
-          time: client.created_at,
+          time: c.created_at,
         });
-      });
+        count++;
+      }
     }
 
-    // Sort all by time
-    return items
-      .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
-      .slice(0, 8);
+    items.sort((a, b) => parseDate(b.time) - parseDate(a.time));
+    if (items.length > 8) items.length = 8;
+    return items;
   }, [clients, rawOrders, dateRange]);
 
   return (
@@ -93,12 +95,16 @@ export default function RecentActivityFeed({ clients, rawOrders, dateRange }) {
         <span className="live-dot" data-tooltip="Datos en vivo"></span>
       </div>
 
-      {activities.length === 0 ? (
+      {!rawOrders?.length && !clients?.length ? (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--on-surface-variant)', fontSize: 13 }}>
-          Sin actividad reciente registrada.
+          Cargando actividad...
+        </div>
+      ) : activities.length === 0 ? (
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--on-surface-variant)', fontSize: 13 }}>
+          Sin actividad reciente en este rango.
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, flex: 1 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, flex: 1, overflowY: 'auto' }}>
           {activities.map((act, i) => (
             <div
               key={act.id}
@@ -107,8 +113,7 @@ export default function RecentActivityFeed({ clients, rawOrders, dateRange }) {
                 alignItems: 'center',
                 gap: 12,
                 padding: '10px 0',
-                borderBottom: i < activities.length - 1 ? '1px solid var(--border-subtle)' : 'none',
-                animation: `slideUp 0.3s ease ${i * 50}ms both`,
+                borderBottom: i < activities.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
               }}
             >
               <div style={{
