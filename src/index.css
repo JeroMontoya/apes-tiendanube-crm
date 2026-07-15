@@ -107,37 +107,37 @@
   --primary-container: rgba(59, 130, 246, 0.1);
   --primary-fixed: #2563eb;
   
-  /* Surfaces & Backgrounds (Premium Cool Dark - Flat & Elegant) */
-  --background: #111827; /* gray-900 */
-  --on-background: #f3f4f6;
+  /* Surfaces & Backgrounds (Ultra Dark - Linear/Vercel inspired) */
+  --background: #09090B; /* Zinc 950 - deepest dark */
+  --on-background: #FAFAFA;
   
-  --surface: #1f2937; /* gray-800 */
-  --surface-dim: #111827;
-  --surface-bright: #374151; /* gray-700 */
+  --surface: #18181B; /* Zinc 900 */
+  --surface-dim: #09090B;
+  --surface-bright: #27272A; /* Zinc 800 */
   --surface-container-lowest: transparent;
   --surface-container-low: rgba(255, 255, 255, 0.02);
-  --surface-container: #1f2937; /* Flat solid instead of translucent for cleaner look */
-  --surface-container-high: #374151;
-  --surface-container-highest: #4b5563;
+  --surface-container: #18181B;
+  --surface-container-high: #27272A;
+  --surface-container-highest: #3F3F46;
   
-  --on-surface: #f9fafb;
-  --on-surface-variant: #9ca3af; /* gray-400 */
+  --on-surface: #FAFAFA;
+  --on-surface-variant: #A1A1AA; /* Zinc 400 */
 
   /* Borders & Outlines */
-  --outline: rgba(255,255,255,0.1);
-  --outline-variant: rgba(255,255,255,0.05);
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-medium: rgba(255, 255, 255, 0.12);
+  --outline: rgba(255,255,255,0.08);
+  --outline-variant: rgba(255,255,255,0.04);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-medium: rgba(255, 255, 255, 0.1);
 
   /* Glassmorphism Dark (Ultra-Premium) */
-  --glass-bg: rgba(20, 22, 30, 0.45);
+  --glass-bg: rgba(9, 9, 11, 0.6);
   --glass-border: rgba(255, 255, 255, 0.06);
   --glass-blur: blur(40px);
 
   /* Shadows Dark - Deep Organic */
-  --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.15);
-  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.15);
+  --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.25);
 
   /* Spacing */
   --space-xs: 4px;

@@ -2,11 +2,11 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { loadFromCache, saveToCache, clearStaleCache } from '../data/cache';
 
 const SEGMENTS = [
-  { key: 'todos', icon: '', label: 'Todos' },
-  { key: 'abandoned', icon: '🛒', label: 'Abandonados' },
-  { key: 'regular', icon: '🛍️', label: 'Regulares' },
-  { key: 'vip', icon: '🌟', label: 'VIP' },
-  { key: 'con_cupon', icon: '🎟️', label: 'Con Cupón' },
+  { key: 'todos', label: 'Todos' },
+  { key: 'abandoned', label: 'Ocasional' },
+  { key: 'regular', label: 'Fiel' },
+  { key: 'vip', label: 'VIP' },
+  { key: 'con_cupon', label: 'Con Cupon' },
 ];
 
 const COLUMNS = [
@@ -22,9 +22,9 @@ const COLUMNS = [
 const PAGE_SIZE = 10;
 
 const SEGMENT_BADGES = {
-  abandoned: { bg: 'rgba(239, 68, 68, 0.15)', color: '#F87171', border: '1px solid rgba(239, 68, 68, 0.3)', label: '🛒 Abandonado' },
-  regular: { bg: 'rgba(59, 130, 246, 0.15)', color: '#60A5FA', border: '1px solid rgba(59, 130, 246, 0.3)', label: '🛍️ Regular' },
-  vip: { bg: 'rgba(245, 158, 11, 0.15)', color: '#FBBF24', border: '1px solid rgba(245, 158, 11, 0.3)', label: '🌟 VIP' },
+  abandoned: { bg: 'rgba(239, 68, 68, 0.1)', color: '#F87171', border: '1px solid rgba(239, 68, 68, 0.2)', label: 'Ocasional' },
+  regular: { bg: 'rgba(52, 211, 153, 0.1)', color: '#34D399', border: '1px solid rgba(52, 211, 153, 0.2)', label: 'Fiel' },
+  vip: { bg: 'rgba(251, 191, 36, 0.1)', color: '#FBBF24', border: '1px solid rgba(251, 191, 36, 0.2)', label: 'VIP' },
 };
 
 const SOURCE_BADGES = {
@@ -38,7 +38,7 @@ function getSegment(client) {
 
 const s = {
   container: {
-    fontFamily: "'Montserrat', sans-serif",
+    fontFamily: "'Inter', sans-serif",
   },
   searchRow: {
     display: 'flex',
@@ -54,16 +54,15 @@ const s = {
   searchInput: {
     width: '100%',
     padding: '12px 16px 12px 44px',
-    background: 'var(--surface)',
+    background: 'rgba(255, 255, 255, 0.03)',
     border: '1px solid var(--border-subtle)',
-    borderRadius: 8,
-    color: 'var(--on-surface)',
-    fontSize: 14,
-    fontFamily: "'Montserrat', sans-serif",
+    borderRadius: 10,
+    color: '#FAFAFA',
+    fontSize: 13,
+    fontFamily: "'Inter', sans-serif",
     outline: 'none',
     transition: 'border-color 0.2s',
     boxSizing: 'border-box',
-    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
   },
   searchIcon: {
     position: 'absolute',
@@ -88,20 +87,20 @@ const s = {
     fontSize: 13,
     fontWeight: 500,
     cursor: 'pointer',
-    fontFamily: "'Montserrat', sans-serif",
+    fontFamily: "'Inter', sans-serif",
     transition: 'all 0.2s',
   },
   filterBtnActive: {
-    background: 'var(--surface-container)',
-    color: 'var(--on-surface)',
-    border: '1px solid #D1D5DB',
+    background: 'rgba(255, 255, 255, 0.06)',
+    color: '#FAFAFA',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
   },
   tableWrap: {
     background: 'var(--surface)',
-    borderRadius: 16,
+    borderRadius: 12,
     border: '1px solid var(--border-subtle)',
     overflow: 'hidden',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+    boxShadow: 'var(--shadow-sm)',
   },
   table: {
     width: '100%',
@@ -169,7 +168,7 @@ const s = {
     color: 'var(--on-surface-variant)',
     fontSize: 13,
     cursor: 'pointer',
-    fontFamily: "'Montserrat', sans-serif",
+    fontFamily: "'Inter', sans-serif",
     transition: 'all 0.2s',
   },
   pageBtnDisabled: {
@@ -214,10 +213,10 @@ export default function MasterTable({ clients, onSelectClient }) {
     if (search.trim()) {
       const q = search.toLowerCase().trim();
       arr = arr.filter(c =>
-        (c.name || '').toLowerCase().includes(q) ||
-        (c.email || '').toLowerCase().includes(q) ||
-        (c.phone || '').toLowerCase().includes(q) ||
-        (c.city || '').toLowerCase().includes(q)
+        String(c.name || '').toLowerCase().includes(q) ||
+        String(c.email || '').toLowerCase().includes(q) ||
+        String(c.phone || '').toLowerCase().includes(q) ||
+        String(c.city || '').toLowerCase().includes(q)
       );
     }
 
