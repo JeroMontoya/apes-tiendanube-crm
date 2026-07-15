@@ -502,24 +502,46 @@ app.post('/api/webhook/supabase', (req, res) => {
 });
 
 // TiendaNueve Webhook receiver
-app.post('/api/webhook/tiendanube', (req, res) => {
+app.post('/api/webhook/tiendanube', async (req, res) => {
   try {
     const body = req.body;
     const storeId = body.store_id || body.storeId;
     const event = body.event || body.topic || 'unknown';
+    const orderId = body.resource_id || body.order_id || body.id;
 
-    console.log(`[TiendaNueve Webhook] ${event} for store ${storeId}`);
+    console.log(`[TiendaNueve Webhook] ${event} for store ${storeId} (order: ${orderId})`);
+
+    // Try to fetch order details for notification payload
+    let orderSummary = null;
+    if ((event.includes('order') || event.includes('purchase')) && orderId) {
+      try {
+        const config = await getConfig();
+        const token = config?.tiendanube_access_token;
+        const sid = config?.tiendanube_store_id || storeId;
+        if (token && sid) {
+          const orderRes = await tnFetch(`https://api.tiendanube.com/v1/${sid}/orders/${orderId}`, token);
+          if (orderRes) {
+            const customerName = orderRes.customer?.name || orderRes.contact_name || 'Cliente';
+            const total = orderRes.total ? `$${parseFloat(orderRes.total).toLocaleString()}` : '';
+            orderSummary = `${customerName} — ${total}`;
+          }
+        }
+      } catch (e) {
+        console.log('[TN Webhook] Could not fetch order details:', e.message);
+      }
+    }
 
     // Broadcast to all connected clients for this store
     broadcastToChannel('global', 'tn-event', { event, storeId, data: body });
-    broadcastToChannel('tiendanube', 'tn-event', { event, storeId, data: body });
 
-    // Specific event handling
+    // Specific event handling with notification payload
     if (event.includes('order') || event.includes('purchase')) {
-      broadcastToChannel('global', 'order-changed', { event, storeId });
+      broadcastToChannel('global', 'order-changed', { event, storeId, orderId, orderSummary });
+      broadcastToChannel('tiendanube', 'order-changed', { event, storeId, orderId, orderSummary });
     }
     if (event.includes('product') || event.includes('stock')) {
       broadcastToChannel('global', 'product-changed', { event, storeId });
+      broadcastToChannel('tiendanube', 'product-changed', { event, storeId });
     }
 
     res.status(200).json({ received: true });
@@ -1113,6 +1135,15 @@ app.get('/api/cron/sync', async (req, res) => {
     }, { onConflict: 'id' });
 
     if (upsertErr) console.error('[Cron] Upsert error:', upsertErr.message);
+
+    // Broadcast sync-complete to all connected SSE clients
+    broadcastToChannel('global', 'sync-complete', {
+      orders: orders.length,
+      customers: customers.length,
+      products: products.length,
+      duration,
+      errors: errors.length,
+    });
 
     res.json({ status: 'ok', duration, customers: customers.length, orders: orders.length, products: products.length, errors });
   } catch (err) {

@@ -35,6 +35,11 @@ import MerchantCenterPanel from './components/MerchantCenterPanel';
 import SearchConsolePanel from './components/SearchConsolePanel';
 import LogisticsCenter from './components/LogisticsCenter';
 
+// Real-time Notification System
+import { NotificationProvider, useNotifications } from './contexts/NotificationContext';
+import ToastContainer from './components/ToastContainer';
+import NotificationBell from './components/NotificationBell';
+
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Team System
@@ -939,6 +944,7 @@ setConnectionStatus('connected');
 
   return (
     <ErrorBoundary>
+      <NotificationProvider>
       <TeamProvider session={session}>
       <AppContent
         activeView={activeView}
@@ -991,6 +997,8 @@ setConnectionStatus('connected');
         refreshSnapshot={refreshSnapshot}
       />
 </TeamProvider>
+      <ToastContainer />
+      </NotificationProvider>
       </ErrorBoundary>
     );
   }
@@ -1008,14 +1016,70 @@ function AppContent({
   fetchMetaInsights, setWorkspaceData, handleManualSync, refreshSnapshot,
 }) {
   const { currentMember, ROLE_LABELS, ROLE_COLORS, ROLE_ICONS } = useTeam();
+  const { notify } = useNotifications();
 
   const snapshotRefreshTimerRef = useRef(null);
   const lastSyncRef = useRef(null);
+  const sseConnectedRef = useRef(false);
+  const prevOrdersCountRef = useRef(0);
+
+  // ── SSE direct connection for real-time events ──────────────────────────
+  useEffect(() => {
+    const es = new EventSource('/api/sync/stream?channel=global');
+    es.onopen = () => { sseConnectedRef.current = true; };
+    es.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data.type === 'connected') return;
+
+        if (data.type === 'order-changed' || data.event?.includes('order')) {
+          notify({ type: 'order', title: 'Nuevo pedido', message: data.orderSummary || 'Pedido actualizado en TiendaNueve' });
+          debouncedRefresh();
+        }
+        if (data.type === 'product-changed' || data.event?.includes('product')) {
+          notify({ type: 'product', title: 'Producto actualizado', message: data.productSummary || 'Inventario cambiado en TiendaNueve' });
+          debouncedRefresh();
+        }
+        if (data.type === 'sync-complete') {
+          notify({ type: 'sync', title: 'Sync completado', message: `${data.orders} pedidos, ${data.clients} clientes — ${data.duration}ms`, toast: false });
+          debouncedRefresh();
+        }
+        if (data.type === 'db-change') {
+          debouncedRefresh();
+        }
+        if (data.type === 'config-changed') {
+          const loadConfig = async () => {
+            const { data: config } = await supabase.from('system_config').select('*').eq('id', 'main').single();
+            if (config) setWorkspaceData(prev => ({ ...prev, ...config }));
+          };
+          loadConfig();
+        }
+      } catch {}
+    };
+    es.onerror = () => { sseConnectedRef.current = false; };
+    return () => es.close();
+  }, [notify, debouncedRefresh, setWorkspaceData]);
+
+  // ── Detect new orders from snapshot updates and notify ──────────────────
+  useEffect(() => {
+    if (rawOrders.length > 0 && prevOrdersCountRef.current > 0 && rawOrders.length > prevOrdersCountRef.current) {
+      const newest = rawOrders[rawOrders.length - 1];
+      if (newest) {
+        const clientName = newest.customer?.name || newest.contact_name || 'Cliente';
+        const amount = newest.total ? `$${parseFloat(newest.total).toLocaleString()}` : '';
+        notify({
+          type: 'order',
+          title: `Pedido #${newest.number || newest.id}`,
+          message: `${clientName} — ${amount}`,
+        });
+      }
+    }
+    prevOrdersCountRef.current = rawOrders.length;
+  }, [rawOrders]);
 
   // Real-time sync: SSE + Supabase Realtime + Broadcast
   const handleRealtimeEvent = useCallback((data) => {
     if (data.type === 'config-changed' || data.table === 'system_config') {
-      // Config changed - reload workspace data
       const loadConfig = async () => {
         const { data: config } = await supabase.from('system_config').select('*').eq('id', 'main').single();
         if (config) setWorkspaceData(prev => ({ ...prev, ...config }));
@@ -1023,12 +1087,10 @@ function AppContent({
       loadConfig();
     }
     if (data.type === 'order-changed' || data.event?.includes('order')) {
-      // Order changed - refresh orders and clients
       const token = workspaceData?.tiendanube_access_token;
       if (storeId && token) fetchRealData(storeId, token, { isManual: false });
     }
     if (data.type === 'product-changed' || data.event?.includes('product')) {
-      // Product changed - refresh products
       const token = workspaceData?.tiendanube_access_token;
       if (storeId && token) fetchRealData(storeId, token, { isManual: false });
     }
@@ -1080,6 +1142,31 @@ function AppContent({
     return () => { supabase.removeChannel(channel); clearInterval(pollInterval); if (snapshotRefreshTimerRef.current) clearTimeout(snapshotRefreshTimerRef.current); };
   }, [session, debouncedRefresh]);
 
+  // ── Detect new clients from snapshot updates ────────────────────────────
+  const prevClientsCountRef = useRef(0);
+  useEffect(() => {
+    if (filteredClients.length > 0 && prevClientsCountRef.current > 0 && filteredClients.length > prevClientsCountRef.current) {
+      const newest = filteredClients[filteredClients.length - 1];
+      if (newest) {
+        notify({
+          type: 'client',
+          title: 'Nuevo cliente',
+          message: newest.name || newest.email || 'Cliente sin nombre',
+        });
+      }
+    }
+    prevClientsCountRef.current = filteredClients.length;
+  }, [filteredClients]);
+
+  // ── Notify on sync status transitions ───────────────────────────────────
+  const prevConnRef = useRef(connectionStatus);
+  useEffect(() => {
+    if (prevConnRef.current === 'connecting' && connectionStatus === 'connected') {
+      notify({ type: 'sync', title: 'Sincronización completa', message: 'Datos actualizados correctamente', toast: false });
+    }
+    prevConnRef.current = connectionStatus;
+  }, [connectionStatus]);
+
   return (
     <div className="app-layout">
       {/* Sidebar Navigation */}
@@ -1107,6 +1194,7 @@ function AppContent({
               <span style={{ color: syncConnected ? '#10b981' : '#ef4444' }}>{syncConnected ? 'Sync' : 'Offline'}</span>
             </div>
             <NotificationCenter />
+            <NotificationBell />
           </div>
         </div>
         
