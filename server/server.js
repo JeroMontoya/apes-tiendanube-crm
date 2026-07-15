@@ -911,6 +911,11 @@ function mapToUnified(orders) {
     const couponSaved = couponType === 'percentage'
       ? (parseFloat(o.total) || 0) * (parseFloat(couponValue) || 0) / 100
       : (parseFloat(couponValue) || 0);
+    // Extract promotion details from promotional_discount.contents
+    const promoContents = (o.promotional_discount?.contents || []).filter(c => (parseFloat(c.total_discount_amount) || 0) > 0);
+    const promoName = promoContents.length > 0 ? promoContents[0].scope_value_name || null : null;
+    const promoType = promoContents.length > 0 ? promoContents[0].discount_script_type || null : null;
+    const promoScope = promoContents.length > 0 ? promoContents[0].scope_type || null : null;
     c.purchases.push({
       date: orderDateStr,
       amount: parseFloat(o.total) || 0,
@@ -923,6 +928,9 @@ function mapToUnified(orders) {
       hasDiscount: discountTotal > 0 || promoDiscount > 0,
       discountTotal,
       promoDiscountAmount: promoDiscount,
+      promoName,
+      promoType,
+      promoScope,
       benefitType: couponCode ? 'coupon' : promoDiscount > 0 ? 'promo_auto' : discountTotal > 0 ? 'manual' : 'normal',
     });
   }
@@ -1164,6 +1172,7 @@ app.get('/api/data/snapshot', async (req, res) => {
       (sample.orders && !sample.purchases) ||
       (sample.purchases?.length > 0 && !sample.purchases[0].date) ||
       (sample.purchases?.length > 0 && !('couponType' in sample.purchases[0])) ||
+      (sample.purchases?.length > 0 && !('promoName' in sample.purchases[0])) ||
       sample.name === 'Sin nombre' ||
       !sample.created_at ||
       (!sample.city && !sample.province) ||
@@ -1224,6 +1233,9 @@ app.get('/api/data/snapshot', async (req, res) => {
             hasDiscount: p.hasDiscount,
             discountTotal: p.discountTotal,
             promoDiscountAmount: p.promoDiscountAmount,
+            promoName: p.promoName,
+            promoType: p.promoType,
+            promoScope: p.promoScope,
             benefitType: p.benefitType,
             productsArray: (p.productsArray || []).map(pa => ({
               id: pa.id, name: pa.name, quantity: pa.quantity, price: pa.price,

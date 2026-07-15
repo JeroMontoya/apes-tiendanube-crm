@@ -206,6 +206,12 @@ function orderToPurchase(order) {
   const discountGateway = parseFloat(order.discount_gateway) || 0;
   const promoDiscountAmount = parseFloat(order.promotional_discount?.total_discount_amount) || 0;
 
+  // Extract promotion details from promotional_discount.contents
+  const promoContents = (order.promotional_discount?.contents || []).filter(c => (parseFloat(c.total_discount_amount) || 0) > 0);
+  const promoName = promoContents.length > 0 ? promoContents[0].scope_value_name || null : null;
+  const promoType = promoContents.length > 0 ? promoContents[0].discount_script_type || null : null;
+  const promoScope = promoContents.length > 0 ? promoContents[0].scope_type || null : null;
+
   // Calculate exact percentage for automatic promotions
   let smartPromoName = 'Promoción de Tienda';
   if (promoDiscountAmount > 0 && order.total > 0) {
@@ -247,6 +253,9 @@ function orderToPurchase(order) {
     discountCoupon,
     discountGateway,
     promoDiscountAmount,
+    promoName,
+    promoType,
+    promoScope,
     smartPromoName,
     benefitType,
   };

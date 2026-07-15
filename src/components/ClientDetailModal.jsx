@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { ShoppingCart, Tag, Ticket, Edit3, Circle, CheckCircle2, Package, Star, Calendar, Percent } from 'lucide-react';
 
 const fmt = (v) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v || 0);
 const fmtDate = (d) => {
@@ -7,11 +8,11 @@ const fmtDate = (d) => {
 };
 
 const BADGE = {
-  coupon:     { bg: '#EFF6FF', fg: '#2563EB', icon: ' coupon', text: 'Cupon' },
-  promo_auto: { bg: '#F5F3FF', fg: '#7C3AED', icon: ' promo', text: 'Promo' },
-  promo_code: { bg: '#FFFBEB', fg: '#D97706', icon: ' tag', text: 'Promo Codigo' },
-  manual:     { bg: '#FEF2F2', fg: '#DC2626', icon: ' edit', text: 'Ajuste Manual' },
-  normal:     { bg: '#F9FAFB', fg: '#6B7280', icon: '', text: 'Normal' },
+  coupon:     { bg: 'rgba(59, 130, 246, 0.15)', fg: '#60A5FA', border: 'rgba(59, 130, 246, 0.3)', icon: Ticket, text: 'Cupón' },
+  promo_auto: { bg: 'rgba(139, 92, 246, 0.15)', fg: '#A78BFA', border: 'rgba(139, 92, 246, 0.3)', icon: Star, text: 'Promo' },
+  promo_code: { bg: 'rgba(245, 158, 11, 0.15)', fg: '#FBBF24', border: 'rgba(245, 158, 11, 0.3)', icon: Tag, text: 'Promo Código' },
+  manual:     { bg: 'rgba(239, 68, 68, 0.15)', fg: '#F87171', border: 'rgba(239, 68, 68, 0.3)', icon: Edit3, text: 'Ajuste Manual' },
+  normal:     { bg: 'rgba(156, 163, 175, 0.1)', fg: '#9CA3AF', border: 'rgba(156, 163, 175, 0.2)', icon: CheckCircle2, text: 'Normal' },
 };
 
 export default function ClientDetailModal({ client, allClients = [], onClose }) {
@@ -22,8 +23,9 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
 
   const a = useMemo(() => {
     const ps = dc.purchases || [];
-    let couponSaved = 0, promoSaved = 0, totalDiscount = 0, couponCount = 0;
+    let couponSaved = 0, promoSaved = 0, totalDiscount = 0, couponCount = 0, promoCount = 0;
     const coupons = {};
+    const promos = {};
     ps.forEach(p => {
       const cs = parseFloat(p.couponSaved) || 0;
       const ps2 = parseFloat(p.promoDiscountAmount) || 0;
@@ -34,83 +36,156 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
         coupons[p.coupon].count++;
         coupons[p.coupon].saved += cs;
       }
+      if (p.benefitType === 'promo_auto' || p.benefitType === 'promo_code') {
+        promoCount++;
+        const name = p.promoName || 'Promocion automatica';
+        if (!promos[name]) promos[name] = { name, count: 0, saved: 0, type: p.promoType, scope: p.promoScope };
+        promos[name].count++;
+        promos[name].saved += ps2;
+      }
     });
-    return { couponSaved, promoSaved, totalDiscount, couponCount, coupons: Object.values(coupons).sort((a, b) => b.saved - a.saved) };
+    return {
+      couponSaved, promoSaved, totalDiscount, couponCount, promoCount,
+      coupons: Object.values(coupons).sort((a, b) => b.saved - a.saved),
+      promos: Object.values(promos).sort((a, b) => b.saved - a.saved),
+    };
   }, [dc.purchases]);
 
   return (
     <div onClick={onClose} style={{
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16,
+      position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(12px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20,
+      fontFamily: "'Inter', 'Montserrat', sans-serif"
     }}>
       <div onClick={e => e.stopPropagation()} style={{
-        background: '#fff', borderRadius: 20, width: '100%', maxWidth: 820, maxHeight: '88vh',
+        background: '#111827', // Tailwind gray-900
+        borderRadius: 24, width: '100%', maxWidth: 880, maxHeight: '90vh',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
-        boxShadow: '0 25px 80px rgba(0,0,0,0.25)', border: '1px solid rgba(0,0,0,0.06)',
+        boxShadow: '0 25px 80px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1)', 
+        border: '1px solid rgba(255, 255, 255, 0.1)',
       }}>
 
-        {/* Header */}
-        <div style={{ padding: '28px 32px 20px', borderBottom: '1px solid #F3F4F6', background: 'linear-gradient(135deg, #FAFBFC 0%, #F8FAFC 100%)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+        {/* Header - Glassy Dark */}
+        <div style={{ 
+          padding: '32px 40px 24px', 
+          borderBottom: '1px solid rgba(255, 255, 255, 0.06)', 
+          background: 'linear-gradient(135deg, rgba(31, 41, 55, 0.8) 0%, rgba(17, 24, 39, 0.9) 100%)' 
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
             <div>
-              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#111827', letterSpacing: -0.3 }}>{dc.name}</h2>
-              <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                <h2 style={{ margin: 0, fontSize: 28, fontWeight: 800, color: '#F9FAFB', letterSpacing: '-0.02em' }}>{dc.name}</h2>
                 <Badge segment={dc.segment} />
-                <span style={pillStyle('#F3F4F6', '#6B7280')}>{dc.purchaseCount} compra{dc.purchaseCount !== 1 ? 's' : ''}</span>
-                <span style={pillStyle('#ECFDF5', '#059669')}>{fmt(dc.totalSpent)}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <span style={pillStyle('rgba(255, 255, 255, 0.05)', '#D1D5DB', 'rgba(255, 255, 255, 0.1)')}>
+                  <ShoppingCart size={14} style={{ marginRight: 6, opacity: 0.7 }} />
+                  {dc.purchaseCount} compra{dc.purchaseCount !== 1 ? 's' : ''}
+                </span>
+                <span style={pillStyle('rgba(16, 185, 129, 0.1)', '#34D399', 'rgba(16, 185, 129, 0.2)')}>
+                  {fmt(dc.totalSpent)}
+                </span>
               </div>
             </div>
             <button onClick={onClose} style={{
-              width: 32, height: 32, borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff',
-              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#9CA3AF', fontSize: 18, flexShrink: 0, transition: 'all 0.15s',
-            }} onMouseEnter={e => { e.currentTarget.style.background = '#FEF2F2'; e.currentTarget.style.borderColor = '#FECACA'; e.currentTarget.style.color = '#DC2626'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.color = '#9CA3AF'; }}>
-              x
+              width: 36, height: 36, borderRadius: 10, border: '1px solid rgba(255, 255, 255, 0.1)', 
+              background: 'rgba(255, 255, 255, 0.03)', cursor: 'pointer', display: 'flex', 
+              alignItems: 'center', justifyContent: 'center', color: '#9CA3AF', fontSize: 20, 
+              transition: 'all 0.2s ease',
+            }} onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)'; e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)'; e.currentTarget.style.color = '#F87171'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.color = '#9CA3AF'; }}>
+              ✕
             </button>
           </div>
-          <div style={{ display: 'flex', gap: 16, fontSize: 12, color: '#6B7280', flexWrap: 'wrap' }}>
-            {dc.email && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>{dc.email}</span>}
-            {dc.phone && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>{dc.phone}</span>}
-            {dc.city && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>{dc.city}{dc.province ? `, ${dc.province}` : ''}</span>}
+          <div style={{ display: 'flex', gap: 20, fontSize: 13, color: '#9CA3AF', flexWrap: 'wrap', fontWeight: 500 }}>
+            {dc.email && <span>{dc.email}</span>}
+            {dc.phone && <span>{dc.phone}</span>}
+            {dc.city && <span>{dc.city}{dc.province ? `, ${dc.province}` : ''}</span>}
           </div>
         </div>
 
-        <div style={{ padding: '0 32px 28px', overflow: 'auto', flex: 1 }}>
+        <div style={{ padding: '0 40px 40px', overflow: 'auto', flex: 1, background: '#111827' }}>
 
-          {/* Summary Row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, margin: '20px 0' }}>
-            <SummaryCard label="Compras con Cupon" value={a.couponCount} sub={`de ${dc.purchases?.length || 0}`} color="#2563EB" />
-            <SummaryCard label="Ahorro Cupones" value={fmt(a.couponSaved)} color="#2563EB" />
-            <SummaryCard label="Compras con Promo" value={dc.purchases?.filter(p => p.benefitType === 'promo_auto' || p.benefitType === 'promo_code').length || 0} sub={`de ${dc.purchases?.length || 0}`} color="#7C3AED" />
-            <SummaryCard label="Ahorro Promos" value={fmt(a.promoSaved)} color="#7C3AED" />
+          {/* 6 Summary Cards - Modern Grid */}
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', 
+            gap: 16, 
+            margin: '32px 0' 
+          }}>
+            <SummaryCard label="Total Pagado" value={fmt(dc.totalSpent)} color="#34D399" accent="#059669" />
+            <SummaryCard label="Ahorro Total" value={fmt(a.totalDiscount)} color="#FBBF24" accent="#D97706" />
+            <SummaryCard label="Compras con Cupón" value={`${a.couponCount} de ${dc.purchases?.length || 0}`} color="#60A5FA" accent="#2563EB" />
+            <SummaryCard label="Ahorro en Cupones" value={fmt(a.couponSaved)} color="#60A5FA" accent="#2563EB" />
+            <SummaryCard label="Compras con Promo" value={`${a.promoCount} de ${dc.purchases?.length || 0}`} color="#A78BFA" accent="#7C3AED" />
+            <SummaryCard label="Ahorro en Promos" value={fmt(a.promoSaved)} color="#A78BFA" accent="#7C3AED" />
           </div>
 
           {/* Coupons Used */}
           {a.coupons.length > 0 && (
-            <div style={{ marginBottom: 20 }}>
-              <h4 style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 10px' }}>Cupones Utilizados</h4>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            <div style={{ marginBottom: 32 }}>
+              <SectionTitle title="Cupones Utilizados" icon={<Ticket size={16} />} />
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                 {a.coupons.map((c, i) => (
                   <div key={i} style={{
-                    display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 10,
-                    background: '#EFF6FF', border: '1px solid #DBEAFE',
+                    display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderRadius: 12,
+                    background: 'rgba(59, 130, 246, 0.05)', border: '1px solid rgba(59, 130, 246, 0.2)',
+                    boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.02)'
                   }}>
-                    <span style={{ fontWeight: 700, fontSize: 13, color: '#1D4ED8' }}>{c.code}</span>
-                    <span style={{ fontSize: 11, color: '#6B7280' }}>{c.type === 'percentage' ? `${c.value}%` : fmt(c.value)}</span>
-                    <span style={{ fontSize: 11, color: '#9CA3AF' }}>x{c.count}</span>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: '#059669' }}>-{fmt(c.saved)}</span>
+                    <span style={{ fontWeight: 700, fontSize: 13, color: '#60A5FA', letterSpacing: 0.5, wordBreak: 'break-all', maxWidth: 200, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title={c.code}>
+                      {c.code}
+                    </span>
+                    <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.1)' }}></div>
+                    <span style={{ fontSize: 12, color: '#9CA3AF', fontWeight: 500 }}>
+                      {c.type === 'percentage' ? `${c.value}%` : fmt(c.value)} <span style={{ opacity: 0.5, margin: '0 4px' }}>×</span> {c.count}
+                    </span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#34D399', marginLeft: 4 }}>
+                      -{fmt(c.saved)}
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Purchase Timeline */}
-          <h4 style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 12px' }}>Historial de Compras</h4>
+          {/* Promotions Applied */}
+          {a.promos.length > 0 && (
+            <div style={{ marginBottom: 32 }}>
+              <SectionTitle title="Promociones Aplicadas" icon={<Percent size={16} />} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {a.promos.map((p, i) => (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+                    padding: '12px 16px', borderRadius: 12,
+                    background: 'rgba(168, 85, 247, 0.05)', border: '1px solid rgba(168, 85, 247, 0.2)',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+                      <Percent size={14} color="#A78BFA" style={{ flexShrink: 0 }} />
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: '#E5E7EB', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.name}>
+                          {p.name}
+                        </div>
+                        <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2, display: 'flex', gap: 8 }}>
+                          {p.type && <span style={{ textTransform: 'uppercase', fontWeight: 600 }}>{p.type}</span>}
+                          {p.scope && <span>{p.scope}</span>}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                      <span style={{ fontSize: 12, color: '#9CA3AF', fontWeight: 500 }}>x{p.count}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#A78BFA' }}>-{fmt(p.saved)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Purchase Timeline - Beautiful List, No Overlapping Tables */}
+          <SectionTitle title={`Historial de Compras (${dc.purchases?.length || 0})`} icon={<Calendar size={16} />} />
 
           {dc.purchases && dc.purchases.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[...dc.purchases].sort((a, b) => (b.date || '').localeCompare(a.date || '')).map((p, idx) => {
                 const b = BADGE[p.benefitType] || BADGE.normal;
                 const cs = parseFloat(p.couponSaved) || 0;
@@ -118,81 +193,135 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
                 const disc = parseFloat(p.discountTotal) || 0;
                 const original = (parseFloat(p.amount) || 0) + disc;
                 const hasAnyDiscount = disc > 0;
+                const Icon = b.icon;
+                
                 return (
                   <div key={idx} style={{
-                    background: '#FAFBFC', borderRadius: 12, border: '1px solid #F3F4F6',
-                    padding: '14px 18px', transition: 'all 0.15s',
+                    background: 'rgba(31, 41, 55, 0.4)', borderRadius: 16, 
+                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                    padding: '20px 24px', transition: 'all 0.2s ease',
+                    display: 'flex', gap: 20, alignItems: 'center'
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#F3F4F6'; e.currentTarget.style.boxShadow = 'none'; }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-                      {/* Left: Date + Products */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                          <span style={{ fontSize: 12, color: '#6B7280', fontWeight: 500 }}>{fmtDate(p.date)}</span>
-                          <span style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 3,
-                            padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
-                            background: b.bg, color: b.fg, textTransform: 'uppercase', letterSpacing: 0.3,
-                          }}>
-                            {b.icon && <span style={{ fontSize: 10 }}>{b.icon}</span>}
-                            {b.text}
-                          </span>
-                        </div>
-                        <div style={{ fontSize: 13, color: '#374151', fontWeight: 500, lineHeight: 1.4 }}>
+                  onMouseEnter={e => { 
+                    e.currentTarget.style.background = 'rgba(31, 41, 55, 0.8)'; 
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; 
+                  }}
+                  onMouseLeave={e => { 
+                    e.currentTarget.style.background = 'rgba(31, 41, 55, 0.4)'; 
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)'; 
+                  }}>
+                    
+                    {/* Left: Product Info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                        <span style={{ fontSize: 13, color: '#9CA3AF', fontWeight: 600, letterSpacing: 0.5 }}>{fmtDate(p.date)}</span>
+                        <div style={{ width: 4, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.2)' }}></div>
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 4,
+                          padding: '4px 10px', borderRadius: 8, fontSize: 10, fontWeight: 700,
+                          background: b.bg, color: b.fg, border: `1px solid ${b.border}`,
+                          textTransform: 'uppercase', letterSpacing: 0.5,
+                        }}>
+                          {Icon && <Icon size={12} strokeWidth={2.5} />}
+                          {b.text}
+                        </span>
+                      </div>
+                      
+                      <div style={{ fontSize: 15, color: '#F3F4F6', fontWeight: 600, lineHeight: 1.5, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Package size={16} color="#9CA3AF" />
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                           {p.product || 'Sin producto'}
-                          {p.productsArray && p.productsArray.length > 1 && (
-                            <span style={{ fontSize: 11, color: '#9CA3AF', marginLeft: 6 }}>+{p.productsArray.length - 1} mas</span>
-                          )}
-                        </div>
-                        {/* Coupon Detail */}
-                        {p.coupon && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
-                            <span style={{
-                              display: 'inline-flex', alignItems: 'center', gap: 4,
-                              padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700,
-                              background: '#EFF6FF', color: '#2563EB', border: '1px solid #DBEAFE',
-                            }}>
-                              {p.coupon}
-                              {p.couponType && (
-                                <span style={{ fontWeight: 500, opacity: 0.7, marginLeft: 2 }}>
-                                  {p.couponType === 'percentage' ? `${p.couponValue}%` : fmt(p.couponValue)}
-                                </span>
-                              )}
-                            </span>
-                            {cs > 0 && (
-                              <span style={{ fontSize: 11, color: '#059669', fontWeight: 600 }}>-{fmt(cs)} ahorrado</span>
-                            )}
-                          </div>
+                        </span>
+                        {p.productsArray && p.productsArray.length > 1 && (
+                          <span style={{ 
+                            fontSize: 11, color: '#9CA3AF', background: 'rgba(255,255,255,0.05)', 
+                            padding: '2px 8px', borderRadius: 10, whiteSpace: 'nowrap', border: '1px solid rgba(255,255,255,0.05)'
+                          }}>
+                            +{p.productsArray.length - 1} más
+                          </span>
                         )}
                       </div>
-
-                      {/* Right: Amount */}
-                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>{fmt(p.amount)}</div>
-                        {hasAnyDiscount && (
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, marginTop: 2 }}>
-                            <span style={{ fontSize: 11, color: '#9CA3AF', textDecoration: 'line-through' }}>{fmt(original)}</span>
-                            <span style={{ fontSize: 11, color: '#059669', fontWeight: 600 }}>-{fmt(disc)} ({((disc / original) * 100).toFixed(0)}% off)</span>
-                            {(cs > 0 || ps > 0) && (
-                              <span style={{ fontSize: 10, color: '#9CA3AF' }}>
-                                {cs > 0 && `cupon: -${fmt(cs)}`}
-                                {cs > 0 && ps > 0 && ' | '}
-                                {ps > 0 && `promo: -${fmt(ps)}`}
+                      
+                      {/* Coupon Detail */}
+                      {p.coupon && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
+                          <span style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 6,
+                            padding: '4px 12px', borderRadius: 8, fontSize: 11, fontWeight: 700,
+                            background: 'rgba(59, 130, 246, 0.1)', color: '#60A5FA', border: '1px dashed rgba(59, 130, 246, 0.3)',
+                          }}>
+                            <Tag size={12} />
+                            <span style={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {p.coupon}
+                            </span>
+                            {p.couponType && (
+                              <span style={{ fontWeight: 500, opacity: 0.6, marginLeft: 4 }}>
+                                ({p.couponType === 'percentage' ? `${p.couponValue}%` : fmt(p.couponValue)})
                               </span>
                             )}
+                          </span>
+                          {cs > 0 && (
+                            <span style={{ fontSize: 12, color: '#34D399', fontWeight: 600 }}>-{fmt(cs)}</span>
+                          )}
+                        </div>
+                      )}
+                      {/* Promo Detail */}
+                      {p.promoName && (p.benefitType === 'promo_auto' || p.benefitType === 'promo_code') && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: p.coupon ? 6 : 12 }}>
+                          <span style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 6,
+                            padding: '4px 12px', borderRadius: 8, fontSize: 11, fontWeight: 700,
+                            background: 'rgba(168, 85, 247, 0.1)', color: '#A78BFA', border: '1px dashed rgba(168, 85, 247, 0.3)',
+                          }}>
+                            <Percent size={12} />
+                            <span style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.promoName}>
+                              {p.promoName}
+                            </span>
+                            {p.promoType && (
+                              <span style={{ fontWeight: 500, opacity: 0.6, marginLeft: 4 }}>({p.promoType})</span>
+                            )}
+                          </span>
+                          {ps > 0 && (
+                            <span style={{ fontSize: 12, color: '#34D399', fontWeight: 600 }}>-{fmt(ps)}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Right: Amounts */}
+                    <div style={{ textAlign: 'right', flexShrink: 0, paddingLeft: 20, borderLeft: '1px solid rgba(255,255,255,0.05)' }}>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: '#F9FAFB', letterSpacing: '-0.02em' }}>{fmt(p.amount)}</div>
+                      {hasAnyDiscount && (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, marginTop: 6 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontSize: 12, color: '#6B7280', textDecoration: 'line-through' }}>{fmt(original)}</span>
+                            <span style={{ 
+                              fontSize: 11, color: '#10B981', fontWeight: 700, background: 'rgba(16, 185, 129, 0.1)', 
+                              padding: '2px 6px', borderRadius: 6, border: '1px solid rgba(16, 185, 129, 0.2)' 
+                            }}>
+                              -{((disc / original) * 100).toFixed(0)}%
+                            </span>
                           </div>
-                        )}
-                      </div>
+                          
+                          {(cs > 0 || ps > 0) && (
+                            <div style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 500, display: 'flex', gap: 6, marginTop: 2 }}>
+                              {cs > 0 && <span style={{ color: '#60A5FA' }}>CUP: -{fmt(cs)}</span>}
+                              {cs > 0 && ps > 0 && <span style={{ opacity: 0.3 }}>|</span>}
+                              {ps > 0 && <span style={{ color: '#A78BFA' }}>PRM: -{fmt(ps)}</span>}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF' }}>
-              <div style={{ fontSize: 40, marginBottom: 8, opacity: 0.3 }}></div>
-              <p style={{ fontSize: 13 }}>No hay compras registradas</p>
+            <div style={{ padding: '60px 40px', textAlign: 'center', background: 'rgba(31, 41, 55, 0.3)', borderRadius: 16, border: '1px dashed rgba(255,255,255,0.1)' }}>
+              <Package size={48} color="#4B5563" style={{ marginBottom: 16, opacity: 0.5 }} />
+              <h3 style={{ margin: '0 0 8px', fontSize: 16, color: '#E5E7EB', fontWeight: 600 }}>Sin historial</h3>
+              <p style={{ margin: 0, fontSize: 14, color: '#9CA3AF' }}>Este cliente aún no tiene compras registradas en el sistema.</p>
             </div>
           )}
         </div>
@@ -201,33 +330,59 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
   );
 }
 
+function SectionTitle({ title, icon }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+      {icon && <span style={{ color: '#9CA3AF' }}>{icon}</span>}
+      <h4 style={{ fontSize: 13, fontWeight: 700, color: '#E5E7EB', textTransform: 'uppercase', letterSpacing: 1.2, margin: 0 }}>
+        {title}
+      </h4>
+      <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(255,255,255,0.1) 0%, transparent 100%)', marginLeft: 8 }}></div>
+    </div>
+  );
+}
+
 function Badge({ segment }) {
-  const s = segment === 'vip' ? { bg: '#FEF3C7', fg: '#D97706', label: 'VIP' }
-    : segment === 'regular' || segment === 'Fiel' ? { bg: '#ECFDF5', fg: '#059669', label: 'Fiel' }
-    : { bg: '#FEF2F2', fg: '#DC2626', label: 'Ocasional' };
+  const s = segment === 'vip' ? { bg: 'rgba(245, 158, 11, 0.15)', fg: '#FBBF24', border: 'rgba(245, 158, 11, 0.3)', label: 'VIP' }
+    : segment === 'regular' || segment === 'Fiel' ? { bg: 'rgba(16, 185, 129, 0.15)', fg: '#34D399', border: 'rgba(16, 185, 129, 0.3)', label: 'Fiel' }
+    : { bg: 'rgba(239, 68, 68, 0.15)', fg: '#F87171', border: 'rgba(239, 68, 68, 0.3)', label: 'Ocasional' };
+  
   return (
     <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: 3,
-      padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700,
-      background: s.bg, color: s.fg, textTransform: 'uppercase', letterSpacing: 0.3,
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      padding: '4px 12px', borderRadius: 8, fontSize: 11, fontWeight: 800,
+      background: s.bg, color: s.fg, border: `1px solid ${s.border}`,
+      textTransform: 'uppercase', letterSpacing: 0.5,
     }}>
-      {segment === 'vip' ? '' : ''} {s.label}
+      {s.label}
     </span>
   );
 }
 
-function SummaryCard({ label, value, sub, color }) {
+function SummaryCard({ label, value, color, accent }) {
   return (
-    <div style={{ background: '#FAFBFC', borderRadius: 10, padding: '12px 14px', border: '1px solid #F3F4F6' }}>
-      <div style={{ fontSize: 10, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color, lineHeight: 1.2 }}>
+    <div style={{ 
+      background: 'rgba(31, 41, 55, 0.6)', 
+      borderRadius: 16, 
+      padding: '16px 20px', 
+      border: '1px solid rgba(255, 255, 255, 0.05)',
+      borderLeft: `4px solid ${accent}`,
+      boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+      display: 'flex', flexDirection: 'column', justifyContent: 'center'
+    }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+        {label}
+      </div>
+      <div style={{ fontSize: 24, fontWeight: 800, color: color, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
         {value}
-        {sub && <span style={{ fontSize: 11, fontWeight: 500, color: '#9CA3AF', marginLeft: 4 }}>{sub}</span>}
       </div>
     </div>
   );
 }
 
-function pillStyle(bg, fg) {
-  return { display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600, background: bg, color: fg };
+function pillStyle(bg, fg, border) {
+  return { 
+    display: 'inline-flex', alignItems: 'center', padding: '6px 14px', borderRadius: 8, 
+    fontSize: 13, fontWeight: 600, background: bg, color: fg, border: `1px solid ${border}` 
+  };
 }
