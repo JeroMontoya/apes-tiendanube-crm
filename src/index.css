@@ -300,19 +300,19 @@ a:hover {
   width: calc(var(--sidebar-width) - 24px);
   height: calc(100vh - 24px);
   height: calc(100dvh - 24px);
-  background: rgba(18, 22, 30, 0.82);
-  backdrop-filter: blur(32px) saturate(180%);
-  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  background: rgba(9, 9, 11, 0.88);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 20px;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   z-index: 100;
   transition: transform var(--transition-base), width var(--transition-base), box-shadow 0.3s ease;
   overflow: hidden;
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.25),
-    0 2px 8px rgba(0, 0, 0, 0.1),
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
@@ -349,13 +349,13 @@ a:hover {
 .sidebar-logo-icon {
   width: 36px;
   height: 36px;
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(45, 139, 78, 0.3);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .sidebar-logo .logo-subtitle {
@@ -453,8 +453,8 @@ a:hover {
 }
 
 .sidebar-nav-item.active {
-  background: rgba(99, 102, 241, 0.12);
-  color: #a5b4fc;
+  background: rgba(59, 130, 246, 0.1);
+  color: #60A5FA;
   font-weight: 600;
 }
 
@@ -475,7 +475,7 @@ a:hover {
 
 .sidebar-nav-item.active .nav-icon {
   opacity: 1;
-  color: #818cf8;
+  color: #60A5FA;
 }
 
 /* ── Member Badge ── */
@@ -568,15 +568,15 @@ a:hover {
   left: auto;
   width: 240px;
   z-index: 1000;
-  background: rgba(22, 26, 36, 0.97);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  background: rgba(9, 9, 11, 0.95);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
+  border-radius: 14px;
   padding: 8px;
   box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.5),
-    0 4px 16px rgba(0, 0, 0, 0.2);
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    0 4px 16px rgba(0, 0, 0, 0.3);
   animation: fadeIn 0.15s ease;
 }
 
