@@ -1258,7 +1258,12 @@ app.get('/api/data/snapshot', async (req, res) => {
       syncDuration: data.sync_duration_ms,
       data: {
         products: (data.tiendanube_products || []).map(p => ({
-          id: p.id, name: p.name, sku: p.sku, price: p.variants?.[0]?.price || p.price,
+          id: p.id, name: p.name, attributes: p.attributes, images: p.images,
+          variants: (p.variants || []).map(v => ({
+            id: v.id, name: v.name, stock: v.stock, stock_management: v.stock_management,
+            sku: v.sku, price: v.price, promotional_price: v.promotional_price,
+            values: v.values,
+          })),
         })),
         unifiedClients: unifiedClients.map(c => ({
           ...c,
