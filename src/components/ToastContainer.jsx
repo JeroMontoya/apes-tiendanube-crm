@@ -13,6 +13,7 @@ const TOAST_STYLES = {
   info: { bg: 'rgba(99, 102, 241, 0.12)', border: 'rgba(99, 102, 241, 0.25)', icon: Info, iconColor: '#818CF8' },
   product: { bg: 'rgba(6, 182, 212, 0.12)', border: 'rgba(6, 182, 212, 0.25)', icon: Package, iconColor: '#06B6D4' },
   system: { bg: 'rgba(148, 163, 184, 0.12)', border: 'rgba(148, 163, 184, 0.25)', icon: Zap, iconColor: '#94A3B8' },
+  calendar: { bg: 'rgba(245, 158, 11, 0.12)', border: 'rgba(245, 158, 11, 0.25)', icon: Bell, iconColor: '#F59E0B' },
 };
 
 function formatTime(ts) {

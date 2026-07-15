@@ -24,7 +24,7 @@ import InventoryPage from './components/InventoryPage';
 import GoalTrackerBanner from './components/GoalTrackerBanner';
 import ActiveCampaignsWidget from './components/ActiveCampaignsWidget';
 import EventCalendar from './components/EventCalendar';
-import NotificationCenter from './components/NotificationCenter';
+// NotificationCenter merged into NotificationBell
 import CohortRetentionChart from './components/CohortRetentionChart';
 import StockAlertWidget from './components/StockAlertWidget';
 import AIInsightsWidget from './components/AIInsightsWidget';
@@ -1195,7 +1195,6 @@ function AppContent({
               <div style={{ width: 6, height: 6, borderRadius: '50%', background: syncConnected ? '#10b981' : '#ef4444', animation: syncConnected ? 'pulse 2s infinite' : 'none' }} />
               <span style={{ color: syncConnected ? '#10b981' : '#ef4444' }}>{syncConnected ? 'Sync' : 'Offline'}</span>
             </div>
-            <NotificationCenter />
             <NotificationBell />
           </div>
         </div>

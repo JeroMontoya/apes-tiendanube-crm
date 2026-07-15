@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+import { getUpcomingEvents } from '../utils/colombianEvents';
 
 const NotificationContext = createContext(null);
 
@@ -8,10 +9,53 @@ export function NotificationProvider({ children }) {
   const [notifications, setNotifications] = useState([]);
   const [toasts, setToasts] = useState([]);
   const timersRef = useRef({});
+  const calendarLoadedRef = useRef(false);
 
-  const addNotification = useCallback(({ type, title, message, icon, data }) => {
+  // Load calendar events on mount
+  useEffect(() => {
+    if (calendarLoadedRef.current) return;
+    calendarLoadedRef.current = true;
+    try {
+      const upcoming = getUpcomingEvents(30);
+      const dismissed = JSON.parse(localStorage.getItem('dismissed_notifications') || '[]');
+      const calendarNotifs = upcoming
+        .filter(ev => !dismissed.includes(ev.id))
+        .map(ev => {
+          const urgency = ev.daysUntil <= 3 ? 'urgent' : ev.daysUntil <= 10 ? 'warning' : 'info';
+          return {
+            id: _nextId++,
+            type: 'calendar',
+            title: ev.title,
+            message: ev.description || '',
+            emoji: ev.emoji || '📅',
+            urgency,
+            daysUntil: ev.daysUntil,
+            calendarId: ev.id,
+            category: ev.category,
+            read: false,
+            timestamp: Date.now(),
+          };
+        });
+      if (calendarNotifs.length > 0) {
+        setNotifications(prev => [...calendarNotifs, ...prev]);
+      }
+      // Show toasts for urgent calendar events (once per session)
+      const sessionKey = 'calendar_toast_' + new Date().toDateString();
+      if (!sessionStorage.getItem(sessionKey)) {
+        const urgent = calendarNotifs.filter(n => n.urgency === 'urgent' || n.urgency === 'warning').slice(0, 2);
+        if (urgent.length > 0) {
+          urgent.forEach(n => {
+            addToast({ type: 'calendar', title: n.emoji + ' ' + n.title, message: n.daysUntil === 0 ? '¡Es hoy!' : `Faltan ${n.daysUntil} días`, duration: 6000 });
+          });
+          sessionStorage.setItem(sessionKey, 'true');
+        }
+      }
+    } catch {}
+  }, []);
+
+  const addNotification = useCallback(({ type, title, message, icon, data, emoji, urgency, calendarId }) => {
     const id = _nextId++;
-    const notif = { id, type, title, message, icon: icon || null, data: data || null, read: false, timestamp: Date.now() };
+    const notif = { id, type, title, message, icon: icon || null, emoji: emoji || null, urgency: urgency || null, calendarId: calendarId || null, data: data || null, read: false, timestamp: Date.now() };
     setNotifications(prev => [notif, ...prev].slice(0, 100));
     return id;
   }, []);
@@ -33,8 +77,8 @@ export function NotificationProvider({ children }) {
     return id;
   }, []);
 
-  const notify = useCallback(({ type, title, message, icon, data, toast = true }) => {
-    const id = addNotification({ type, title, message, icon, data });
+  const notify = useCallback(({ type, title, message, icon, data, toast = true, emoji, urgency, calendarId }) => {
+    const id = addNotification({ type, title, message, icon, data, emoji, urgency, calendarId });
     if (toast) {
       addToast({ type, title, message, icon });
     }
@@ -47,6 +91,13 @@ export function NotificationProvider({ children }) {
 
   const markAllRead = useCallback(() => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  }, []);
+
+  const dismissCalendar = useCallback((calendarId) => {
+    setNotifications(prev => prev.filter(n => n.calendarId !== calendarId));
+    const dismissed = JSON.parse(localStorage.getItem('dismissed_notifications') || '[]');
+    dismissed.push(calendarId);
+    localStorage.setItem('dismissed_notifications', JSON.stringify(dismissed));
   }, []);
 
   const clearNotification = useCallback((id) => {
@@ -72,7 +123,7 @@ export function NotificationProvider({ children }) {
     <NotificationContext.Provider value={{
       notifications, toasts, unreadCount,
       addNotification, addToast, notify,
-      markAsRead, markAllRead, clearNotification, clearAll,
+      markAsRead, markAllRead, dismissCalendar, clearNotification, clearAll,
       dismissToast,
     }}>
       {children}
