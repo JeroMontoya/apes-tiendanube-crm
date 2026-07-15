@@ -903,7 +903,8 @@ function mapToUnified(orders) {
     if (!c.address && orderAddress) c.address = orderAddress;
     const discountTotal = parseFloat(o.discount) || 0;
     const promoDiscount = parseFloat(o.promotional_discount?.total_discount_amount) || 0;
-    const couponCode = Array.isArray(o.coupon) && o.coupon.length > 0 ? (o.coupon[0].code || null) : (o.coupon && typeof o.coupon === 'object' && !Array.isArray(o.coupon) ? (o.coupon.code || null) : null);
+    const _rawCouponCode = Array.isArray(o.coupon) && o.coupon.length > 0 ? (o.coupon[0].code || null) : (o.coupon && typeof o.coupon === 'object' && !Array.isArray(o.coupon) ? (o.coupon.code || null) : null);
+    const couponCode = _rawCouponCode && !_rawCouponCode.startsWith('DRAFT-ORDER') ? _rawCouponCode : null;
     const couponObj = Array.isArray(o.coupon) && o.coupon.length > 0 ? o.coupon[0] : (o.coupon && typeof o.coupon === 'object' && !Array.isArray(o.coupon) ? o.coupon : null);
     const couponType = couponObj?.type || null;
     const couponValue = couponObj?.value || null;

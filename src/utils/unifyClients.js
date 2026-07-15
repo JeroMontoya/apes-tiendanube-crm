@@ -237,10 +237,10 @@ function orderToPurchase(order) {
     product: (order.products || []).map((p) => p.name).join(' + '),
     productsArray: order.products || [],
     // Coupon-specific fields
-    coupon: couponInfo?.code || null,
-    couponType: couponInfo?.type || null,       // 'percentage' | 'absolute'
-    couponValue: couponInfo?.value || null,      // e.g. "10.00" for 10%
-    couponSaved: couponInfo ? discountCoupon : 0, // money saved by coupon
+    coupon: couponInfo?.code && !couponInfo.code.startsWith('DRAFT-ORDER') ? couponInfo.code : null,
+    couponType: couponInfo?.code && !couponInfo.code.startsWith('DRAFT-ORDER') ? couponInfo.type : null,
+    couponValue: couponInfo?.code && !couponInfo.code.startsWith('DRAFT-ORDER') ? couponInfo.value : null,
+    couponSaved: couponInfo?.code && !couponInfo.code.startsWith('DRAFT-ORDER') ? discountCoupon : 0,
     // Discount breakdown
     hasDiscount: discountTotal > 0 || promoDiscountAmount > 0,
     discountTotal,
@@ -382,7 +382,7 @@ export function unifyClients(historicClients = [], tiendanubeOrders = []) {
   const emailIndex = new Map();
   const phoneIndex = new Map();
   const dniIndex = new Map();
-  const nameIndex = new Map();
+  const customerIdIndex = new Map(); // Tiendanube customer.id → profile id
 
   for (const client of historicClients) {
     const profile = {
@@ -411,8 +411,6 @@ export function unifyClients(historicClients = [], tiendanubeOrders = []) {
     if (!isInvalidDni(dniKey)) {
       dniIndex.set(dniKey, profile.id);
     }
-
-
   }
 
   // ── 2. Process each Tiendanube order ──────────────────────────────
@@ -420,8 +418,6 @@ export function unifyClients(historicClients = [], tiendanubeOrders = []) {
 
   for (const order of tiendanubeOrders) {
     // Skip cancelled / voided orders — they are NOT real revenue.
-    // TiendaNube uses TWO fields: `status` (order lifecycle) and `payment_status` (payment lifecycle).
-    // An order can be status='cancelled' but payment_status='paid' — still not a valid sale.
     const payStatus = (order.payment_status || '').toLowerCase();
     const orderStatus = (order.state || order.status || '').toLowerCase();
     if (
@@ -438,13 +434,13 @@ export function unifyClients(historicClients = [], tiendanubeOrders = []) {
     }
     processedOrderNumbers.add(orderNum);
 
-    // STRICTLY use order-level data. Ignore order.customer completely to break forced groupings.
+    // STRICTLY use order-level data for identity fields.
     const trueName = order.contact_name || order.billing_name || '';
     const trueEmail = order.contact_email || '';
     const truePhone = order.contact_phone || order.billing_phone || '';
     const trueDni = order.billing_identification || '';
 
-    // Attempt match in priority order: email → phone → DNI
+    // Attempt match in priority order: email → phone → DNI → customer.id (with name guard)
     let matchedProfileId = null;
 
     // 2a. Email match (skip invalid)
@@ -469,8 +465,31 @@ export function unifyClients(historicClients = [], tiendanubeOrders = []) {
       }
     }
 
-    // Name matching removed because it causes false positives for people with the same name.
-    // We strictly merge by Email, Phone, or DNI.
+    // 2d. Tiendanube customer.id match — ONLY if names share at least one
+    //     significant word. This prevents the "Carlos Alberto" false-grouping
+    //     bug while still merging legitimate duplicates (e.g. onli@ clients).
+    if (!matchedProfileId) {
+      const orderCustomerId = order.customer?.id;
+      if (orderCustomerId) {
+        const candidateProfileId = customerIdIndex.get(String(orderCustomerId));
+        if (candidateProfileId) {
+          const candidateProfile = profilesById.get(candidateProfileId);
+          if (candidateProfile) {
+            const candidateName = normalizeName(candidateProfile.name);
+            const orderName = normalizeName(trueName);
+            if (candidateName && orderName) {
+              // Extract significant words (length > 2 to skip "de", "la", etc.)
+              const candidateWords = new Set(candidateName.split(' ').filter(w => w.length > 2));
+              const orderWords = orderName.split(' ').filter(w => w.length > 2);
+              const hasCommonWord = orderWords.some(w => candidateWords.has(w));
+              if (hasCommonWord) {
+                matchedProfileId = candidateProfileId;
+              }
+            }
+          }
+        }
+      }
+    }
 
     // ── Merge or create ─────────────────────────────────────────────
     if (matchedProfileId) {
@@ -480,6 +499,16 @@ export function unifyClients(historicClients = [], tiendanubeOrders = []) {
       // Update indexes with potentially-new email
       if (!isInvalidEmail(profile.email)) {
         emailIndex.set(profile.email.toLowerCase().trim(), profile.id);
+      }
+      // Update phone index if new valid phone found
+      const mergedPhone = digitsOnly(profile.phone);
+      if (!isInvalidPhone(mergedPhone)) {
+        phoneIndex.set(mergedPhone, profile.id);
+      }
+      // Keep customer.id pointing to this profile
+      const custId = order.customer?.id;
+      if (custId) {
+        customerIdIndex.set(String(custId), profile.id);
       }
     } else {
       const newProfile = profileFromOrder(order);
@@ -497,7 +526,11 @@ export function unifyClients(historicClients = [], tiendanubeOrders = []) {
       if (!isInvalidDni(newDni)) {
         dniIndex.set(newDni, newProfile.id);
       }
-
+      // Index by Tiendanube customer.id
+      const custId = order.customer?.id;
+      if (custId) {
+        customerIdIndex.set(String(custId), newProfile.id);
+      }
     }
   }
 

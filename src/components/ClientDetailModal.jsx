@@ -1,264 +1,198 @@
 import React, { useMemo } from 'react';
 
-const fmtMoney = (v) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v || 0);
+const fmt = (v) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v || 0);
 const fmtDate = (d) => {
-  if (!d) return '—';
-  try { return new Date(d).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' }); } catch { return d; }
+  if (!d) return '';
+  try { return new Date(d + 'T12:00:00').toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' }); } catch { return d; }
 };
 
-const BENEFIT_COLORS = {
-  coupon: { bg: 'rgba(59,130,246,0.12)', color: '#3b82f6', label: 'Cupon' },
-  promo_auto: { bg: 'rgba(168,85,247,0.12)', color: '#a855f7', label: 'Promo Auto' },
-  promo_code: { bg: 'rgba(245,158,11,0.12)', color: '#f59e0b', label: 'Promo Codigo' },
-  normal: { bg: 'var(--surface-container)', color: 'var(--on-surface-variant)', label: 'Sin descuento' },
+const BADGE = {
+  coupon:     { bg: '#EFF6FF', fg: '#2563EB', icon: ' coupon', text: 'Cupon' },
+  promo_auto: { bg: '#F5F3FF', fg: '#7C3AED', icon: ' promo', text: 'Promo' },
+  promo_code: { bg: '#FFFBEB', fg: '#D97706', icon: ' tag', text: 'Promo Codigo' },
+  manual:     { bg: '#FEF2F2', fg: '#DC2626', icon: ' edit', text: 'Ajuste Manual' },
+  normal:     { bg: '#F9FAFB', fg: '#6B7280', icon: '', text: 'Normal' },
 };
 
 export default function ClientDetailModal({ client, allClients = [], onClose }) {
   if (!client) return null;
 
-  const originalClient = allClients.find(c => c.id === client.id) || client;
-  const displayClient = {
-    ...client,
-    purchases: originalClient.purchases || client.purchases,
-    totalSpent: originalClient.totalSpent || client.totalSpent,
-    purchaseCount: originalClient.purchaseCount || client.purchaseCount,
-  };
+  const oc = allClients.find(c => c.id === client.id) || client;
+  const dc = { ...client, purchases: oc.purchases || client.purchases, totalSpent: oc.totalSpent || client.totalSpent, purchaseCount: oc.purchaseCount || client.purchaseCount };
 
-  const analytics = useMemo(() => {
-    const ps = displayClient.purchases || [];
-    let totalCouponSaved = 0;
-    let totalPromoSaved = 0;
-    let totalDiscount = 0;
-    let couponCount = 0;
-    let promoCount = 0;
-    const couponMap = {};
-
+  const a = useMemo(() => {
+    const ps = dc.purchases || [];
+    let couponSaved = 0, promoSaved = 0, totalDiscount = 0, couponCount = 0;
+    const coupons = {};
     ps.forEach(p => {
-      const couponS = parseFloat(p.couponSaved) || 0;
-      const promoS = parseFloat(p.promoDiscountAmount) || 0;
-      const disc = parseFloat(p.discountTotal) || 0;
-      totalCouponSaved += couponS;
-      totalPromoSaved += promoS;
-      totalDiscount += disc;
+      const cs = parseFloat(p.couponSaved) || 0;
+      const ps2 = parseFloat(p.promoDiscountAmount) || 0;
+      couponSaved += cs; promoSaved += ps2; totalDiscount += parseFloat(p.discountTotal) || 0;
       if (p.coupon) {
         couponCount++;
-        if (!couponMap[p.coupon]) couponMap[p.coupon] = { code: p.coupon, count: 0, totalSaved: 0, type: p.couponType, value: p.couponValue };
-        couponMap[p.coupon].count++;
-        couponMap[p.coupon].totalSaved += couponS;
+        if (!coupons[p.coupon]) coupons[p.coupon] = { code: p.coupon, count: 0, saved: 0, type: p.couponType, value: p.couponValue };
+        coupons[p.coupon].count++;
+        coupons[p.coupon].saved += cs;
       }
-      if (p.benefitType === 'promo_auto' || p.benefitType === 'promo_code') promoCount++;
     });
-
-    const paidWithDiscount = ps.filter(p => parseFloat(p.discountTotal) > 0).length;
-    const avgDiscountPct = ps.length > 0 && totalDiscount > 0
-      ? (totalDiscount / ps.reduce((s, p) => s + (parseFloat(p.amount) || 0) + (parseFloat(p.discountTotal) || 0), 0)) * 100
-      : 0;
-
-    return {
-      totalCouponSaved, totalPromoSaved, totalDiscount, couponCount, promoCount,
-      couponsUsed: Object.values(couponMap).sort((a, b) => b.totalSaved - a.totalSaved),
-      paidWithDiscount, avgDiscountPct,
-      totalOriginal: displayClient.totalSpent + totalDiscount,
-    };
-  }, [displayClient.purchases]);
+    return { couponSaved, promoSaved, totalDiscount, couponCount, coupons: Object.values(coupons).sort((a, b) => b.saved - a.saved) };
+  }, [dc.purchases]);
 
   return (
-    <div className="modal-overlay" onClick={onClose} style={{
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-      backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      zIndex: 1000, padding: 20, animation: 'fadeIn 0.2s ease'
+    <div onClick={onClose} style={{
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16,
     }}>
-      <div className="modal-content" onClick={e => e.stopPropagation()} style={{
-        background: 'var(--surface)', color: 'var(--on-surface)', border: '1px solid var(--border-subtle)',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.4)', borderRadius: 16, width: '100%', maxWidth: 900, maxHeight: '90vh',
-        overflow: 'hidden', display: 'flex', flexDirection: 'column',
-        animation: 'slideUp 0.3s ease', minWidth: 0, wordBreak: 'break-word'
+      <div onClick={e => e.stopPropagation()} style={{
+        background: '#fff', borderRadius: 20, width: '100%', maxWidth: 820, maxHeight: '88vh',
+        display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        boxShadow: '0 25px 80px rgba(0,0,0,0.25)', border: '1px solid rgba(0,0,0,0.06)',
       }}>
-        <button onClick={onClose} style={{
-          position: 'absolute', top: 12, right: 12, zIndex: 1,
-          background: 'var(--surface-container-high)', border: 'none', color: 'var(--on-surface-variant)',
-          cursor: 'pointer', padding: 8, borderRadius: 8, display: 'flex', transition: 'all 0.2s',
-          width: 36, height: 36, alignItems: 'center', justifyContent: 'center', fontSize: 20
-        }} onMouseEnter={e => e.currentTarget.style.background = 'var(--error-container)'}
-        onMouseLeave={e => e.currentTarget.style.background = 'var(--surface-container-high)'}>
-          x
-        </button>
 
         {/* Header */}
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
-            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--on-surface)' }}>{displayClient.name}</h2>
-            <span style={{
-              padding: '4px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
-              background: displayClient.segment === 'vip' ? 'rgba(251,191,36,0.15)' : displayClient.segment === 'regular' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
-              color: displayClient.segment === 'vip' ? '#fbbf24' : displayClient.segment === 'regular' ? '#10b981' : '#ef4444',
-            }}>
-              {displayClient.segment === 'vip' ? 'VIP' : displayClient.segment === 'regular' ? 'Regular' : 'Abandonado'}
-            </span>
+        <div style={{ padding: '28px 32px 20px', borderBottom: '1px solid #F3F4F6', background: 'linear-gradient(135deg, #FAFBFC 0%, #F8FAFC 100%)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+            <div>
+              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#111827', letterSpacing: -0.3 }}>{dc.name}</h2>
+              <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+                <Badge segment={dc.segment} />
+                <span style={pillStyle('#F3F4F6', '#6B7280')}>{dc.purchaseCount} compra{dc.purchaseCount !== 1 ? 's' : ''}</span>
+                <span style={pillStyle('#ECFDF5', '#059669')}>{fmt(dc.totalSpent)}</span>
+              </div>
+            </div>
+            <button onClick={onClose} style={{
+              width: 32, height: 32, borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#9CA3AF', fontSize: 18, flexShrink: 0, transition: 'all 0.15s',
+            }} onMouseEnter={e => { e.currentTarget.style.background = '#FEF2F2'; e.currentTarget.style.borderColor = '#FECACA'; e.currentTarget.style.color = '#DC2626'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.color = '#9CA3AF'; }}>
+              x
+            </button>
           </div>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 12, color: 'var(--on-surface-variant)' }}>
-            <span>{displayClient.email || 'Sin email'}</span>
-            <span>{displayClient.phone || 'Sin telefono'}</span>
-            <span>{displayClient.city || ''}{displayClient.province ? `, ${displayClient.province}` : ''}</span>
+          <div style={{ display: 'flex', gap: 16, fontSize: 12, color: '#6B7280', flexWrap: 'wrap' }}>
+            {dc.email && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>{dc.email}</span>}
+            {dc.phone && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>{dc.phone}</span>}
+            {dc.city && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>{dc.city}{dc.province ? `, ${dc.province}` : ''}</span>}
           </div>
         </div>
 
-        <div style={{ padding: '0 24px 24px', overflow: 'auto', flex: 1, minWidth: 0 }}>
+        <div style={{ padding: '0 32px 28px', overflow: 'auto', flex: 1 }}>
 
-          {/* Analytics Summary Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, margin: '16px 0', minWidth: 0 }}>
-            <StatCard label="Total Pagado" value={fmtMoney(displayClient.totalSpent)} color="#10b981" />
-            <StatCard label="Ahorro Total" value={fmtMoney(analytics.totalDiscount)} color="#f59e0b" />
-            <StatCard label="Compras con Cupon" value={analytics.couponCount} sub={`de ${displayClient.purchases?.length || 0}`} color="#3b82f6" />
-            <StatCard label="Ahorro en Cupones" value={fmtMoney(analytics.totalCouponSaved)} color="#3b82f6" />
-            <StatCard label="Compras con Promo" value={analytics.promoCount} sub={`de ${displayClient.purchases?.length || 0}`} color="#a855f7" />
-            <StatCard label="Ahorro en Promos" value={fmtMoney(analytics.totalPromoSaved)} color="#a855f7" />
+          {/* Summary Row */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, margin: '20px 0' }}>
+            <SummaryCard label="Compras con Cupon" value={a.couponCount} sub={`de ${dc.purchases?.length || 0}`} color="#2563EB" />
+            <SummaryCard label="Ahorro Cupones" value={fmt(a.couponSaved)} color="#2563EB" />
+            <SummaryCard label="Compras con Promo" value={dc.purchases?.filter(p => p.benefitType === 'promo_auto' || p.benefitType === 'promo_code').length || 0} sub={`de ${dc.purchases?.length || 0}`} color="#7C3AED" />
+            <SummaryCard label="Ahorro Promos" value={fmt(a.promoSaved)} color="#7C3AED" />
           </div>
 
           {/* Coupons Used */}
-          {analytics.couponsUsed.length > 0 && (
-            <div style={{ background: 'var(--surface-container)', borderRadius: 12, padding: 14, marginBottom: 16, minWidth: 0 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>
-                Cupones Utilizados
-              </div>
+          {a.coupons.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <h4 style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 10px' }}>Cupones Utilizados</h4>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {analytics.couponsUsed.map((c, i) => (
+                {a.coupons.map((c, i) => (
                   <div key={i} style={{
-                    display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderRadius: 8,
-                    background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)',
+                    display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 10,
+                    background: '#EFF6FF', border: '1px solid #DBEAFE',
                   }}>
-                    <span style={{ fontWeight: 700, fontSize: 13, color: '#3b82f6' }}>{c.code}</span>
-                    <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>
-                      {c.type === 'percentage' ? `${c.value}% off` : `${fmtMoney(c.value)} off`}
-                    </span>
-                    <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>x{c.count}</span>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: '#10b981' }}>-{fmtMoney(c.totalSaved)}</span>
+                    <span style={{ fontWeight: 700, fontSize: 13, color: '#1D4ED8' }}>{c.code}</span>
+                    <span style={{ fontSize: 11, color: '#6B7280' }}>{c.type === 'percentage' ? `${c.value}%` : fmt(c.value)}</span>
+                    <span style={{ fontSize: 11, color: '#9CA3AF' }}>x{c.count}</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: '#059669' }}>-{fmt(c.saved)}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Purchase History */}
-          <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--on-surface)' }}>
-              Historial de Compras ({displayClient.purchases?.length || 0})
-            </h3>
-          </div>
+          {/* Purchase Timeline */}
+          <h4 style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 12px' }}>Historial de Compras</h4>
 
-          {displayClient.purchases && displayClient.purchases.length > 0 ? (
-            <div style={{ overflowX: 'auto', minWidth: 0 }}>
-              <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: 800 }}>
-                <thead>
-                  <tr>
-                    <th style={thStyle}>Fecha</th>
-                    <th style={{...thStyle, minWidth: 180}}>Producto</th>
-                    <th style={thStyle}>Beneficio</th>
-                    <th style={thStyle}>Cupon</th>
-                    <th style={{...thStyle, textAlign: 'right'}}>Descuento</th>
-                    <th style={{...thStyle, textAlign: 'right'}}>Ahorro Cupon</th>
-                    <th style={{...thStyle, textAlign: 'right'}}>Ahorro Promo</th>
-                    <th style={{...thStyle, textAlign: 'right'}}>Monto Pagado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {displayClient.purchases.map((p, idx) => {
-                    const benefit = BENEFIT_COLORS[p.benefitType] || BENEFIT_COLORS.normal;
-                    const couponS = parseFloat(p.couponSaved) || 0;
-                    const promoS = parseFloat(p.promoDiscountAmount) || 0;
-                    const disc = parseFloat(p.discountTotal) || 0;
-                    const original = (parseFloat(p.amount) || 0) + disc;
-                    return (
-                      <tr key={idx} style={{ transition: 'background 0.15s' }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-container)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                        <td style={tdStyle}>{fmtDate(p.date)}</td>
-                        <td style={{...tdStyle, wordBreak: 'break-word', maxWidth: 250, fontSize: 12}}>
-                          {p.product || '—'}
-                          {p.productsArray && p.productsArray.length > 1 && (
-                            <div style={{ fontSize: 10, color: 'var(--outline)', marginTop: 2 }}>
-                              +{p.productsArray.length - 1} productos mas
-                            </div>
-                          )}
-                        </td>
-                        <td style={tdStyle}>
+          {dc.purchases && dc.purchases.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[...dc.purchases].sort((a, b) => (b.date || '').localeCompare(a.date || '')).map((p, idx) => {
+                const b = BADGE[p.benefitType] || BADGE.normal;
+                const cs = parseFloat(p.couponSaved) || 0;
+                const ps = parseFloat(p.promoDiscountAmount) || 0;
+                const disc = parseFloat(p.discountTotal) || 0;
+                const original = (parseFloat(p.amount) || 0) + disc;
+                const hasAnyDiscount = disc > 0;
+                return (
+                  <div key={idx} style={{
+                    background: '#FAFBFC', borderRadius: 12, border: '1px solid #F3F4F6',
+                    padding: '14px 18px', transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#F3F4F6'; e.currentTarget.style.boxShadow = 'none'; }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                      {/* Left: Date + Products */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                          <span style={{ fontSize: 12, color: '#6B7280', fontWeight: 500 }}>{fmtDate(p.date)}</span>
                           <span style={{
-                            display: 'inline-block', padding: '3px 8px', borderRadius: 10, fontSize: 10, fontWeight: 700,
-                            background: benefit.bg, color: benefit.color, textTransform: 'uppercase', whiteSpace: 'nowrap',
+                            display: 'inline-flex', alignItems: 'center', gap: 3,
+                            padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
+                            background: b.bg, color: b.fg, textTransform: 'uppercase', letterSpacing: 0.3,
                           }}>
-                            {benefit.label}
+                            {b.icon && <span style={{ fontSize: 10 }}>{b.icon}</span>}
+                            {b.text}
                           </span>
-                        </td>
-                        <td style={tdStyle}>
-                          {p.coupon ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
-                              <span style={{
-                                background: 'rgba(59,130,246,0.12)', color: '#3b82f6', padding: '3px 8px',
-                                borderRadius: 10, fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap',
-                              }}>
-                                {p.coupon}
-                              </span>
+                        </div>
+                        <div style={{ fontSize: 13, color: '#374151', fontWeight: 500, lineHeight: 1.4 }}>
+                          {p.product || 'Sin producto'}
+                          {p.productsArray && p.productsArray.length > 1 && (
+                            <span style={{ fontSize: 11, color: '#9CA3AF', marginLeft: 6 }}>+{p.productsArray.length - 1} mas</span>
+                          )}
+                        </div>
+                        {/* Coupon Detail */}
+                        {p.coupon && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
+                            <span style={{
+                              display: 'inline-flex', alignItems: 'center', gap: 4,
+                              padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                              background: '#EFF6FF', color: '#2563EB', border: '1px solid #DBEAFE',
+                            }}>
+                              {p.coupon}
                               {p.couponType && (
-                                <span style={{ fontSize: 10, color: 'var(--on-surface-variant)' }}>
-                                  {p.couponType === 'percentage' ? `${p.couponValue}%` : fmtMoney(p.couponValue)}
+                                <span style={{ fontWeight: 500, opacity: 0.7, marginLeft: 2 }}>
+                                  {p.couponType === 'percentage' ? `${p.couponValue}%` : fmt(p.couponValue)}
                                 </span>
                               )}
-                            </div>
-                          ) : (
-                            <span style={{ color: 'var(--on-surface-variant)', opacity: 0.4, fontSize: 12 }}>—</span>
-                          )}
-                        </td>
-                        <td style={{...tdStyle, textAlign: 'right', fontWeight: 600, color: disc > 0 ? '#f59e0b' : 'var(--on-surface-variant)'}}>
-                          {disc > 0 ? `-${fmtMoney(disc)}` : '—'}
-                          {disc > 0 && original > 0 && (
-                            <div style={{ fontSize: 9, color: 'var(--outline)', marginTop: 1 }}>
-                              -{((disc / original) * 100).toFixed(1)}%
-                            </div>
-                          )}
-                        </td>
-                        <td style={{...tdStyle, textAlign: 'right', fontWeight: 600, color: couponS > 0 ? '#3b82f6' : 'var(--on-surface-variant)'}}>
-                          {couponS > 0 ? `-${fmtMoney(couponS)}` : '—'}
-                        </td>
-                        <td style={{...tdStyle, textAlign: 'right', fontWeight: 600, color: promoS > 0 ? '#a855f7' : 'var(--on-surface-variant)'}}>
-                          {promoS > 0 ? `-${fmtMoney(promoS)}` : '—'}
-                        </td>
-                        <td style={{...tdStyle, textAlign: 'right', fontWeight: 700, color: '#10b981'}}>
-                          {fmtMoney(p.amount)}
-                          {disc > 0 && (
-                            <div style={{ fontSize: 9, color: 'var(--outline)', textDecoration: 'line-through', marginTop: 1 }}>
-                              {fmtMoney(original)}
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-                <tfoot>
-                  <tr>
-                    <td colSpan="4" style={{ textAlign: 'right', padding: '14px 12px', fontWeight: 700, color: 'var(--on-surface)', fontSize: 12, borderTop: '2px solid var(--border-subtle)' }}>
-                      TOTALES:
-                    </td>
-                    <td style={{...tdStyle, textAlign: 'right', fontWeight: 700, color: '#f59e0b', borderTop: '2px solid var(--border-subtle)'}}>
-                      -{fmtMoney(analytics.totalDiscount)}
-                    </td>
-                    <td style={{...tdStyle, textAlign: 'right', fontWeight: 700, color: '#3b82f6', borderTop: '2px solid var(--border-subtle)'}}>
-                      -{fmtMoney(analytics.totalCouponSaved)}
-                    </td>
-                    <td style={{...tdStyle, textAlign: 'right', fontWeight: 700, color: '#a855f7', borderTop: '2px solid var(--border-subtle)'}}>
-                      -{fmtMoney(analytics.totalPromoSaved)}
-                    </td>
-                    <td style={{...tdStyle, textAlign: 'right', fontWeight: 800, fontSize: 15, color: '#10b981', borderTop: '2px solid var(--border-subtle)'}}>
-                      {fmtMoney(displayClient.totalSpent)}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
+                            </span>
+                            {cs > 0 && (
+                              <span style={{ fontSize: 11, color: '#059669', fontWeight: 600 }}>-{fmt(cs)} ahorrado</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right: Amount */}
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>{fmt(p.amount)}</div>
+                        {hasAnyDiscount && (
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, marginTop: 2 }}>
+                            <span style={{ fontSize: 11, color: '#9CA3AF', textDecoration: 'line-through' }}>{fmt(original)}</span>
+                            <span style={{ fontSize: 11, color: '#059669', fontWeight: 600 }}>-{fmt(disc)} ({((disc / original) * 100).toFixed(0)}% off)</span>
+                            {(cs > 0 || ps > 0) && (
+                              <span style={{ fontSize: 10, color: '#9CA3AF' }}>
+                                {cs > 0 && `cupon: -${fmt(cs)}`}
+                                {cs > 0 && ps > 0 && ' | '}
+                                {ps > 0 && `promo: -${fmt(ps)}`}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           ) : (
-            <div style={{ padding: '32px', textAlign: 'center', color: 'var(--on-surface-variant)' }}>
-              <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.3 }}></div>
-              <p>No hay compras registradas (Carrito Abandonado)</p>
+            <div style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF' }}>
+              <div style={{ fontSize: 40, marginBottom: 8, opacity: 0.3 }}></div>
+              <p style={{ fontSize: 13 }}>No hay compras registradas</p>
             </div>
           )}
         </div>
@@ -267,28 +201,33 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
   );
 }
 
-const thStyle = {
-  background: 'var(--surface-container-low)', color: 'var(--on-surface-variant)',
-  borderBottom: '1px solid var(--border-subtle)', padding: '10px 10px', textAlign: 'left',
-  fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, whiteSpace: 'nowrap',
-};
-
-const tdStyle = {
-  padding: '10px 10px', borderBottom: '1px solid var(--border-subtle)',
-  color: 'var(--on-surface)', fontSize: 12, whiteSpace: 'nowrap',
-};
-
-function StatCard({ label, value, sub, color }) {
+function Badge({ segment }) {
+  const s = segment === 'vip' ? { bg: '#FEF3C7', fg: '#D97706', label: 'VIP' }
+    : segment === 'regular' || segment === 'Fiel' ? { bg: '#ECFDF5', fg: '#059669', label: 'Fiel' }
+    : { bg: '#FEF2F2', fg: '#DC2626', label: 'Ocasional' };
   return (
-    <div style={{
-      background: 'var(--surface-container)', borderRadius: 10, padding: '12px 14px',
-      borderLeft: `3px solid ${color}`, minWidth: 0,
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 3,
+      padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+      background: s.bg, color: s.fg, textTransform: 'uppercase', letterSpacing: 0.3,
     }}>
-      <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 18, fontWeight: 800, color, lineHeight: 1.2 }}>
+      {segment === 'vip' ? '' : ''} {s.label}
+    </span>
+  );
+}
+
+function SummaryCard({ label, value, sub, color }) {
+  return (
+    <div style={{ background: '#FAFBFC', borderRadius: 10, padding: '12px 14px', border: '1px solid #F3F4F6' }}>
+      <div style={{ fontSize: 10, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color, lineHeight: 1.2 }}>
         {value}
-        {sub && <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--on-surface-variant)', marginLeft: 4 }}>{sub}</span>}
+        {sub && <span style={{ fontSize: 11, fontWeight: 500, color: '#9CA3AF', marginLeft: 4 }}>{sub}</span>}
       </div>
     </div>
   );
+}
+
+function pillStyle(bg, fg) {
+  return { display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600, background: bg, color: fg };
 }
