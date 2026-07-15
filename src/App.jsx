@@ -900,7 +900,7 @@ setConnectionStatus('connected');
       const uiSegment = allTimeCount === 0 ? 'abandoned' : allTimeCount === 1 ? 'regular' : 'vip';
 
       if (!purchases.length) {
-        return { ...client, purchaseCount: 0, totalSpent: 0, allTimePurchaseCount: allTimeCount, allTimeTotalSpent: allTimeSpent, segment: uiSegment };
+        return { ...client, purchaseCount: 0, totalSpent: 0, totalOrders: undefined, allTimePurchaseCount: allTimeCount, allTimeTotalSpent: allTimeSpent, segment: uiSegment };
       }
 
       const filteredPurchases = purchases.filter(purchase => {
@@ -916,6 +916,7 @@ setConnectionStatus('connected');
         purchases,
         purchaseCount: filteredPurchases.length,
         totalSpent: filteredTotal,
+        totalOrders: undefined,
         allTimePurchaseCount: allTimeCount,
         allTimeTotalSpent: allTimeSpent,
         filteredPurchaseCount: filteredPurchases.length,
@@ -1098,7 +1099,8 @@ function AppContent({
   // ── Detect new orders from snapshot updates and notify ──────────────────
   useEffect(() => {
     if (rawOrders.length > 0 && prevOrdersCountRef.current > 0 && rawOrders.length > prevOrdersCountRef.current) {
-      const newest = rawOrders[rawOrders.length - 1];
+      // TN API returns newest-first, index 0 is the most recent
+      const newest = rawOrders[0];
       if (newest) {
         const clientName = newest.customer?.name || newest.contact_name || 'Cliente';
         const amount = newest.total ? `$${parseFloat(newest.total).toLocaleString()}` : '';

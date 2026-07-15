@@ -11,41 +11,47 @@ export default function GeoFunnel({ clients, onSelectClient }) {
 
   const { provinceData, cityData, totalRevenue, totalClients } = useMemo(() => {
     const arr = (clients || []).filter(c => (c.purchaseCount ?? 0) > 0);
-    const totalRevenue = arr.reduce((s, c) => s + (c.totalSpent ?? 0), 0);
-    const totalClients = arr.length;
-
-    // Province aggregation
+    
+    // Aggregate geography from individual filtered purchases (not client-level fields)
     const provinces = {};
     const cities = {};
+    let totalRevenue = 0;
+    let totalClients = arr.length;
 
     arr.forEach(c => {
-      const prov = c.province || 'Sin provincia';
-      const city = c.city || 'Sin ciudad';
+      const purchases = c.purchases || [];
+      const filteredPurchases = purchases.filter(p => p.amount > 0);
+      
+      filteredPurchases.forEach(p => {
+        const prov = p.province || c.province || 'Sin provincia';
+        const city = p.city || c.city || 'Sin ciudad';
+        const amt = p.amount || 0;
+        totalRevenue += amt;
 
-      // Province
-      if (!provinces[prov]) provinces[prov] = { clients: [], revenue: 0, cities: {} };
-      provinces[prov].clients.push(c);
-      provinces[prov].revenue += c.totalSpent ?? 0;
-      if (!provinces[prov].cities[city]) provinces[prov].cities[city] = { count: 0, revenue: 0 };
-      provinces[prov].cities[city].count += 1;
-      provinces[prov].cities[city].revenue += c.totalSpent ?? 0;
+        // Province
+        if (!provinces[prov]) provinces[prov] = { clientIds: new Set(), revenue: 0, cities: {} };
+        provinces[prov].clientIds.add(c.id);
+        provinces[prov].revenue += amt;
+        if (!provinces[prov].cities[city]) provinces[prov].cities[city] = { count: 0, revenue: 0 };
+        provinces[prov].cities[city].count += 1;
+        provinces[prov].cities[city].revenue += amt;
 
-      // City (flat)
-      if (!cities[city]) cities[city] = { clients: [], revenue: 0, province: prov };
-      cities[city].clients.push(c);
-      cities[city].revenue += c.totalSpent ?? 0;
+        // City (flat)
+        if (!cities[city]) cities[city] = { clientIds: new Set(), revenue: 0, province: prov };
+        cities[city].clientIds.add(c.id);
+        cities[city].revenue += amt;
+      });
     });
 
     const maxProvRev = Math.max(...Object.values(provinces).map(p => p.revenue), 1);
     const provinceData = Object.entries(provinces)
       .map(([name, data]) => ({
         name,
-        count: data.clients.length,
+        count: data.clientIds.size,
         revenue: data.revenue,
-        pct: totalClients > 0 ? ((data.clients.length / totalClients) * 100).toFixed(1) : '0.0',
+        pct: totalClients > 0 ? ((data.clientIds.size / totalClients) * 100).toFixed(1) : '0.0',
         revPct: totalRevenue > 0 ? ((data.revenue / totalRevenue) * 100).toFixed(1) : '0.0',
         barWidth: (data.revenue / maxProvRev) * 100,
-        clients: data.clients.sort((a, b) => b.totalSpent - a.totalSpent),
         cities: Object.entries(data.cities)
           .map(([city, d]) => ({ city, ...d }))
           .sort((a, b) => b.revenue - a.revenue),
@@ -57,12 +63,11 @@ export default function GeoFunnel({ clients, onSelectClient }) {
       .map(([name, data]) => ({
         name,
         province: data.province,
-        count: data.clients.length,
+        count: data.clientIds.size,
         revenue: data.revenue,
-        pct: totalClients > 0 ? ((data.clients.length / totalClients) * 100).toFixed(1) : '0.0',
+        pct: totalClients > 0 ? ((data.clientIds.size / totalClients) * 100).toFixed(1) : '0.0',
         revPct: totalRevenue > 0 ? ((data.revenue / totalRevenue) * 100).toFixed(1) : '0.0',
         barWidth: (data.revenue / maxCityRev) * 100,
-        clients: data.clients.sort((a, b) => b.totalSpent - a.totalSpent),
       }))
       .sort((a, b) => b.revenue - a.revenue);
 
@@ -218,34 +223,9 @@ export default function GeoFunnel({ clients, onSelectClient }) {
                   </div>
                 )}
 
-                {/* Client chips */}
-                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--on-surface-variant)', textTransform: 'uppercase', marginBottom: 8 }}>
-                  Clientes en {item.name}
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {item.clients.slice(0, 15).map((c, i) => (
-                    <button
-                      key={i}
-                      onClick={(e) => { e.stopPropagation(); onSelectClient && onSelectClient(c); }}
-                      style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 6,
-                        padding: '5px 10px', borderRadius: 6,
-                        background: 'var(--surface)', border: '1px solid var(--border-subtle)',
-                        color: 'var(--on-surface-variant)', fontSize: 12, cursor: 'pointer',
-                        transition: 'all 0.15s', fontFamily: 'inherit',
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = color; e.currentTarget.style.color = color; }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.color = 'var(--on-surface-variant)'; }}
-                    >
-                      <span style={{ fontWeight: 500 }}>{c.name || c.email}</span>
-                      <span style={{ color: 'var(--outline)', fontSize: 11 }}>{formatCurrency(c.totalSpent)}</span>
-                    </button>
-                  ))}
-                  {item.clients.length > 15 && (
-                    <span style={{ padding: '5px 10px', fontSize: 12, color: 'var(--outline)' }}>
-                      +{item.clients.length - 15} más
-                    </span>
-                  )}
+                {/* Client count */}
+                <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginTop: 8 }}>
+                  <span style={{ fontWeight: 600 }}>{item.count}</span> clientes en esta zona
                 </div>
               </div>
             )}

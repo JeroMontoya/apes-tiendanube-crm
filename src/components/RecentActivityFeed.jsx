@@ -36,10 +36,10 @@ export default function RecentActivityFeed({ clients, rawOrders, dateRange }) {
     const items = [];
 
     if (rawOrders?.length) {
-      let best = null;
+      // TN API returns newest-first, so iterate from start (index 0 = most recent)
       let count = 0;
       const limit = 6;
-      for (let i = rawOrders.length - 1; i >= 0 && count < limit; i--) {
+      for (let i = 0; i < rawOrders.length && count < limit; i++) {
         const o = rawOrders[i];
         if (!o.created_at) continue;
         const d = typeof o.created_at === 'string' ? o.created_at.substring(0, 10) : '';
@@ -59,11 +59,14 @@ export default function RecentActivityFeed({ clients, rawOrders, dateRange }) {
     }
 
     if (clients?.length) {
+      // Sort clients by created_at descending to get most recent first
+      const recentClients = clients
+        .filter(c => c.created_at)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       let count = 0;
       const limit = 4;
-      for (let i = clients.length - 1; i >= 0 && count < limit; i--) {
-        const c = clients[i];
-        if (!c.created_at) continue;
+      for (const c of recentClients) {
+        if (count >= limit) break;
         const d = typeof c.created_at === 'string' ? c.created_at.substring(0, 10) : '';
         if (startDate && endDate && (d < startDate || d > endDate)) continue;
         items.push({

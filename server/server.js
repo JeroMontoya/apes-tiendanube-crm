@@ -830,6 +830,13 @@ function mapToUnified(orders) {
   const nameIndex = new Map(); // normalized name → key
 
   for (const o of orders) {
+    // Skip cancelled, voided, and refunded orders (same logic as client-side unifyClients)
+    const payStatus = (o.payment_status || '').toLowerCase();
+    const orderStatus = (o.state || o.status || '').toLowerCase();
+    if (payStatus === 'cancelled' || payStatus === 'voided' || payStatus === 'refunded' || orderStatus === 'cancelled') {
+      continue;
+    }
+
     const cust = o.customer || {};
     // Prefer order-level email/phone over customer-level to avoid TN merge groupings
     const orderEmail = o.contact_email || '';
@@ -943,6 +950,8 @@ function mapToUnified(orders) {
       amount: parseFloat(o.total) || 0,
       product: (o.products || []).map(p => p.name).join(' + '),
       productsArray: o.products || [],
+      city: orderCity,
+      province: orderProvince,
       coupon: couponCode,
       couponType,
       couponValue,

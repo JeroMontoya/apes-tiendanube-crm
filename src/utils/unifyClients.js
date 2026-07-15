@@ -235,6 +235,11 @@ function orderToPurchase(order) {
     benefitType = 'manual';
   }
 
+  // Extract shipping address for geographic tracking per purchase
+  const shipAddr = order.shipping_address || order.billing_address || {};
+  const purchaseCity = shipAddr.city || '';
+  const purchaseProvince = shipAddr.province || shipAddr.locality || '';
+
   return {
     date: order.created_at
       ? order.created_at.substring(0, 10)
@@ -242,6 +247,8 @@ function orderToPurchase(order) {
     amount: parseFloat(order.total) || 0,
     product: (order.products || []).map((p) => p.name).join(' + '),
     productsArray: order.products || [],
+    city: purchaseCity,
+    province: purchaseProvince,
     // Coupon-specific fields
     coupon: couponInfo?.code && !couponInfo.code.startsWith('DRAFT-ORDER') ? couponInfo.code : null,
     couponType: couponInfo?.code && !couponInfo.code.startsWith('DRAFT-ORDER') ? couponInfo.type : null,
