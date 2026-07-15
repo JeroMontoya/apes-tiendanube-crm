@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useNotifications } from '../contexts/NotificationContext';
 import {
   Warehouse, RefreshCw, Search, PackageX, AlertTriangle, CheckCircle,
   Package, Edit3, Save, X, ArrowUpDown, Filter, TrendingUp,
@@ -91,6 +92,7 @@ function parseVariantOptions(variant, productAttributes) {
 }
 
 export default function InventoryPage({ products, onRefresh, isRefreshing, lastSync, isConnected, onUpdateStock }) {
+  const { addToast } = useNotifications();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [sortKey, setSortKey] = useState('name');
@@ -200,10 +202,29 @@ export default function InventoryPage({ products, onRefresh, isRefreshing, lastS
   const saveVariant = async (v) => {
     setSaving(true);
     try {
-      if (onUpdateStock) await onUpdateStock(v.productId, v.id, parseInt(editStock, 10) || 0);
+      if (onUpdateStock) {
+        await onUpdateStock(v.productId, v.id, parseInt(editStock, 10) || 0);
+        addToast({ type: 'success', title: 'Stock actualizado', message: `${v.productName} — ${v.color || ''} ${v.size || ''}: ${editStock}` });
+      }
       setEditingVariant(null);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error('[Inventory] saveVariant error:', e);
+      addToast({ type: 'error', title: 'Error al guardar', message: e.message || 'Intenta de nuevo' });
+    }
     setSaving(false);
+  };
+
+  const quickStockChange = async (productId, variantId, variant, delta) => {
+    try {
+      const newStock = Math.max(0, (variant.stock || 0) + delta);
+      if (onUpdateStock) {
+        await onUpdateStock(productId, variantId, newStock);
+        addToast({ type: 'success', title: 'Stock actualizado', message: `${variant.productName || ''} → ${newStock}` });
+      }
+    } catch (e) {
+      console.error('[Inventory] quickStockChange error:', e);
+      addToast({ type: 'error', title: 'Error', message: 'No se pudo actualizar stock' });
+    }
   };
 
   const formatSyncTime = () => {
@@ -389,8 +410,8 @@ export default function InventoryPage({ products, onRefresh, isRefreshing, lastS
                           <div>
                             {!isEditing && v.stock !== null && (
                               <div style={{ display: 'flex', gap: 3 }}>
-                                <button onClick={async () => { if (onUpdateStock) await onUpdateStock(item.id, v.id, Math.max(0, v.stock - 1)); }} style={{ width: 22, height: 22, borderRadius: 4, border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.08)', color: '#ef4444', cursor: 'pointer', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
-                                <button onClick={async () => { if (onUpdateStock) await onUpdateStock(item.id, v.id, v.stock + 1); }} style={{ width: 22, height: 22, borderRadius: 4, border: '1px solid rgba(16,185,129,0.2)', background: 'rgba(16,185,129,0.08)', color: '#10b981', cursor: 'pointer', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                                <button onClick={() => quickStockChange(item.id, v.id, v, -1)} style={{ width: 22, height: 22, borderRadius: 4, border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.08)', color: '#ef4444', cursor: 'pointer', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+                                <button onClick={() => quickStockChange(item.id, v.id, v, 1)} style={{ width: 22, height: 22, borderRadius: 4, border: '1px solid rgba(16,185,129,0.2)', background: 'rgba(16,185,129,0.08)', color: '#10b981', cursor: 'pointer', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
                               </div>
                             )}
                           </div>
@@ -451,8 +472,8 @@ export default function InventoryPage({ products, onRefresh, isRefreshing, lastS
                 <div>
                   {!isEditing && v.stock !== null && (
                     <div style={{ display: 'flex', gap: 3 }}>
-                      <button onClick={async () => { if (onUpdateStock) await onUpdateStock(v.productId, v.id, Math.max(0, v.stock - 1)); }} style={{ width: 22, height: 22, borderRadius: 4, border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.08)', color: '#ef4444', cursor: 'pointer', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
-                      <button onClick={async () => { if (onUpdateStock) await onUpdateStock(v.productId, v.id, v.stock + 1); }} style={{ width: 22, height: 22, borderRadius: 4, border: '1px solid rgba(16,185,129,0.2)', background: 'rgba(16,185,129,0.08)', color: '#10b981', cursor: 'pointer', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                      <button onClick={() => quickStockChange(v.productId, v.id, v, -1)} style={{ width: 22, height: 22, borderRadius: 4, border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.08)', color: '#ef4444', cursor: 'pointer', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+                      <button onClick={() => quickStockChange(v.productId, v.id, v, 1)} style={{ width: 22, height: 22, borderRadius: 4, border: '1px solid rgba(16,185,129,0.2)', background: 'rgba(16,185,129,0.08)', color: '#10b981', cursor: 'pointer', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
                     </div>
                   )}
                 </div>

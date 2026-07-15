@@ -1,5 +1,6 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useTeam } from '../contexts/TeamContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import { supabase } from '../lib/supabase';
 import { TiendanubeAPI } from '../utils/tiendanubeAPI';
 import InventoryPage from './InventoryPage';
@@ -62,6 +63,7 @@ function generateBatchCode() {
 
 export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpdateStock, onRefreshStock, storeId, session }) {
   const { currentMember, logActivity, ROLE_COLORS } = useTeam();
+  const { addToast } = useNotifications();
   const [activeTab, setActiveTab] = useState('production');
   const [batches, setBatches] = useState([]);
   const [materials, setMaterials] = useState([]);
@@ -71,6 +73,8 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
   const [search, setSearch] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [defectModal, setDefectModal] = useState(null);
 
   // ── Load data ──────────────────────────────────────────
   useEffect(() => {
@@ -109,136 +113,186 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
 
   // ── Create batch ───────────────────────────────────────
   const createBatch = async (batchData) => {
-    const batchCode = generateBatchCode();
-    console.log('[Workshop] Creating batch:', batchCode, 'product:', batchData.tiendanubeProductName, 'variants:', batchData.batchVariants);
-    const { data: batch, error } = await supabase.from('production_batches').insert({
-      batch_code: batchCode,
-      product_name: batchData.productName,
-      product_description: batchData.description,
-      category: batchData.category,
-      material: batchData.material,
-      color: batchData.color,
-      color_hex: batchData.colorHex,
-      status: 'pending',
-      priority: batchData.priority,
-      due_date: batchData.dueDate || null,
-      notes: batchData.notes,
-      total_quantity: batchData.sizes.reduce((sum, s) => sum + s.quantity, 0),
-      assigned_to: currentMember?.id || null,
-      created_by: currentMember?.id || null,
-      tiendanube_product_id: batchData.tiendanubeProductId || null,
-      tiendanube_product_name: batchData.tiendanubeProductName || null,
-      tiendanube_product_image: batchData.tiendanubeProductImage || null,
-      batch_variants: batchData.batchVariants || null,
-    }).select().single();
+    try {
+      const batchCode = generateBatchCode();
+      console.log('[Workshop] Creating batch:', batchCode, 'product:', batchData.tiendanubeProductName, 'variants:', batchData.batchVariants);
+      const { data: batch, error } = await supabase.from('production_batches').insert({
+        batch_code: batchCode,
+        product_name: batchData.productName,
+        product_description: batchData.description,
+        category: batchData.category,
+        material: batchData.material,
+        color: batchData.color,
+        color_hex: batchData.colorHex,
+        status: 'pending',
+        priority: batchData.priority,
+        due_date: batchData.dueDate || null,
+        notes: batchData.notes,
+        total_quantity: batchData.sizes.reduce((sum, s) => sum + s.quantity, 0),
+        assigned_to: currentMember?.id || null,
+        created_by: currentMember?.id || null,
+        tiendanube_product_id: batchData.tiendanubeProductId || null,
+        tiendanube_product_name: batchData.tiendanubeProductName || null,
+        tiendanube_product_image: batchData.tiendanubeProductImage || null,
+        batch_variants: batchData.batchVariants || null,
+      }).select().single();
 
-    if (error) { console.error('[Workshop] Batch insert error:', error); return; }
-    console.log('[Workshop] Batch created:', batch.id, 'tiendanube_product_id:', batch.tiendanube_product_id, 'batch_variants:', batch.batch_variants);
+      if (error) throw error;
+      console.log('[Workshop] Batch created:', batch.id, 'tiendanube_product_id:', batch.tiendanube_product_id, 'batch_variants:', batch.batch_variants);
 
-    const sizeInserts = batchData.sizes.filter(s => s.quantity > 0).map(s => ({
-      batch_id: batch.id,
-      size: s.size,
-      quantity: s.quantity,
-      produced: 0,
-      defect: 0,
-    }));
-    if (sizeInserts.length > 0) {
-      await supabase.from('batch_sizes').insert(sizeInserts);
+      const sizeInserts = batchData.sizes.filter(s => s.quantity > 0).map(s => ({
+        batch_id: batch.id,
+        size: s.size,
+        quantity: s.quantity,
+        produced: 0,
+        defect: 0,
+      }));
+      if (sizeInserts.length > 0) {
+        await supabase.from('batch_sizes').insert(sizeInserts);
+      }
+
+      await logActivity('batch_created', 'production_batch', batch.id, batchData.productName, {
+        code: batchCode, total: batchData.sizes.reduce((sum, s) => sum + s.quantity, 0), material: batchData.material,
+      });
+
+      addToast({ type: 'success', title: 'Lote creado', message: `${batchCode} — ${batchData.productName}` });
+      setShowNewBatch(false);
+      await loadData();
+    } catch (err) {
+      console.error('[Workshop] createBatch error:', err);
+      addToast({ type: 'error', title: 'Error al crear lote', message: err.message || 'Intenta de nuevo' });
     }
-
-    await logActivity('batch_created', 'production_batch', batch.id, batchData.productName, {
-      code: batchCode, total: batchData.sizes.reduce((sum, s) => sum + s.quantity, 0), material: batchData.material,
-    });
-
-    setShowNewBatch(false);
-    await loadData();
   };
 
   // ── Update batch status ────────────────────────────────
   const updateBatchStatus = async (batchId, newStatus) => {
-    const batch = batches.find(b => b.id === batchId);
-    const updates = { status: newStatus, updated_at: new Date().toISOString() };
-    if (newStatus === 'cutting' && !batch.started_at) updates.started_at = new Date().toISOString();
-    if (newStatus === 'ready' || newStatus === 'shipped') updates.completed_at = new Date().toISOString();
+    try {
+      const batch = batches.find(b => b.id === batchId);
+      const updates = { status: newStatus, updated_at: new Date().toISOString() };
+      if (newStatus === 'cutting' && !batch.started_at) updates.started_at = new Date().toISOString();
+      if (newStatus === 'ready' || newStatus === 'shipped') updates.completed_at = new Date().toISOString();
 
-    await supabase.from('production_batches').update(updates).eq('id', batchId);
-    await logActivity('batch_status_changed', 'production_batch', batchId, batch?.product_name, { from: batch?.status, to: newStatus });
+      const { error } = await supabase.from('production_batches').update(updates).eq('id', batchId);
+      if (error) throw error;
+      await logActivity('batch_status_changed', 'production_batch', batchId, batch?.product_name, { from: batch?.status, to: newStatus });
 
-    // ── Sync Tiendanube stock when batch reaches "ready" ──
-    console.log('[Workshop] Status changed to:', newStatus, '| batch.tiendanube_product_id:', batch?.tiendanube_product_id, '| batch.batch_variants:', batch?.batch_variants);
-    if (newStatus === 'ready' && batch?.tiendanube_product_id && batch?.batch_variants) {
-      try {
-        const api = await getAPI();
-        if (!api) { console.warn('[Workshop] No API token for Tiendanube sync'); await loadData(); return; }
-        const variants = typeof batch.batch_variants === 'string' ? JSON.parse(batch.batch_variants) : batch.batch_variants;
-        console.log('[Workshop] Syncing', variants.length, 'variants to Tiendanube...');
-        const results = [];
-        for (const v of variants) {
-          console.log('[Workshop] Variant:', v.variant_id, 'quantity:', v.quantity, 'current_stock:', v.current_stock);
-          if (v.variant_id && v.quantity > 0) {
-            // Get current stock from Tiendanube
-            const currentStock = v.current_stock ?? 0;
-            const newStock = currentStock + v.quantity;
-            const res = await api.updateVariantStock(batch.tiendanube_product_id, v.variant_id, newStock);
-            console.log('[Workshop] API result for variant', v.variant_id, ':', res);
-            results.push({ variant_id: v.variant_id, ok: res?.success !== false });
+      const statusLabel = STATUS_FLOW.find(s => s.key === newStatus)?.label || newStatus;
+      addToast({ type: 'success', title: 'Estado actualizado', message: `${batch?.product_name} → ${statusLabel}` });
+
+      // ── Sync Tiendanube stock when batch reaches "ready" ──
+      console.log('[Workshop] Status changed to:', newStatus, '| batch.tiendanube_product_id:', batch?.tiendanube_product_id, '| batch.batch_variants:', batch?.batch_variants);
+      if (newStatus === 'ready' && batch?.tiendanube_product_id && batch?.batch_variants) {
+        try {
+          const api = await getAPI();
+          if (!api) {
+            console.warn('[Workshop] No API token for Tiendanube sync');
+            addToast({ type: 'warning', title: 'Sync TN', message: 'Sin token de TiendaNueve — no se sincronizó stock' });
+            await loadData();
+            return;
           }
+          const variants = typeof batch.batch_variants === 'string' ? JSON.parse(batch.batch_variants) : batch.batch_variants;
+          console.log('[Workshop] Syncing', variants.length, 'variants to Tiendanube...');
+          const results = [];
+          for (const v of variants) {
+            console.log('[Workshop] Variant:', v.variant_id, 'quantity:', v.quantity, 'current_stock:', v.current_stock);
+            if (v.variant_id && v.quantity > 0) {
+              const currentStock = v.current_stock ?? 0;
+              const newStock = currentStock + v.quantity;
+              const res = await api.updateVariantStock(batch.tiendanube_product_id, v.variant_id, newStock);
+              console.log('[Workshop] API result for variant', v.variant_id, ':', res);
+              results.push({ variant_id: v.variant_id, ok: res?.success !== false });
+            }
+          }
+          const synced = results.filter(r => r.ok).length;
+          console.log(`[Workshop] Synced ${synced}/${variants.length} variants to Tiendanube`);
+          addToast({ type: 'success', title: 'Stock sincronizado', message: `${synced}/${variants.length} variantes actualizadas en TiendaNueve` });
+          await logActivity('batch_synced_tiendanube', 'production_batch', batchId, batch?.product_name, {
+            synced, total: variants.length, product_id: batch.tiendanube_product_id,
+          });
+        } catch (err) {
+          console.error('[Workshop] Tiendanube sync error:', err);
+          addToast({ type: 'error', title: 'Error sync TN', message: err.message || 'No se pudo sincronizar stock' });
         }
-        const synced = results.filter(r => r.ok).length;
-        console.log(`[Workshop] Synced ${synced}/${variants.length} variants to Tiendanube`);
-        await logActivity('batch_synced_tiendanube', 'production_batch', batchId, batch?.product_name, {
-          synced, total: variants.length, product_id: batch.tiendanube_product_id,
-        });
-      } catch (err) {
-        console.error('[Workshop] Tiendanube sync error:', err);
       }
-    }
 
-    await loadData();
+      await loadData();
+    } catch (err) {
+      console.error('[Workshop] updateBatchStatus error:', err);
+      addToast({ type: 'error', title: 'Error al cambiar estado', message: err.message || 'Intenta de nuevo' });
+    }
   };
 
   // ── Update size produced ───────────────────────────────
   const updateSizeProduced = async (sizeId, produced, defect = 0) => {
-    await supabase.from('batch_sizes').update({ produced, defect }).eq('id', sizeId);
-    await loadData();
+    try {
+      const { error } = await supabase.from('batch_sizes').update({ produced, defect }).eq('id', sizeId);
+      if (error) throw error;
+      await loadData();
+    } catch (err) {
+      console.error('[Workshop] updateSizeProduced error:', err);
+      addToast({ type: 'error', title: 'Error', message: 'No se pudo actualizar la talla' });
+    }
   };
 
   // ── Create material ────────────────────────────────────
   const createMaterial = async (data) => {
-    await supabase.from('materials').insert({
-      name: data.name, category: data.category, color: data.color,
-      unit: data.unit, stock_quantity: data.stock, min_stock: data.minStock,
-      cost_per_unit: data.cost, supplier: data.supplier,
-      created_by: currentMember?.id || null,
-    });
-    await logActivity('material_created', 'material', null, data.name, { category: data.category });
-    setShowNewMaterial(false);
-    await loadData();
+    try {
+      const { error } = await supabase.from('materials').insert({
+        name: data.name, category: data.category, color: data.color,
+        unit: data.unit, stock_quantity: data.stock, min_stock: data.minStock,
+        cost_per_unit: data.cost, supplier: data.supplier,
+        created_by: currentMember?.id || null,
+      });
+      if (error) throw error;
+      await logActivity('material_created', 'material', null, data.name, { category: data.category });
+      addToast({ type: 'success', title: 'Material creado', message: data.name });
+      setShowNewMaterial(false);
+      await loadData();
+    } catch (err) {
+      console.error('[Workshop] createMaterial error:', err);
+      addToast({ type: 'error', title: 'Error al crear material', message: err.message || 'Intenta de nuevo' });
+    }
   };
 
   // ── Update material stock ──────────────────────────────
   const updateMaterialStock = async (materialId, newQty) => {
-    const mat = materials.find(m => m.id === materialId);
-    await supabase.from('materials').update({ stock_quantity: newQty }).eq('id', materialId);
-    await supabase.from('material_usage_log').insert({
-      material_id: materialId, material_name: mat?.name,
-      change_type: 'adjusted', quantity: newQty - (mat?.stock_quantity || 0),
-      previous_stock: mat?.stock_quantity, new_stock: newQty,
-      created_by: currentMember?.id || null,
-    });
-    await loadData();
+    try {
+      const mat = materials.find(m => m.id === materialId);
+      const { error } = await supabase.from('materials').update({ stock_quantity: newQty }).eq('id', materialId);
+      if (error) throw error;
+      await supabase.from('material_usage_log').insert({
+        material_id: materialId, material_name: mat?.name,
+        change_type: 'adjusted', quantity: newQty - (mat?.stock_quantity || 0),
+        previous_stock: mat?.stock_quantity, new_stock: newQty,
+        created_by: currentMember?.id || null,
+      });
+      addToast({ type: 'success', title: 'Stock actualizado', message: `${mat?.name}: ${newQty} ${mat?.unit || ''}` });
+      await loadData();
+    } catch (err) {
+      console.error('[Workshop] updateMaterialStock error:', err);
+      addToast({ type: 'error', title: 'Error al actualizar stock', message: err.message || 'Intenta de nuevo' });
+    }
   };
 
   // ── Delete batch ───────────────────────────────────────
   const deleteBatch = async (batchId) => {
-    if (!confirm('¿Eliminar este lote?')) return;
-    const batch = batches.find(b => b.id === batchId);
-    await supabase.from('batch_sizes').delete().eq('batch_id', batchId);
-    await supabase.from('batch_materials').delete().eq('batch_id', batchId);
-    await supabase.from('production_batches').delete().eq('id', batchId);
-    await logActivity('batch_deleted', 'production_batch', batchId, batch?.product_name);
-    setSelectedBatch(null);
-    await loadData();
+    try {
+      const batch = batches.find(b => b.id === batchId);
+      const { error: e1 } = await supabase.from('batch_sizes').delete().eq('batch_id', batchId);
+      if (e1) throw e1;
+      const { error: e2 } = await supabase.from('batch_materials').delete().eq('batch_id', batchId);
+      if (e2) throw e2;
+      const { error: e3 } = await supabase.from('production_batches').delete().eq('id', batchId);
+      if (e3) throw e3;
+      await logActivity('batch_deleted', 'production_batch', batchId, batch?.product_name);
+      addToast({ type: 'success', title: 'Lote eliminado', message: batch?.product_name || '' });
+      setConfirmDelete(null);
+      setSelectedBatch(null);
+      await loadData();
+    } catch (err) {
+      console.error('[Workshop] deleteBatch error:', err);
+      addToast({ type: 'error', title: 'Error al eliminar', message: err.message || 'Intenta de nuevo' });
+    }
   };
 
   // ── Filtered batches ───────────────────────────────────
@@ -613,7 +667,7 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
                                       style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.1)', color: '#ef4444', cursor: 'pointer', fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                       −
                                     </button>
-                                    <button onClick={() => { const d = prompt('Defectos en talla ' + size.size + ':', size.defect || 0); if (d !== null) updateSizeProduced(size.id, size.produced || 0, parseInt(d) || 0); }}
+                                    <button onClick={() => setDefectModal({ sizeId: size.id, sizeName: size.size, produced: size.produced || 0, defect: size.defect || 0 })}
                                       style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.1)', color: '#f59e0b', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                       ⚠
                                     </button>
@@ -631,7 +685,7 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
                             {batch.started_at && <span>Iniciado: {new Date(batch.started_at).toLocaleDateString('es-CO')}</span>}
                           </div>
                           <div style={{ display: 'flex', gap: 8 }}>
-                            <button onClick={() => deleteBatch(batch.id)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.08)', color: '#ef4444', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <button onClick={() => setConfirmDelete({ id: batch.id, name: batch.product_name })} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.08)', color: '#ef4444', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                               <Trash2 size={12} /> Eliminar
                             </button>
                           </div>
@@ -668,6 +722,41 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
 
       {/* ═══════ NEW MATERIAL MODAL ═══════ */}
       {showNewMaterial && <NewMaterialModal onClose={() => setShowNewMaterial(false)} onCreate={createMaterial} />}
+
+      {/* ═══════ CONFIRM DELETE MODAL ═══════ */}
+      {confirmDelete && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, backdropFilter: 'blur(12px)' }} onClick={() => setConfirmDelete(null)}>
+          <div style={{ width: 400, borderRadius: 20, background: 'var(--surface)', border: '1px solid var(--glass-border)', boxShadow: '0 24px 80px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--on-surface)' }}>Eliminar Lote</h3>
+              <button onClick={() => setConfirmDelete(null)} style={{ background: 'none', border: 'none', color: 'var(--on-surface-variant)', cursor: 'pointer' }}><X size={18} /></button>
+            </div>
+            <div style={{ padding: 24 }}>
+              <p style={{ margin: 0, fontSize: 13, color: 'var(--on-surface-variant)', lineHeight: 1.5 }}>
+                ¿Eliminar el lote <strong style={{ color: 'var(--on-surface)' }}>{confirmDelete.name}</strong>? Esta acción no se puede deshacer.
+              </p>
+              <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+                <button onClick={() => setConfirmDelete(null)} style={{ flex: 1, padding: '10px 16px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'var(--on-surface)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                  Cancelar
+                </button>
+                <button onClick={() => deleteBatch(confirmDelete.id)} style={{ flex: 1, padding: '10px 16px', borderRadius: 10, border: 'none', background: 'rgba(239,68,68,0.15)', color: '#ef4444', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                  <Trash2 size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════ DEFECT INPUT MODAL ═══════ */}
+      {defectModal && (
+        <DefectModal
+          sizeName={defectModal.sizeName}
+          currentDefect={defectModal.defect}
+          onSave={(defect) => { updateSizeProduced(defectModal.sizeId, defectModal.produced, defect); setDefectModal(null); }}
+          onClose={() => setDefectModal(null)}
+        />
+      )}
 
       <style>{`
         @keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -1076,6 +1165,39 @@ function NewMaterialModal({ onClose, onCreate }) {
             style={{ width: '100%', padding: '12px 20px', borderRadius: 12, border: 'none', background: form.name.trim() ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'rgba(255,255,255,0.05)', color: '#fff', fontWeight: 700, fontSize: 14, cursor: form.name.trim() ? 'pointer' : 'not-allowed', opacity: form.name.trim() ? 1 : 0.5, marginTop: 16 }}>
             Crear Material
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════
+// DEFECT INPUT MODAL
+// ══════════════════════════════════════════════════════════════════
+function DefectModal({ sizeName, currentDefect, onSave, onClose }) {
+  const [value, setValue] = useState(String(currentDefect || 0));
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, backdropFilter: 'blur(12px)' }} onClick={onClose}>
+      <div style={{ width: 360, borderRadius: 20, background: 'var(--surface)', border: '1px solid var(--glass-border)', boxShadow: '0 24px 80px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--on-surface)' }}>Defectos — Talla {sizeName}</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--on-surface-variant)', cursor: 'pointer' }}><X size={18} /></button>
+        </div>
+        <div style={{ padding: 24 }}>
+          <label style={labelStyle}>Cantidad de defectos</label>
+          <input type="number" min={0} value={value} onChange={e => setValue(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') onSave(parseInt(value) || 0); }}
+            autoFocus
+            style={{ ...inputStyle, fontSize: 20, fontWeight: 800, textAlign: 'center', fontFamily: "'JetBrains Mono', monospace" }} />
+          <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+            <button onClick={onClose} style={{ flex: 1, padding: '10px 16px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'var(--on-surface)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+              Cancelar
+            </button>
+            <button onClick={() => onSave(parseInt(value) || 0)} style={{ flex: 1, padding: '10px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #f59e0b, #f97316)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+              Guardar
+            </button>
+          </div>
         </div>
       </div>
     </div>
