@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Repeat } from 'lucide-react';
+import { Repeat, Info } from 'lucide-react';
 
 /**
  * FrequencyFunnel — Embudo de Frecuencia de Compra
@@ -63,6 +63,9 @@ export default function FrequencyFunnel({ clients, onSelectClient }) {
         <div>
           <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--on-surface)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
             <Repeat size={20} color="#60a5fa" /> Embudo de Frecuencia de Compra
+            <div className="metric-info" title="Muestra cuántos clientes compraron 1 vez, 2 veces, 3 veces, etc. Te ayuda a entender la fidelidad de tus clientes: si muchos compran solo una vez, necesitas estrategias de retención.">
+              <Info size={14} color="var(--on-surface-variant)" style={{ cursor: 'help', opacity: 0.6 }} />
+            </div>
           </h3>
           <p style={{ fontSize: 12, color: 'var(--on-surface-variant)', margin: '4px 0 0' }}>Distribución de clientes por número de compras realizadas</p>
         </div>

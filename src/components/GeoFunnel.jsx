@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { MapPin } from 'lucide-react';
+import { MapPin, Info } from 'lucide-react';
 /**
  * GeoFunnel — Embudo Geográfico por Ciudad y Provincia
  * Shows where customers are buying from, grouped by province,
@@ -93,6 +93,9 @@ export default function GeoFunnel({ clients, onSelectClient }) {
         <div>
           <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--on-surface)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
             <MapPin size={20} color="#60a5fa" /> Embudo Geográfico de Ventas
+            <div className="metric-info" title="Muestra de qué ciudades y provincias vienen tus clientes y cuánto revenue genera cada zona. Útil para enfocar publicidad geográfica o detectar nuevas zonas de oportunidad.">
+              <Info size={14} color="var(--on-surface-variant)" style={{ cursor: 'help', opacity: 0.6 }} />
+            </div>
           </h3>
           <p style={{ fontSize: 12, color: 'var(--on-surface-variant)', margin: '4px 0 0' }}>
             ¿De dónde compran tus clientes? — {totalClients} clientes, {formatCurrency(totalRevenue)} revenue

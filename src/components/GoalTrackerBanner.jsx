@@ -1,23 +1,24 @@
-import React from 'react';
-import { Target } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Target, Info } from 'lucide-react';
 
 const GoalTrackerBanner = ({ clients, dateRange }) => {
   // Goal: Let's assume a default dynamic goal of $50M for demonstration. 
   // Ideally this would come from settings.
   const targetGoal = 50000000; 
   
-  // Calculate total revenue from filtered clients
-  const totalRevenue = clients.reduce((acc, client) => acc + (client.totalSpent || 0), 0);
+  const { totalRevenue, percentage, remaining } = useMemo(() => {
+    const total = (clients || []).reduce((acc, client) => acc + (client.totalSpent || 0), 0);
+    const pct = Math.min(100, Math.round((total / targetGoal) * 100)) || 0;
+    const rem = Math.max(0, targetGoal - total);
+    return { totalRevenue: total, percentage: pct, remaining: rem };
+  }, [clients]);
   
-  const percentage = Math.min(100, Math.round((totalRevenue / targetGoal) * 100)) || 0;
-  const remaining = Math.max(0, targetGoal - totalRevenue);
-
-  const formatter = new Intl.NumberFormat('es-CO', {
+  const formatter = useMemo(() => new Intl.NumberFormat('es-CO', {
     style: 'currency',
     currency: 'COP',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
-  });
+  }), []);
 
   return (
     <div style={{ 
@@ -40,6 +41,9 @@ const GoalTrackerBanner = ({ clients, dateRange }) => {
         <div>
           <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, letterSpacing: -0.5, display: 'flex', alignItems: 'center', gap: 8 }}>
             <Target size={24} color="#f43f5e" /> Meta de Ventas del Periodo
+            <div className="metric-info" title="Seguimiento de tu meta de ventas. La barra muestra cuánto has vendido vs. tu objetivo. Si está en verde, ¡vas bien! Si no, revisa tus estrategias de marketing.">
+              <Info size={15} color="var(--on-surface-variant)" style={{ cursor: 'help', opacity: 0.6 }} />
+            </div>
           </h3>
           <p style={{ fontSize: 14, color: '#94a3b8', margin: '6px 0 0', fontWeight: 500 }}>
             {percentage >= 100 ? '¡Meta superada! Excelente trabajo. 🚀' : `Faltan ${formatter.format(remaining)} para alcanzar la meta.`}
@@ -73,12 +77,6 @@ const GoalTrackerBanner = ({ clients, dateRange }) => {
           <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)', animation: 'shimmer 2s infinite' }} />
         </div>
       </div>
-      <style>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-      `}</style>
     </div>
   );
 };

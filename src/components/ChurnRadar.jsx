@@ -1,24 +1,27 @@
 import React, { useMemo } from 'react';
 import { calculateChurnScore } from '../utils/predictiveEngine';
-import { AlertTriangle, TrendingDown } from 'lucide-react';
+import { AlertTriangle, TrendingDown, Info } from 'lucide-react';
 
 export default function ChurnRadar({ clients }) {
   const atRisk = useMemo(() => {
-    if (!clients) return [];
-    return clients
+    if (!clients || clients.length === 0) return [];
+    const scored = clients
       .map(c => ({ ...c, churnRisk: calculateChurnScore(c) }))
-      .filter(c => c.churnRisk >= 50)
-      .sort((a, b) => b.churnRisk - a.churnRisk)
-      .slice(0, 5); // Top 5 highest risk
+      .filter(c => c.churnRisk >= 50);
+    scored.sort((a, b) => b.churnRisk - a.churnRisk);
+    return scored.slice(0, 5);
   }, [clients]);
 
   return (
     <div className="glass-card" style={{ padding: 24, display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--on-surface)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <AlertTriangle color="#ef4444" size={20} />
-          Radar de Fuga (Churn)
-        </h3>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--on-surface)' }}>Radar de Fuga (Churn)</h3>
+          <div className="metric-info" title="Clientes que llevan mucho tiempo sin comprar y podrían no volver. El % se calcula según frecuencia de compra y días desde la última compra.">
+            <Info size={14} color="var(--on-surface-variant)" style={{ cursor: 'help' }} />
+          </div>
+        </div>
         <span style={{ fontSize: 12, color: 'var(--on-surface-variant)', fontWeight: 600 }}>Alto Riesgo</span>
       </div>
 

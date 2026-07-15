@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { 
   DollarSign, Users, ShoppingCart, Repeat, 
   Star, Package, TrendingUp, Rocket, Globe, ArrowUpRight, Target,
-  RefreshCw
+  RefreshCw, Info
 } from 'lucide-react';
 
 function formatCurrency(value) {
@@ -65,14 +65,22 @@ function Sparkline({ data, color, width = 80, height = 32 }) {
 }
 
 const CARD_CONFIG = [
-  { key: 'revenue', icon: DollarSign, label: 'Ingresos Totales', color: '#10b981', span: 'bento-span-3' },
-  { key: 'metaSpend', icon: TrendingUp, label: 'Inversión Meta', color: '#1877F2', span: 'bento-span-3' },
-  { key: 'roas', icon: Rocket, label: 'ROAS Global', color: '#8b5cf6', span: 'bento-span-3' },
-  { key: 'cpa', icon: Target, label: 'CPA Promedio', color: '#f43f5e', span: 'bento-span-3' },
-  { key: 'total', icon: Users, label: 'Total Clientes', color: '#3b82f6', span: 'bento-span-3' },
-  { key: 'avgTicket', icon: ShoppingCart, label: 'Ticket Promedio', color: '#f59e0b', span: 'bento-span-3' },
-  { key: 'cltv', icon: Globe, label: 'CLTV Promedio', color: '#06b6d4', span: 'bento-span-3' },
-  { key: 'retention', icon: Repeat, label: 'Tasa Retención', color: '#8b5cf6', span: 'bento-span-3' },
+  { key: 'revenue', icon: DollarSign, label: 'Ingresos Totales', color: '#10b981', span: 'bento-span-3',
+    tooltip: 'Suma total de lo que todos tus clientes han gastado en tu tienda. Incluye todas las compras, con y sin descuento.' },
+  { key: 'metaSpend', icon: TrendingUp, label: 'Inversión Meta', color: '#1877F2', span: 'bento-span-3',
+    tooltip: 'Cuánto dinero has invertido en publicidad en Facebook/Instagram en los últimos 30 días.' },
+  { key: 'roas', icon: Rocket, label: 'ROAS Global', color: '#8b5cf6', span: 'bento-span-3',
+    tooltip: 'Retorno sobre inversión publicitaria. Por cada $1 invertido en Meta Ads, ¿cuántos $ de ventas generaste? Un ROAS de 3x significa $3 de venta por cada $1 de inversión.' },
+  { key: 'cpa', icon: Target, label: 'CPA Promedio', color: '#f43f5e', span: 'bento-span-3',
+    tooltip: 'Costo Por Adquisición. Cuánto te cuesta en publicidad conseguir un nuevo cliente. Mientras más bajo, mejor.' },
+  { key: 'total', icon: Users, label: 'Total Clientes', color: '#3b82f6', span: 'bento-span-3',
+    tooltip: 'Cantidad de clientes que han hecho al menos una compra en tu tienda.' },
+  { key: 'avgTicket', icon: ShoppingCart, label: 'Ticket Promedio', color: '#f59e0b', span: 'bento-span-3',
+    tooltip: 'Promedio de lo que gasta un cliente por compra. Se calcula dividiendo los ingresos totales entre el número de órdenes.' },
+  { key: 'cltv', icon: Globe, label: 'CLTV Promedio', color: '#06b6d4', span: 'bento-span-3',
+    tooltip: 'Valor de vida del cliente (Customer Lifetime Value). Cuánto gasta en promedio cada cliente a lo largo de toda su relación con tu tienda.' },
+  { key: 'retention', icon: Repeat, label: 'Tasa Retención', color: '#8b5cf6', span: 'bento-span-3',
+    tooltip: 'Porcentaje de clientes que compraron más de una vez. Un porcentaje alto significa que tus clientes vuelven a comprar.' },
 ];
 
 export default function StatsCards({ clients, metaInsights, ga4Insights, metaInsightsLoading }) {
@@ -181,6 +189,11 @@ export default function StatsCards({ clients, metaInsights, ga4Insights, metaIns
                   <Icon size={18} color={cfg.color} />
                 </div>
                 <span className="stat-label" style={{ marginBottom: 0 }}>{cfg.label}</span>
+                {cfg.tooltip && (
+                  <div className="metric-info" title={cfg.tooltip}>
+                    <Info size={13} color="var(--on-surface-variant)" style={{ cursor: 'help', opacity: 0.6 }} />
+                  </div>
+                )}
               </div>
               <div style={{ opacity: isHovered ? 1 : 0, transition: 'opacity 0.3s' }}>
                 <ArrowUpRight size={16} color="#10b981" />
