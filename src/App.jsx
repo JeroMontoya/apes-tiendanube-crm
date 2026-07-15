@@ -1022,6 +1022,41 @@ function AppContent({
   const lastSyncRef = useRef(null);
   const sseConnectedRef = useRef(false);
   const prevOrdersCountRef = useRef(0);
+  const prevClientsCountRef = useRef(0);
+
+  // Real-time sync: SSE + Supabase Realtime + Broadcast
+  const handleRealtimeEvent = useCallback((data) => {
+    if (data.type === 'config-changed' || data.table === 'system_config') {
+      const loadConfig = async () => {
+        const { data: config } = await supabase.from('system_config').select('*').eq('id', 'main').single();
+        if (config) setWorkspaceData(prev => ({ ...prev, ...config }));
+      };
+      loadConfig();
+    }
+    if (data.type === 'order-changed' || data.event?.includes('order')) {
+      const token = workspaceData?.tiendanube_access_token;
+      if (storeId && token) fetchRealData(storeId, token, { isManual: false });
+    }
+    if (data.type === 'product-changed' || data.event?.includes('product')) {
+      const token = workspaceData?.tiendanube_access_token;
+      if (storeId && token) fetchRealData(storeId, token, { isManual: false });
+    }
+  }, [storeId, workspaceData, setWorkspaceData, fetchRealData]);
+
+  const { connected: syncConnected, lastEvent } = useRealtimeSync({
+    onConfigChange: handleRealtimeEvent,
+    onOrderChange: handleRealtimeEvent,
+    onProductChange: handleRealtimeEvent,
+    onBroadcast: handleRealtimeEvent,
+  });
+
+  // ── Snapshot refresh helper (debounced, delegates to App-level refreshSnapshot) ─
+  const debouncedRefresh = useCallback(() => {
+    if (snapshotRefreshTimerRef.current) clearTimeout(snapshotRefreshTimerRef.current);
+    snapshotRefreshTimerRef.current = setTimeout(() => {
+      refreshSnapshot();
+    }, 1500);
+  }, [refreshSnapshot]);
 
   // ── SSE direct connection for real-time events ──────────────────────────
   useEffect(() => {
@@ -1077,40 +1112,6 @@ function AppContent({
     prevOrdersCountRef.current = rawOrders.length;
   }, [rawOrders]);
 
-  // Real-time sync: SSE + Supabase Realtime + Broadcast
-  const handleRealtimeEvent = useCallback((data) => {
-    if (data.type === 'config-changed' || data.table === 'system_config') {
-      const loadConfig = async () => {
-        const { data: config } = await supabase.from('system_config').select('*').eq('id', 'main').single();
-        if (config) setWorkspaceData(prev => ({ ...prev, ...config }));
-      };
-      loadConfig();
-    }
-    if (data.type === 'order-changed' || data.event?.includes('order')) {
-      const token = workspaceData?.tiendanube_access_token;
-      if (storeId && token) fetchRealData(storeId, token, { isManual: false });
-    }
-    if (data.type === 'product-changed' || data.event?.includes('product')) {
-      const token = workspaceData?.tiendanube_access_token;
-      if (storeId && token) fetchRealData(storeId, token, { isManual: false });
-    }
-  }, [storeId, workspaceData, setWorkspaceData, fetchRealData]);
-
-  const { connected: syncConnected, lastEvent } = useRealtimeSync({
-    onConfigChange: handleRealtimeEvent,
-    onOrderChange: handleRealtimeEvent,
-    onProductChange: handleRealtimeEvent,
-    onBroadcast: handleRealtimeEvent,
-  });
-
-  // ── Snapshot refresh helper (debounced, delegates to App-level refreshSnapshot) ─
-  const debouncedRefresh = useCallback(() => {
-    if (snapshotRefreshTimerRef.current) clearTimeout(snapshotRefreshTimerRef.current);
-    snapshotRefreshTimerRef.current = setTimeout(() => {
-      refreshSnapshot();
-    }, 1500);
-  }, [refreshSnapshot]);
-
   // ── Supabase Realtime: auto-refresh when server cache updates ──────────
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -1143,7 +1144,6 @@ function AppContent({
   }, [session, debouncedRefresh]);
 
   // ── Detect new clients from snapshot updates ────────────────────────────
-  const prevClientsCountRef = useRef(0);
   useEffect(() => {
     if (filteredClients.length > 0 && prevClientsCountRef.current > 0 && filteredClients.length > prevClientsCountRef.current) {
       const newest = filteredClients[filteredClients.length - 1];
