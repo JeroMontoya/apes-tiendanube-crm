@@ -254,7 +254,7 @@ async function getMovements(req, res) {
     .select(`
       *,
       inventory_products(name, sku),
-      inventory_locations(name, code)
+      location:inventory_locations!location_id(name, code)
     `, { count: 'exact' })
     .order('created_at', { ascending: false });
 
@@ -388,7 +388,7 @@ async function getMovementReport(req, res) {
     .select(`
       *,
       inventory_products(name, sku),
-      inventory_locations(name, code)
+      location:inventory_locations!location_id(name, code)
     `)
     .gte('created_at', date_from)
     .lte('created_at', date_to + 'T23:59:59.999Z')
