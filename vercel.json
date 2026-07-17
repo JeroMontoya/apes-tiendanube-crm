@@ -6,10 +6,6 @@
       "use": "@vercel/node"
     },
     {
-      "src": "api/inventory/*.js",
-      "use": "@vercel/node"
-    },
-    {
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
@@ -19,20 +15,8 @@
   ],
   "rewrites": [
     {
-      "source": "/api/inventory/webhook-tiendanube",
-      "destination": "/api/inventory/webhook-tiendanube.js"
-    },
-    {
-      "source": "/api/inventory/sync-to-tiendanube",
-      "destination": "/api/inventory/sync-to-tiendanube.js"
-    },
-    {
-      "source": "/api/inventory/register-webhook",
-      "destination": "/api/inventory/register-webhook.js"
-    },
-    {
       "source": "/api/inventory/(.*)",
-      "destination": "/api/inventory/index.js"
+      "destination": "/server/server.js"
     },
     {
       "source": "/api/cron/(.*)",

@@ -1653,6 +1653,42 @@ app.post('/api/taller/inventory/:id/adjust', async (req, res) => {
     });
     if (movError) throw movError;
 
+    // Sync to Tiendanube if the item came from Tiendanube
+    const { data: itemData, error: itemError } = await supabaseAdmin
+      .from('workshop_inventory')
+      .select('source, current_stock, tiendanube_product_id, tiendanube_variant_id')
+      .eq('id', id)
+      .single();
+
+    if (!itemError && itemData && itemData.source === 'tiendanube' && itemData.tiendanube_product_id && itemData.tiendanube_variant_id) {
+      const { data: config } = await supabaseAdmin.from('system_config').select('tiendanube_access_token, tiendanube_store_id').eq('id', 'main').single();
+      const token = config?.tiendanube_access_token;
+      const storeId = config?.tiendanube_store_id;
+
+      if (token && storeId) {
+        try {
+          const tnUrl = `https://api.tiendanube.com/v1/${storeId}/products/${itemData.tiendanube_product_id}/variants/${itemData.tiendanube_variant_id}`;
+          const r = await fetch(tnUrl, {
+            method: 'PUT',
+            headers: {
+              'Authentication': `Bearer ${token}`,
+              'User-Agent': 'APES CRM',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ stock: itemData.current_stock })
+          });
+          
+          if (!r.ok) {
+            console.error('[Tiendanube Sync] Failed to update variant:', await r.text());
+          } else {
+            console.log(`[Tiendanube Sync] Updated variant ${itemData.tiendanube_variant_id} stock to ${itemData.current_stock}`);
+          }
+        } catch (syncErr) {
+          console.error('[Tiendanube Sync] Exception:', syncErr);
+        }
+      }
+    }
+
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -1704,6 +1740,17 @@ app.post('/api/cron/sync-manual', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// === INVENTORY API ROUTES ===
+import inventoryHandler from '../api/inventory/index.js';
+import webhookHandler from '../api/inventory/webhook-tiendanube.js';
+import syncHandler from '../api/inventory/sync-to-tiendanube.js';
+import registerWebhookHandler from '../api/inventory/register-webhook.js';
+
+app.all('/api/inventory/webhook-tiendanube', (req, res) => webhookHandler(req, res));
+app.all('/api/inventory/sync-to-tiendanube', (req, res) => syncHandler(req, res));
+app.all('/api/inventory/register-webhook', (req, res) => registerWebhookHandler(req, res));
+app.all('/api/inventory/*', (req, res) => inventoryHandler(req, res));
 
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
