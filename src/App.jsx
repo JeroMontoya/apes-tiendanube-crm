@@ -21,6 +21,7 @@ import MetaAdsPanel from './components/MetaAdsPanel';
 import GA4Panel from './components/GA4Panel';
 import PQRPanel from './components/PQRPanel';
 import InventoryPage from './components/InventoryPage';
+import InventoryControlCenter from './components/InventoryControlCenter';
 import GoalTrackerBanner from './components/GoalTrackerBanner';
 import ActiveCampaignsWidget from './components/ActiveCampaignsWidget';
 import EventCalendar from './components/EventCalendar';
@@ -906,7 +907,10 @@ setConnectionStatus('connected');
       const filteredPurchases = purchases.filter(purchase => {
         if (!purchase.date) return false;
         const d = typeof purchase.date === 'string' ? purchase.date.substring(0, 10) : '';
-        return d >= startDate && d <= endDate;
+        if (!startDate && !endDate) return true; // "Máximo" - no filter
+        if (startDate && d < startDate) return false;
+        if (endDate && d > endDate) return false;
+        return true;
       });
 
       const filteredTotal = filteredPurchases.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
@@ -1391,7 +1395,7 @@ function AppViewRenderer({
             </div>
           </div>
           <div className="glass-card bento-span-12 mt-md" style={{ padding: 0, overflow: 'hidden' }}>
-            <GeoFunnel clients={filteredClients} onSelectClient={setSelectedClient} />
+            <GeoFunnel clients={filteredClients} onSelectClient={setSelectedClient} dateRange={dateRange} />
           </div>
         </>
       );
@@ -1477,13 +1481,37 @@ function AppViewRenderer({
       return <CampaignPipeline session={session} unifiedClients={filteredClients} />;
     case 'inventario':
       return (
-        <InventoryPage
-          products={tiendanubeProducts}
-          onRefresh={refreshStock}
-          isRefreshing={isRefreshingStock}
+        <InventoryControlCenter
+          initialProducts={tiendanubeProducts}
+          tiendanubeProducts={tiendanubeProducts}
+          connectionStatus={connectionStatus}
+          isRefreshingStock={isRefreshingStock}
           lastSync={lastSync}
-          isConnected={connectionStatus === 'connected' || tiendanubeProducts.length > 0}
-          onUpdateStock={async (productId, variantId, newStock) => {
+          refreshStock={refreshStock}
+          session={session}
+          supabase={supabase}
+          workspaceData={workspaceData}
+          onMovement={async (type, product, variant, quantity, fromLocation, toLocation, notes) => {
+            const { error } = await supabase.from('stock_movements').insert({
+              type,
+              details: {
+                productId: product.productId,
+                productName: product.name,
+                variantId: variant?.id,
+                variantSku: variant?.sku,
+                quantity,
+                fromLocation,
+                toLocation,
+                notes,
+              },
+              location: fromLocation,
+              performed_by: session?.user?.id,
+              performed_by_name: session?.user?.email || 'Usuario',
+              created_at: new Date().toISOString(),
+            });
+            if (error) console.error('[App] Error logging movement:', error);
+          }}
+          onStockUpdate={async (productId, variantId, newStock) => {
             if (!storeId) return;
             const { data: sysCfg } = await supabase.from('system_config').select('tiendanube_access_token').eq('id', 'main').single();
             const token = sysCfg?.tiendanube_access_token || workspaceData?.tiendanube_access_token;
@@ -1491,11 +1519,31 @@ function AppViewRenderer({
             const api = new TiendanubeAPI(storeId, token);
             await api.updateVariantStock(productId, variantId, newStock);
           }}
+          onTransfer={async (product, fromLocation, toLocation, quantity) => {
+            const { error } = await supabase.from('stock_movements').insert({
+              type: 'transfer',
+              details: {
+                productId: product.productId,
+                productName: product.name,
+                fromLocation,
+                toLocation,
+                quantity,
+                notes: 'Transferencia manual',
+              },
+              location: fromLocation,
+              performed_by: session?.user?.id,
+              performed_by_name: session?.user?.email || 'Usuario',
+              created_at: new Date().toISOString(),
+            });
+            if (error) console.error('[App] Error logging transfer:', error);
+          }}
+          lowStockThreshold={5}
+          showPredictive={true}
         />
       );
     case 'pqr':
       return <PQRPanel session={session} rawOrders={rawOrders} n8nWebhookUrl={workspaceData?.n8n_webhook_url} />;
-    case 'taller':
+    case 'logistics':
       return (
         <LogisticsCenter session={session} />
       );

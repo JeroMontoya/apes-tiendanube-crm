@@ -4,6 +4,7 @@ import {
   Star, Package, TrendingUp, Rocket, Globe, ArrowUpRight, Target,
   RefreshCw, Info
 } from 'lucide-react';
+import MetricTooltip from './MetricTooltip';
 
 function formatCurrency(value) {
   return new Intl.NumberFormat('es-CO', {
@@ -190,9 +191,9 @@ export default function StatsCards({ clients, metaInsights, ga4Insights, metaIns
                 </div>
                 <span className="stat-label" style={{ marginBottom: 0 }}>{cfg.label}</span>
                 {cfg.tooltip && (
-                  <div className="metric-info" title={cfg.tooltip}>
-                    <Info size={13} color="var(--on-surface-variant)" style={{ cursor: 'help', opacity: 0.6 }} />
-                  </div>
+                  <MetricTooltip text={cfg.tooltip}>
+                    <Info size={13} color="var(--on-surface-variant)" style={{ opacity: 0.6 }} />
+                  </MetricTooltip>
                 )}
               </div>
               <div style={{ opacity: isHovered ? 1 : 0, transition: 'opacity 0.3s' }}>

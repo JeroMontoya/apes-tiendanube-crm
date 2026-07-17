@@ -175,9 +175,9 @@ export default function CampaignPipeline({ unifiedClients = [] }) {
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       colLeads = colLeads.filter(l => 
-        (l.name || '').toLowerCase().includes(q) || 
-        (l.email || '').toLowerCase().includes(q) ||
-        (l.phone || '').includes(q)
+        String(l.name || '').toLowerCase().includes(q) || 
+        String(l.email || '').toLowerCase().includes(q) ||
+        String(l.phone || '').toLowerCase().includes(q)
       );
     }
     leadsByColumn[col.id] = colLeads;

@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Target, Info } from 'lucide-react';
+import MetricTooltip from './MetricTooltip';
 
 const GoalTrackerBanner = ({ clients, dateRange }) => {
   // Goal: Let's assume a default dynamic goal of $50M for demonstration. 
@@ -41,9 +42,9 @@ const GoalTrackerBanner = ({ clients, dateRange }) => {
         <div>
           <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, letterSpacing: -0.5, display: 'flex', alignItems: 'center', gap: 8 }}>
             <Target size={24} color="#f43f5e" /> Meta de Ventas del Periodo
-            <div className="metric-info" title="Seguimiento de tu meta de ventas. La barra muestra cuánto has vendido vs. tu objetivo. Si está en verde, ¡vas bien! Si no, revisa tus estrategias de marketing.">
-              <Info size={15} color="var(--on-surface-variant)" style={{ cursor: 'help', opacity: 0.6 }} />
-            </div>
+            <MetricTooltip text="Seguimiento de tu meta de ventas. La barra muestra cuánto has vendido vs. tu objetivo. Si está en verde, ¡vas bien! Si no, revisa tus estrategias de marketing.">
+              <Info size={15} color="var(--on-surface-variant)" style={{ opacity: 0.6 }} />
+            </MetricTooltip>
           </h3>
           <p style={{ fontSize: 14, color: '#94a3b8', margin: '6px 0 0', fontWeight: 500 }}>
             {percentage >= 100 ? '¡Meta superada! Excelente trabajo. 🚀' : `Faltan ${formatter.format(remaining)} para alcanzar la meta.`}

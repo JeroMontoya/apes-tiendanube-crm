@@ -54,15 +54,6 @@ async function resolveTiendanubeToken() {
 
   if (config?.value) return config.value;
 
-  const { data: workspace } = await supabase
-    .from('workspaces')
-    .select('tiendanube_token')
-    .eq('is_active', true)
-    .limit(1)
-    .single();
-
-  if (workspace?.tiendanube_token) return workspace.tiendanube_token;
-
   return process.env.TIENDANUBE_STORE_TOKEN || process.env.TIENDANUBE_TOKEN;
 }
 
@@ -74,15 +65,6 @@ async function resolveStoreId() {
     .single();
 
   if (config?.value) return config.value;
-
-  const { data: workspace } = await supabase
-    .from('workspaces')
-    .select('tiendanube_store_id')
-    .eq('is_active', true)
-    .limit(1)
-    .single();
-
-  if (workspace?.tiendanube_store_id) return workspace.tiendanube_store_id;
 
   return process.env.TIENDANUBE_STORE_ID;
 }
@@ -112,7 +94,7 @@ async function pushStockToTiendanube(tiendanubeProductId, tiendanubeVariantId, s
 async function syncProductStock(productId) {
   const { data: product, error: prodError } = await supabase
     .from('inventory_products')
-    .select('id, name, sku, tiendanube_id')
+    .select('id, name, sku, tiendanube_product_id, tiendanube_variant_id')
     .eq('id', productId)
     .single();
 
@@ -120,7 +102,7 @@ async function syncProductStock(productId) {
     return { success: false, error: 'Product not found' };
   }
 
-  if (!product.tiendanube_id) {
+  if (!product.tiendanube_product_id) {
     return { success: false, error: 'Product has no TiendaNube mapping' };
   }
 
@@ -133,7 +115,7 @@ async function syncProductStock(productId) {
 
   const { data: stockEntries, error: stockError } = await supabase
     .from('inventory_stock')
-    .select('quantity, reserved_quantity, location_id, locations(name)')
+    .select('quantity, reserved')
     .eq('product_id', productId);
 
   if (stockError) {
@@ -141,41 +123,31 @@ async function syncProductStock(productId) {
   }
 
   const totalAvailable = (stockEntries || []).reduce(
-    (sum, s) => sum + (s.quantity || 0) - (s.reserved_quantity || 0),
+    (sum, s) => sum + (s.quantity || 0) - (s.reserved || 0),
     0
   );
 
-  const { data: variants } = await supabase
-    .from('inventory_variants')
-    .select('id, tiendanube_variant_id')
-    .eq('product_id', productId);
-
   const results = [];
 
-  if (variants && variants.length > 0) {
-    const perVariant = Math.floor(totalAvailable / variants.length);
-    for (const variant of variants) {
-      if (!variant.tiendanube_variant_id) continue;
-      try {
-        await pushStockToTiendanube(
-          product.tiendanube_id,
-          variant.tiendanube_variant_id,
-          perVariant,
-          token,
-          storeId
-        );
-        results.push({ variant_id: variant.id, synced: true, stock: perVariant });
-      } catch (e) {
-        console.error('[sync] Variant sync failed:', e.message);
-        results.push({ variant_id: variant.id, synced: false, error: e.message });
-      }
-    }
-  } else {
-    const firstVariantId = product.tiendanube_id;
+  if (product.tiendanube_variant_id) {
     try {
       await pushStockToTiendanube(
-        product.tiendanube_id,
-        firstVariantId,
+        product.tiendanube_product_id,
+        product.tiendanube_variant_id,
+        totalAvailable,
+        token,
+        storeId
+      );
+      results.push({ synced: true, stock: totalAvailable });
+    } catch (e) {
+      console.error('[sync] Variant sync failed:', e.message);
+      results.push({ synced: false, error: e.message });
+    }
+  } else {
+    try {
+      await pushStockToTiendanube(
+        product.tiendanube_product_id,
+        product.tiendanube_product_id,
         totalAvailable,
         token,
         storeId
@@ -209,7 +181,7 @@ export default async function handler(req, res) {
         .from('inventory_products')
         .select('id')
         .eq('is_active', true)
-        .not('tiendanube_id', 'is', null);
+        .not('tiendanube_product_id', 'is', null);
 
       if (error) return err(res, 'Failed to fetch products', 500, error.message);
 

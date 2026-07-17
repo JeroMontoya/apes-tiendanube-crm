@@ -4,7 +4,7 @@ import {
   Package, Plus, ArrowDown, ArrowUp, ArrowLeftRight, RefreshCw,
   Search, Filter, MapPin, AlertTriangle, CheckCircle2, XCircle,
   Camera, Edit3, Trash2, Eye, Clock, Truck, Warehouse, RotateCcw,
-  ChevronDown, ChevronUp, Loader2, Box, Scan, Tag, Layers
+  ChevronDown, ChevronUp, Loader2, Box, Scan, Tag, Layers, Cloud
 } from 'lucide-react';
 
 const C = {
@@ -36,10 +36,10 @@ const CATEGORIES = [
 ];
 
 const SOURCE_TABS = [
-  { id: 'all', label: 'Todo', icon: Layers },
-  { id: 'tiendanube', label: 'TiendaNueve', icon: Tag },
-  { id: 'local', label: 'Local', icon: MapPin },
-  { id: 'other_store', label: 'Otra Tienda', icon: Store },
+  { id: 'all', label: 'Todos', icon: Package },
+  { id: 'tiendanube', label: 'TiendaNueve', icon: Cloud },
+  { id: 'local', label: 'R5', icon: MapPin },
+  { id: 'other_store', label: 'APES', icon: Layers }
 ];
 
 function Store() { return <Package size={14} />; }
@@ -205,9 +205,10 @@ function AddProductModal({ locations, onClose, onConfirm }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--on-surface-variant)', marginBottom: 4, display: 'block' }}>Fuente</label>
-              <select value={form.source} onChange={e => set('source', e.target.value)} style={{ width: '100%', height: 38, borderRadius: 8, border: '1px solid var(--border-subtle)', background: 'var(--surface-container)', color: 'var(--on-surface)', padding: '0 8px', fontFamily: 'inherit', fontSize: 13 }}>
-                <option value="local">Local</option>
-                <option value="other_store">Otra Tienda</option>
+              <select value={form.source} onChange={e => setForm({ ...form, source: e.target.value })}
+                style={{ flex: 1, height: 38, borderRadius: 8, border: '1px solid var(--border-subtle)', background: 'var(--surface-container)', color: 'var(--on-surface)', padding: '0 12px', fontFamily: 'inherit', fontSize: 13, outline: 'none' }}>
+                <option value="local">R5</option>
+                <option value="other_store">APES</option>
               </select>
             </div>
             <div>
@@ -349,7 +350,8 @@ export default function LogisticsCenter({ session }) {
   const stats = useMemo(() => ({
     total: items.length,
     tnItems: items.filter(i => i.source === 'tiendanube').length,
-    localItems: items.filter(i => i.source !== 'tiendanube').length,
+    r5Items: items.filter(i => i.source === 'local').length,
+    apesItems: items.filter(i => i.source === 'other_store').length,
     totalStock: items.reduce((s, i) => s + (i.current_stock || 0), 0),
     lowStock: items.filter(i => i.current_stock > 0 && i.current_stock <= (i.min_stock || 5)).length,
     outOfStock: items.filter(i => i.current_stock === 0).length,
@@ -388,7 +390,8 @@ export default function LogisticsCenter({ session }) {
         {[
           { label: 'Total productos', value: stats.total, color: C.primary, icon: Package },
           { label: 'TiendaNueve', value: stats.tnItems, color: C.info, icon: Tag },
-          { label: 'Local/Otra', value: stats.localItems, color: C.purple, icon: MapPin },
+          { label: 'R5', value: stats.r5Items, color: C.purple, icon: MapPin },
+          { label: 'APES', value: stats.apesItems, color: C.warning, icon: Layers },
           { label: 'Stock total', value: stats.totalStock, color: C.success, icon: Box },
           { label: 'Stock bajo', value: stats.lowStock, color: C.warning, icon: AlertTriangle },
           { label: 'Sin stock', value: stats.outOfStock, color: C.danger, icon: XCircle },
@@ -477,7 +480,7 @@ export default function LogisticsCenter({ session }) {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                       <StockBadge stock={item.current_stock} min={item.min_stock} />
                       <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: item.source === 'tiendanube' ? 'rgba(14,165,233,0.12)' : 'rgba(139,92,246,0.12)', color: item.source === 'tiendanube' ? C.info : C.purple, fontWeight: 600 }}>
-                        {item.source === 'tiendanube' ? 'TN' : item.source === 'local' ? 'Local' : 'Otra'}
+                        {item.source === 'tiendanube' ? 'TN' : item.source === 'local' ? 'R5' : 'APES'}
                       </span>
                     </div>
                     <StockBar current={item.current_stock} min={item.min_stock || 5} />

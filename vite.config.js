@@ -5,6 +5,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
+      '/api/inventory': {
+        target: 'https://apes-tiendanube-crm.vercel.app',
+        changeOrigin: true,
+      },
       '/api': {
         target: 'https://api.tiendanube.com',
         changeOrigin: true,

@@ -50,7 +50,7 @@ async function authenticate(req) {
 
 async function getUserRole(userId) {
   const { data, error } = await supabase
-    .from('user_roles')
+    .from('inventory_user_roles')
     .select('role')
     .eq('user_id', userId)
     .single();
@@ -62,7 +62,7 @@ function hasPermission(role, action) {
   const permissions = {
     admin: ['read', 'write', 'delete', 'manage_roles', 'view_audit', 'adjust', 'transfer', 'reports', 'alerts'],
     manager: ['read', 'write', 'adjust', 'transfer', 'reports', 'alerts'],
-    warehouse: ['read', 'adjust', 'transfer'],
+    operator: ['read', 'adjust', 'transfer'],
     viewer: ['read'],
   };
   return permissions[role]?.includes(action) || false;
@@ -76,8 +76,7 @@ async function listProducts(req, res) {
     .from('inventory_products')
     .select(`
       *,
-      inventory_stock(quantity, reserved_quantity, reorder_point, location_id, locations(name)),
-      categories(name, id)
+      inventory_stock(quantity, reserved, low_stock_threshold, location_id, inventory_locations(name, code))
     `, { count: 'exact' })
     .eq('is_active', true)
     .order('name');
@@ -86,7 +85,7 @@ async function listProducts(req, res) {
     query = query.eq('inventory_stock.location_id', location_id);
   }
   if (category) {
-    query = query.eq('category_id', category);
+    query = query.eq('category', category);
   }
   if (search) {
     query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%,barcode.ilike.%${search}%`);
@@ -99,9 +98,9 @@ async function listProducts(req, res) {
   if (stock_status) {
     results = results.filter((p) => {
       const totalStock = (p.inventory_stock || []).reduce((sum, s) => sum + (s.quantity || 0), 0);
-      const totalReserved = (p.inventory_stock || []).reduce((sum, s) => sum + (s.reserved_quantity || 0), 0);
+      const totalReserved = (p.inventory_stock || []).reduce((sum, s) => sum + (s.reserved || 0), 0);
       const available = totalStock - totalReserved;
-      const hasReorder = (p.inventory_stock || []).some((s) => s.quantity <= s.reorder_point);
+      const hasReorder = (p.inventory_stock || []).some((s) => s.quantity <= s.low_stock_threshold);
       if (stock_status === 'out_of_stock') return available === 0;
       if (stock_status === 'low_stock') return available > 0 && hasReorder;
       if (stock_status === 'in_stock') return available > 0 && !hasReorder;
@@ -123,8 +122,7 @@ async function getProductById(req, res, productId) {
     .from('inventory_products')
     .select(`
       *,
-      inventory_stock(*, locations(name, id)),
-      categories(name, id)
+      inventory_stock(*, inventory_locations(name, code))
     `)
     .eq('id', productId)
     .single();
@@ -134,15 +132,16 @@ async function getProductById(req, res, productId) {
 }
 
 async function createProduct(req, res) {
-  const { name, sku, barcode, category_id, description, unit, cost_price, min_stock, max_stock, reorder_point, image_url } = req.body;
-  if (!name || !sku) return err(res, 'name and sku are required', 400);
+  const { name, sku, barcode, category, description, color, size, image_url, unit_cost, sell_price } = req.body;
+  if (!name) return err(res, 'name is required', 400);
 
   const { data, error } = await supabase
     .from('inventory_products')
     .insert({
-      name, sku, barcode, category_id, description, unit,
-      cost_price, min_stock, max_stock, reorder_point, image_url,
-      is_active: true, created_by: req._userId,
+      name, sku: sku || '', barcode: barcode || '', category: category || 'otro',
+      description: description || '', color: color || '', size: size || '',
+      image_url: image_url || '', unit_cost: unit_cost || 0, sell_price: sell_price || 0,
+      is_active: true,
     })
     .select()
     .single();
@@ -153,8 +152,8 @@ async function createProduct(req, res) {
 
 async function updateProduct(req, res, productId) {
   const allowed = [
-    'name', 'sku', 'barcode', 'category_id', 'description', 'unit',
-    'cost_price', 'min_stock', 'max_stock', 'reorder_point', 'image_url', 'is_active',
+    'name', 'sku', 'barcode', 'category', 'description', 'color', 'size',
+    'image_url', 'unit_cost', 'sell_price', 'is_active',
   ];
   const updates = {};
   for (const key of allowed) {
@@ -177,7 +176,7 @@ async function updateProduct(req, res, productId) {
 async function deleteProduct(req, res, productId) {
   const { error } = await supabase
     .from('inventory_products')
-    .update({ is_active: false, deleted_at: new Date().toISOString() })
+    .update({ is_active: false, updated_at: new Date().toISOString() })
     .eq('id', productId);
 
   if (error) return err(res, 'Failed to delete product', 500, error.message);
@@ -192,8 +191,8 @@ async function getStock(req, res) {
     .from('inventory_stock')
     .select(`
       *,
-      inventory_products(name, sku, unit, barcode),
-      locations(name, id)
+      inventory_products(name, sku, barcode),
+      inventory_locations(name, code)
     `)
     .eq('location_id', location_id)
     .order('created_at', { ascending: false });
@@ -203,7 +202,7 @@ async function getStock(req, res) {
 }
 
 async function adjustStock(req, res) {
-  const { product_id, location_id, quantity, type, reason, reference_id } = req.body;
+  const { product_id, location_id, quantity, type, notes } = req.body;
   if (!product_id || !location_id || quantity === undefined || !type) {
     return err(res, 'product_id, location_id, quantity, and type are required', 400);
   }
@@ -211,11 +210,10 @@ async function adjustStock(req, res) {
   const { data, error } = await supabase.rpc('fn_update_stock', {
     p_product_id: product_id,
     p_location_id: location_id,
-    p_quantity: quantity,
-    p_type: type,
-    p_reason: reason || null,
-    p_reference_id: reference_id || null,
-    p_user_id: req._userId,
+    p_quantity_change: quantity,
+    p_movement_type: type,
+    p_notes: notes || '',
+    p_performed_by: req._userId,
   });
 
   if (error) return err(res, 'Failed to adjust stock', 500, error.message);
@@ -223,7 +221,7 @@ async function adjustStock(req, res) {
 }
 
 async function transferStock(req, res) {
-  const { product_id, from_location_id, to_location_id, quantity, reason } = req.body;
+  const { product_id, from_location_id, to_location_id, quantity, notes } = req.body;
   if (!product_id || !from_location_id || !to_location_id || !quantity) {
     return err(res, 'product_id, from_location_id, to_location_id, and quantity are required', 400);
   }
@@ -236,8 +234,8 @@ async function transferStock(req, res) {
     p_from_location_id: from_location_id,
     p_to_location_id: to_location_id,
     p_quantity: quantity,
-    p_reason: reason || null,
-    p_user_id: req._userId,
+    p_notes: notes || '',
+    p_performed_by: req._userId,
   });
 
   if (error) return err(res, 'Failed to transfer stock', 500, error.message);
@@ -256,7 +254,7 @@ async function getMovements(req, res) {
     .select(`
       *,
       inventory_products(name, sku),
-      locations(name, id)
+      inventory_locations(name, code)
     `, { count: 'exact' })
     .order('created_at', { ascending: false });
 
@@ -284,9 +282,9 @@ async function getAlerts(req, res) {
     .select(`
       *,
       inventory_products(name, sku),
-      locations(name, id)
+      inventory_locations(name, code)
     `)
-    .eq('is_acknowledged', false)
+    .eq('acknowledged', false)
     .order('created_at', { ascending: false });
 
   if (error) return err(res, 'Failed to fetch alerts', 500, error.message);
@@ -297,12 +295,12 @@ async function acknowledgeAlert(req, res, alertId) {
   const { data, error } = await supabase
     .from('inventory_alerts')
     .update({
-      is_acknowledged: true,
+      acknowledged: true,
       acknowledged_by: req._userId,
       acknowledged_at: new Date().toISOString(),
     })
     .eq('id', alertId)
-    .eq('is_acknowledged', false)
+    .eq('acknowledged', false)
     .select()
     .single();
 
@@ -323,9 +321,9 @@ async function getSummaryReport(req, res) {
   let stockQuery = supabase
     .from('inventory_stock')
     .select(`
-      quantity, reserved_quantity,
-      inventory_products(name, sku, cost_price, is_active),
-      locations(name, id)
+      quantity, reserved, low_stock_threshold,
+      inventory_products(name, sku, unit_cost, is_active),
+      inventory_locations(name, code)
     `)
     .eq('inventory_products.is_active', true);
 
@@ -334,39 +332,38 @@ async function getSummaryReport(req, res) {
   const { data: stock, error: stockErr } = await stockQuery;
   if (stockErr) return err(res, 'Failed to fetch summary', 500, stockErr.message);
 
-  const { data: products, error: prodErr } = await supabase
+  const { count: productCount } = await supabase
     .from('inventory_products')
     .select('id', { count: 'exact', head: true })
     .eq('is_active', true);
-  if (prodErr) return err(res, 'Failed to fetch product count', 500, prodErr.message);
 
   const { count: alertCount } = await supabase
     .from('inventory_alerts')
     .select('id', { count: 'exact', head: true })
-    .eq('is_acknowledged', false);
+    .eq('acknowledged', false);
 
-  const totalProducts = products?.length || 0;
+  const totalProducts = productCount || 0;
   const totalStock = (stock || []).reduce((sum, s) => sum + (s.quantity || 0), 0);
-  const totalReserved = (stock || []).reduce((sum, s) => sum + (s.reserved_quantity || 0), 0);
+  const totalReserved = (stock || []).reduce((sum, s) => sum + (s.reserved || 0), 0);
   const totalValue = (stock || []).reduce((sum, s) => {
-    const cost = s.inventory_products?.cost_price || 0;
+    const cost = s.inventory_products?.unit_cost || 0;
     return sum + ((s.quantity || 0) * cost);
   }, 0);
 
-  const outOfStock = (stock || []).filter((s) => (s.quantity - (s.reserved_quantity || 0)) === 0).length;
+  const outOfStock = (stock || []).filter((s) => (s.quantity - (s.reserved || 0)) === 0).length;
   const lowStock = (stock || []).filter((s) => {
-    const available = s.quantity - (s.reserved_quantity || 0);
-    return available > 0 && s.quantity <= (s.reorder_point || 0);
+    const available = s.quantity - (s.reserved || 0);
+    return available > 0 && s.quantity <= (s.low_stock_threshold || 0);
   }).length;
 
   const byLocation = {};
   (stock || []).forEach((s) => {
-    const locName = s.locations?.name || 'Unknown';
+    const locName = s.inventory_locations?.name || 'Unknown';
     if (!byLocation[locName]) byLocation[locName] = { products: 0, total_quantity: 0, total_reserved: 0, total_value: 0 };
     byLocation[locName].products++;
     byLocation[locName].total_quantity += s.quantity || 0;
-    byLocation[locName].total_reserved += s.reserved_quantity || 0;
-    byLocation[locName].total_value += (s.quantity || 0) * (s.inventory_products?.cost_price || 0);
+    byLocation[locName].total_reserved += s.reserved || 0;
+    byLocation[locName].total_value += (s.quantity || 0) * (s.inventory_products?.unit_cost || 0);
   });
 
   return ok(res, {
@@ -391,7 +388,7 @@ async function getMovementReport(req, res) {
     .select(`
       *,
       inventory_products(name, sku),
-      locations(name, id)
+      inventory_locations(name, code)
     `)
     .gte('created_at', date_from)
     .lte('created_at', date_to + 'T23:59:59.999Z')
@@ -423,10 +420,9 @@ async function getValuationReport(req, res) {
   let query = supabase
     .from('inventory_stock')
     .select(`
-      quantity, reserved_quantity,
-      inventory_products(name, sku, cost_price, is_active, category_id),
-      locations(name, id),
-      categories(name, id)
+      quantity, reserved,
+      inventory_products(name, sku, unit_cost, is_active, category),
+      inventory_locations(name, code)
     `)
     .eq('inventory_products.is_active', true);
 
@@ -440,7 +436,7 @@ async function getValuationReport(req, res) {
   const byCategory = {};
 
   (data || []).forEach((s) => {
-    const cost = s.inventory_products?.cost_price || 0;
+    const cost = s.inventory_products?.unit_cost || 0;
     const value = (s.quantity || 0) * cost;
     totalCost += value;
 
@@ -449,7 +445,7 @@ async function getValuationReport(req, res) {
     byProduct[prodKey].quantity += s.quantity || 0;
     byProduct[prodKey].total_value += value;
 
-    const catName = s.categories?.name || 'Uncategorized';
+    const catName = s.inventory_products?.category || 'Sin categoría';
     if (!byCategory[catName]) byCategory[catName] = { quantity: 0, total_value: 0 };
     byCategory[catName].quantity += s.quantity || 0;
     byCategory[catName].total_value += value;
@@ -471,11 +467,8 @@ async function triggerSnapshot(req, res) {
 
 async function listRoles(req, res) {
   const { data, error } = await supabase
-    .from('user_roles')
-    .select(`
-      *,
-      auth.users(id, email)
-    `)
+    .from('inventory_user_roles')
+    .select('*')
     .order('created_at', { ascending: false });
 
   if (error) return err(res, 'Failed to fetch roles', 500, error.message);
@@ -486,12 +479,12 @@ async function setRole(req, res) {
   const { user_id, role } = req.body;
   if (!user_id || !role) return err(res, 'user_id and role are required', 400);
 
-  const validRoles = ['admin', 'manager', 'warehouse', 'viewer'];
+  const validRoles = ['admin', 'manager', 'operator', 'viewer'];
   if (!validRoles.includes(role)) return err(res, `role must be one of: ${validRoles.join(', ')}`, 400);
 
   const { data, error } = await supabase
-    .from('user_roles')
-    .upsert({ user_id, role, updated_by: req._userId, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+    .from('inventory_user_roles')
+    .upsert({ user_id, role, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
     .select()
     .single();
 

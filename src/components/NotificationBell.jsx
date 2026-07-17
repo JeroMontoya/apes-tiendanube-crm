@@ -1,25 +1,25 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useNotifications } from '../contexts/NotificationContext';
-import { Bell, ShoppingBag, UserPlus, AlertTriangle, CheckCircle, Info, RefreshCw, Package, Zap, Calendar, CheckCheck, Trash2, X } from 'lucide-react';
+import { Bell, ShoppingBag, UserPlus, AlertTriangle, CheckCircle, Info, RefreshCw, Package, Zap, Calendar, CheckCheck, Trash2, X, ChevronRight } from 'lucide-react';
 
 const TYPE_CONFIG = {
-  order: { icon: ShoppingBag, color: '#34D399' },
-  client: { icon: UserPlus, color: '#60A5FA' },
-  pqr: { icon: AlertTriangle, color: '#A855F7' },
-  sync: { icon: RefreshCw, color: '#22C55E' },
-  success: { icon: CheckCircle, color: '#10B981' },
-  error: { icon: AlertTriangle, color: '#EF4444' },
-  warning: { icon: AlertTriangle, color: '#F59E0B' },
-  info: { icon: Info, color: '#818CF8' },
-  product: { icon: Package, color: '#06B6D4' },
-  system: { icon: Zap, color: '#94A3B8' },
-  calendar: { icon: Calendar, color: '#F59E0B' },
+  order:   { icon: ShoppingBag, color: '#34D399', label: 'Pedido' },
+  client:  { icon: UserPlus, color: '#60A5FA', label: 'Cliente' },
+  pqr:     { icon: AlertTriangle, color: '#A78BFA', label: 'PQR' },
+  sync:    { icon: RefreshCw, color: '#34D399', label: 'Sync' },
+  success: { icon: CheckCircle, color: '#34D399', label: 'OK' },
+  error:   { icon: AlertTriangle, color: '#F87171', label: 'Error' },
+  warning: { icon: AlertTriangle, color: '#FBBF24', label: 'Alerta' },
+  info:    { icon: Info, color: '#818CF8', label: 'Info' },
+  product: { icon: Package, color: '#22D3EE', label: 'Producto' },
+  system:  { icon: Zap, color: '#94A3B8', label: 'Sistema' },
+  calendar:{ icon: Calendar, color: '#FBBF24', label: 'Calendario' },
 };
 
-const URGENCY_COLORS = {
-  urgent: { bg: 'rgba(239, 68, 68, 0.1)', border: 'rgba(239, 68, 68, 0.2)', dot: '#EF4444' },
-  warning: { bg: 'rgba(245, 158, 11, 0.08)', border: 'rgba(245, 158, 11, 0.15)', dot: '#F59E0B' },
-  info: { bg: 'rgba(59, 130, 246, 0.06)', border: 'rgba(59, 130, 246, 0.12)', dot: '#60A5FA' },
+const URGENCY_MAP = {
+  urgent: { bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.2)', dot: '#F87171', pulse: true },
+  warning:{ bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.15)', dot: '#FBBF24', pulse: false },
+  info:   { bg: 'rgba(96,165,250,0.06)', border: 'rgba(96,165,250,0.12)', dot: '#60A5FA', pulse: false },
 };
 
 function formatTime(ts) {
@@ -30,10 +30,22 @@ function formatTime(ts) {
   return new Date(ts).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
 }
 
+function groupByTime(notifs) {
+  const now = Date.now();
+  const groups = { 'Hoy': [], 'Ayer': [], 'Anteriores': [] };
+  notifs.forEach(n => {
+    const diff = now - n.timestamp;
+    if (diff < 86400000) groups['Hoy'].push(n);
+    else if (diff < 172800000) groups['Ayer'].push(n);
+    else groups['Anteriores'].push(n);
+  });
+  return Object.entries(groups).filter(([, items]) => items.length > 0);
+}
+
 export default function NotificationBell() {
   const { notifications, unreadCount, markAsRead, markAllRead, clearAll, dismissCalendar } = useNotifications();
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState('all'); // 'all' | 'calendar' | 'system'
+  const [tab, setTab] = useState('all');
   const ref = useRef(null);
 
   useEffect(() => {
@@ -47,46 +59,47 @@ export default function NotificationBell() {
   const calendarNotifs = notifications.filter(n => n.type === 'calendar');
   const systemNotifs = notifications.filter(n => n.type !== 'calendar');
   const filteredNotifs = tab === 'calendar' ? calendarNotifs : tab === 'system' ? systemNotifs : notifications;
+  const grouped = useMemo(() => groupByTime(filteredNotifs), [filteredNotifs]);
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
+      {/* Bell Button */}
       <button
         onClick={() => setOpen(!open)}
-        style={{
-          position: 'relative', width: 36, height: 36, borderRadius: 10,
-          border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.04)',
-          color: 'var(--on-surface)', cursor: 'pointer', display: 'flex',
-          alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s ease',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
-        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+        className={`notif-bell-btn ${open ? 'notif-bell-active' : ''}`}
       >
-        <Bell size={18} />
+        <Bell size={17} strokeWidth={2} />
         {unreadCount > 0 && (
-          <span style={{
-            position: 'absolute', top: -4, right: -4, minWidth: 18, height: 18,
-            borderRadius: 9, background: '#EF4444', color: '#fff', fontSize: 10,
-            fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '0 4px', border: '2px solid var(--background)', lineHeight: 1,
-          }}>
+          <span className="notif-bell-badge">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
       </button>
 
+      {/* Panel */}
       {open && (
-        <div className="notification-panel">
+        <div className="notif-panel">
+          {/* Gradient accent line */}
+          <div style={{ height: 2, background: 'linear-gradient(90deg, #60A5FA, #A78BFA, #34D399)', opacity: 0.6 }} />
+
           {/* Header */}
-          <div className="notification-panel-header">
-            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--on-surface)' }}>Notificaciones</span>
-            <div style={{ display: 'flex', gap: 4 }}>
+          <div className="notif-panel-header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--on-surface)', letterSpacing: '-0.01em' }}>Notificaciones</span>
               {unreadCount > 0 && (
-                <button className="notification-panel-action" onClick={markAllRead} title="Marcar todo leido">
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#60A5FA', background: 'rgba(96,165,250,0.1)', padding: '2px 7px', borderRadius: 6 }}>
+                  {unreadCount} nuevas
+                </span>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: 2 }}>
+              {unreadCount > 0 && (
+                <button className="notif-action-btn" onClick={markAllRead} title="Marcar todo leído">
                   <CheckCheck size={14} />
                 </button>
               )}
               {notifications.length > 0 && (
-                <button className="notification-panel-action notification-panel-action-danger" onClick={clearAll} title="Limpiar todo">
+                <button className="notif-action-btn notif-action-danger" onClick={clearAll} title="Limpiar todo">
                   <Trash2 size={14} />
                 </button>
               )}
@@ -94,7 +107,7 @@ export default function NotificationBell() {
           </div>
 
           {/* Tabs */}
-          <div style={{ display: 'flex', padding: '0 12px', gap: 2, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="notif-tabs">
             {[
               { key: 'all', label: 'Todo', count: notifications.length },
               { key: 'calendar', label: 'Calendario', count: calendarNotifs.length },
@@ -103,92 +116,85 @@ export default function NotificationBell() {
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
-                style={{
-                  flex: 1, padding: '8px 0', fontSize: 12, fontWeight: 600, border: 'none',
-                  background: 'transparent', cursor: 'pointer', borderRadius: '8px 8px 0 0',
-                  color: tab === t.key ? 'var(--on-surface)' : 'var(--on-surface-variant)',
-                  borderBottom: tab === t.key ? '2px solid #60A5FA' : '2px solid transparent',
-                  transition: 'all 0.15s',
-                }}
+                className={`notif-tab ${tab === t.key ? 'notif-tab-active' : ''}`}
               >
-                {t.label} {t.count > 0 && <span style={{ opacity: 0.5 }}>({t.count})</span>}
+                {t.label}
+                {t.count > 0 && <span className="notif-tab-count">{t.count}</span>}
               </button>
             ))}
           </div>
 
           {/* List */}
-          <div className="notification-panel-list">
+          <div className="notif-list">
             {filteredNotifs.length === 0 ? (
-              <div className="notification-panel-empty">
-                <Bell size={24} style={{ opacity: 0.3, marginBottom: 8 }} />
-                <div>Sin notificaciones</div>
+              <div className="notif-empty">
+                <div className="notif-empty-icon">
+                  <Bell size={28} strokeWidth={1.5} />
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--on-surface)', marginBottom: 4 }}>Sin notificaciones</div>
+                <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', opacity: 0.6 }}>Aparecerán aquí cuando haya actividad</div>
               </div>
             ) : (
-              filteredNotifs.slice(0, 30).map(n => {
-                // Calendar event
-                if (n.type === 'calendar') {
-                  const urg = URGENCY_COLORS[n.urgency] || URGENCY_COLORS.info;
-                  return (
-                    <div
-                      key={n.id}
-                      className={`notification-item ${!n.read ? 'notification-unread' : ''}`}
-                      onClick={() => markAsRead(n.id)}
-                      style={{ background: n.urgency === 'urgent' ? urg.bg : undefined }}
-                    >
-                      <div className="notification-item-icon" style={{
-                        fontSize: 18, background: urg.bg, border: `1px solid ${urg.border}`,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        {n.emoji || '📅'}
-                      </div>
-                      <div className="notification-item-body">
-                        <div className="notification-item-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          {n.title}
-                          {n.daysUntil === 0 && (
-                            <span style={{ fontSize: 10, fontWeight: 700, color: '#EF4444', background: 'rgba(239,68,68,0.15)', padding: '1px 6px', borderRadius: 4 }}>HOY</span>
-                          )}
-                          {n.daysUntil > 0 && n.daysUntil <= 3 && (
-                            <span style={{ fontSize: 10, fontWeight: 600, color: '#F59E0B', background: 'rgba(245,158,11,0.15)', padding: '1px 6px', borderRadius: 4 }}>{n.daysUntil}d</span>
-                          )}
+              grouped.map(([group, items]) => (
+                <div key={group}>
+                  <div className="notif-group-label">{group}</div>
+                  {items.slice(0, 15).map((n, idx) => {
+                    if (n.type === 'calendar') {
+                      const urg = URGENCY_MAP[n.urgency] || URGENCY_MAP.info;
+                      return (
+                        <div
+                          key={n.id}
+                          className={`notif-item ${!n.read ? 'notif-item-unread' : ''}`}
+                          onClick={() => markAsRead(n.id)}
+                          style={{ animationDelay: `${idx * 30}ms` }}
+                        >
+                          <div className="notif-item-icon" style={{ background: urg.bg, border: `1px solid ${urg.border}` }}>
+                            <span style={{ fontSize: 15 }}>{n.emoji || '📅'}</span>
+                          </div>
+                          <div className="notif-item-body">
+                            <div className="notif-item-title">
+                              {n.title}
+                              {n.daysUntil === 0 && <span className="notif-badge notif-badge-urgent">HOY</span>}
+                              {n.daysUntil > 0 && n.daysUntil <= 3 && <span className="notif-badge notif-badge-warning">{n.daysUntil}d</span>}
+                            </div>
+                            {n.message && <div className="notif-item-message">{n.message}</div>}
+                            <div className="notif-item-time">
+                              {n.daysUntil === 0 ? '¡Es hoy!' : n.daysUntil === 1 ? 'Mañana' : `En ${n.daysUntil} días`}
+                            </div>
+                          </div>
+                          <button
+                            className="notif-dismiss-btn"
+                            onClick={(e) => { e.stopPropagation(); dismissCalendar(n.calendarId); }}
+                          >
+                            <X size={12} />
+                          </button>
                         </div>
-                        {n.message && <div className="notification-item-message">{n.message}</div>}
-                        <div className="notification-item-time">
-                          {n.daysUntil === 0 ? '¡Es hoy!' : n.daysUntil === 1 ? 'Mañana' : `En ${n.daysUntil} días`}
-                        </div>
-                      </div>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); dismissCalendar(n.calendarId); }}
-                        style={{ flexShrink: 0, width: 20, height: 20, borderRadius: 4, border: 'none', background: 'transparent', color: 'var(--on-surface-variant)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}
-                        onMouseEnter={e => { e.currentTarget.style.opacity = '1'; }}
-                        onMouseLeave={e => { e.currentTarget.style.opacity = '0.5'; }}
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                  );
-                }
+                      );
+                    }
 
-                // System event (order, client, sync, etc.)
-                const cfg = TYPE_CONFIG[n.type] || TYPE_CONFIG.info;
-                const Icon = n.icon || cfg.icon;
-                return (
-                  <div
-                    key={n.id}
-                    className={`notification-item ${!n.read ? 'notification-unread' : ''}`}
-                    onClick={() => markAsRead(n.id)}
-                  >
-                    <div className="notification-item-icon" style={{ color: cfg.color, background: `${cfg.color}15` }}>
-                      <Icon size={16} />
-                    </div>
-                    <div className="notification-item-body">
-                      {n.title && <div className="notification-item-title">{n.title}</div>}
-                      {n.message && <div className="notification-item-message">{n.message}</div>}
-                      <div className="notification-item-time">{formatTime(n.timestamp)}</div>
-                    </div>
-                    {!n.read && <div className="notification-item-dot" />}
-                  </div>
-                );
-              })
+                    const cfg = TYPE_CONFIG[n.type] || TYPE_CONFIG.info;
+                    const Icon = n.icon || cfg.icon;
+                    return (
+                      <div
+                        key={n.id}
+                        className={`notif-item ${!n.read ? 'notif-item-unread' : ''}`}
+                        onClick={() => markAsRead(n.id)}
+                        style={{ animationDelay: `${idx * 30}ms` }}
+                      >
+                        <div className="notif-item-icon" style={{ color: cfg.color, background: `${cfg.color}12` }}>
+                          <Icon size={15} strokeWidth={2} />
+                        </div>
+                        <div className="notif-item-body">
+                          {n.title && <div className="notif-item-title">{n.title}</div>}
+                          {n.message && <div className="notif-item-message">{n.message}</div>}
+                          <div className="notif-item-time">{formatTime(n.timestamp)}</div>
+                        </div>
+                        {!n.read && <div className="notif-item-dot" />}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))
             )}
           </div>
         </div>

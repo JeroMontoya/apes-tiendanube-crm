@@ -61,7 +61,7 @@ async function handleProductUpdated(payload) {
   const { data: existing } = await supabase
     .from('inventory_products')
     .select('id, name')
-    .eq('tiendanube_id', String(tnProductId))
+    .eq('tiendanube_product_id', Number(tnProductId))
     .single();
 
   if (!existing) {
@@ -72,22 +72,13 @@ async function handleProductUpdated(payload) {
     for (const variant of variants) {
       if (variant.stock === undefined || variant.stock === null) continue;
       const { error } = await supabase.rpc('fn_apply_tiendanube_stock', {
-        p_tiendanube_product_id: String(tnProductId),
-        p_tiendanube_variant_id: String(variant.id),
-        p_stock: variant.stock,
+        p_tn_product_id: Number(tnProductId),
+        p_tn_variant_id: Number(variant.id),
+        p_new_quantity: variant.stock,
       });
       if (error) {
         console.error('[webhook] fn_apply_tiendanube_stock error:', error.message);
       }
-
-      await supabase.from('inventory_movements').insert({
-        product_id: existing.id,
-        type: 'sync',
-        quantity: variant.stock,
-        reason: `TiendaNube product/updated webhook (variant ${variant.id})`,
-        reference_id: String(tnProductId),
-        metadata: { source: 'tiendanube_webhook', event: 'product/updated', variant_id: variant.id },
-      });
     }
   }
 
@@ -103,7 +94,7 @@ async function handleVariantStockUpdated(payload) {
   const { data: existing } = await supabase
     .from('inventory_products')
     .select('id, name')
-    .eq('tiendanube_id', String(tnProductId))
+    .eq('tiendanube_product_id', Number(tnProductId))
     .single();
 
   if (!existing) {
@@ -111,23 +102,14 @@ async function handleVariantStockUpdated(payload) {
   }
 
   const { error } = await supabase.rpc('fn_apply_tiendanube_stock', {
-    p_tiendanube_product_id: String(tnProductId),
-    p_tiendanube_variant_id: tnVariantId ? String(tnVariantId) : null,
-    p_stock: stock,
+    p_tn_product_id: Number(tnProductId),
+    p_tn_variant_id: tnVariantId ? Number(tnVariantId) : 0,
+    p_new_quantity: stock,
   });
 
   if (error) {
     console.error('[webhook] fn_apply_tiendanube_stock error:', error.message);
   }
-
-  await supabase.from('inventory_movements').insert({
-    product_id: existing.id,
-    type: 'sync',
-    quantity: stock,
-    reason: `TiendaNube variant/stock_updated webhook (variant ${tnVariantId})`,
-    reference_id: String(tnProductId),
-    metadata: { source: 'tiendanube_webhook', event: 'variant/stock_updated', variant_id: tnVariantId },
-  });
 
   return { handled: true, product_id: existing.id };
 }

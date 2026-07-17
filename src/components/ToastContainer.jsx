@@ -1,35 +1,46 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNotifications } from '../contexts/NotificationContext';
-import { ShoppingBag, UserPlus, AlertTriangle, CheckCircle, Info, X, Bell, RefreshCw, Package, Zap } from 'lucide-react';
+import { ShoppingBag, UserPlus, AlertTriangle, CheckCircle, Info, X, Bell, RefreshCw, Package, Zap, Check } from 'lucide-react';
 
 const TOAST_STYLES = {
-  order: { bg: 'rgba(16, 185, 129, 0.12)', border: 'rgba(16, 185, 129, 0.25)', icon: ShoppingBag, iconColor: '#34D399' },
-  client: { bg: 'rgba(59, 130, 246, 0.12)', border: 'rgba(59, 130, 246, 0.25)', icon: UserPlus, iconColor: '#60A5FA' },
-  pqr: { bg: 'rgba(168, 85, 247, 0.12)', border: 'rgba(168, 85, 247, 0.25)', icon: AlertTriangle, iconColor: '#A855F7' },
-  sync: { bg: 'rgba(34, 197, 94, 0.12)', border: 'rgba(34, 197, 94, 0.25)', icon: RefreshCw, iconColor: '#22C55E' },
-  success: { bg: 'rgba(16, 185, 129, 0.12)', border: 'rgba(16, 185, 129, 0.25)', icon: CheckCircle, iconColor: '#10B981' },
-  error: { bg: 'rgba(239, 68, 68, 0.12)', border: 'rgba(239, 68, 68, 0.25)', icon: AlertTriangle, iconColor: '#EF4444' },
-  warning: { bg: 'rgba(245, 158, 11, 0.12)', border: 'rgba(245, 158, 11, 0.25)', icon: AlertTriangle, iconColor: '#F59E0B' },
-  info: { bg: 'rgba(99, 102, 241, 0.12)', border: 'rgba(99, 102, 241, 0.25)', icon: Info, iconColor: '#818CF8' },
-  product: { bg: 'rgba(6, 182, 212, 0.12)', border: 'rgba(6, 182, 212, 0.25)', icon: Package, iconColor: '#06B6D4' },
-  system: { bg: 'rgba(148, 163, 184, 0.12)', border: 'rgba(148, 163, 184, 0.25)', icon: Zap, iconColor: '#94A3B8' },
-  calendar: { bg: 'rgba(245, 158, 11, 0.12)', border: 'rgba(245, 158, 11, 0.25)', icon: Bell, iconColor: '#F59E0B' },
+  order:   { accent: '#34D399', bg: 'rgba(52, 211, 153, 0.08)', icon: ShoppingBag, glow: 'rgba(52, 211, 153, 0.15)' },
+  client:  { accent: '#60A5FA', bg: 'rgba(96, 165, 250, 0.08)', icon: UserPlus, glow: 'rgba(96, 165, 250, 0.15)' },
+  pqr:     { accent: '#A78BFA', bg: 'rgba(167, 139, 250, 0.08)', icon: AlertTriangle, glow: 'rgba(167, 139, 250, 0.15)' },
+  sync:    { accent: '#34D399', bg: 'rgba(52, 211, 153, 0.08)', icon: RefreshCw, glow: 'rgba(52, 211, 153, 0.15)' },
+  success: { accent: '#34D399', bg: 'rgba(52, 211, 153, 0.08)', icon: Check, glow: 'rgba(52, 211, 153, 0.15)' },
+  error:   { accent: '#F87171', bg: 'rgba(248, 113, 113, 0.08)', icon: AlertTriangle, glow: 'rgba(248, 113, 113, 0.15)' },
+  warning: { accent: '#FBBF24', bg: 'rgba(251, 191, 36, 0.08)', icon: AlertTriangle, glow: 'rgba(251, 191, 36, 0.15)' },
+  info:    { accent: '#818CF8', bg: 'rgba(129, 140, 248, 0.08)', icon: Info, glow: 'rgba(129, 140, 248, 0.15)' },
+  product: { accent: '#22D3EE', bg: 'rgba(34, 211, 238, 0.08)', icon: Package, glow: 'rgba(34, 211, 238, 0.15)' },
+  system:  { accent: '#94A3B8', bg: 'rgba(148, 163, 184, 0.08)', icon: Zap, glow: 'rgba(148, 163, 184, 0.15)' },
+  calendar:{ accent: '#FBBF24', bg: 'rgba(251, 191, 36, 0.08)', icon: Bell, glow: 'rgba(251, 191, 36, 0.15)' },
 };
 
-function formatTime(ts) {
-  const diff = Date.now() - ts;
-  if (diff < 60000) return 'Ahora';
-  if (diff < 3600000) return `Hace ${Math.floor(diff / 60000)}m`;
-  return new Date(ts).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+function ToastProgress({ duration, accent }) {
+  const [width, setWidth] = useState(100);
+  useEffect(() => {
+    const start = Date.now();
+    const tick = () => {
+      const elapsed = Date.now() - start;
+      setWidth(Math.max(0, 100 - (elapsed / duration) * 100));
+      if (elapsed < duration) requestAnimationFrame(tick);
+    };
+    const raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [duration]);
+  return (
+    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: 'rgba(255,255,255,0.04)', borderRadius: '0 0 12px 12px', overflow: 'hidden' }}>
+      <div style={{ height: '100%', width: `${width}%`, background: accent, borderRadius: '0 0 12px 12px', transition: 'width 0.1s linear', opacity: 0.6 }} />
+    </div>
+  );
 }
 
 export default function ToastContainer() {
   const { toasts, dismissToast } = useNotifications();
-
   if (!toasts.length) return null;
 
   return (
-    <div className="toast-container">
+    <div className="toast-container-v2">
       {toasts.map((toast, i) => {
         const style = TOAST_STYLES[toast.type] || TOAST_STYLES.info;
         const Icon = toast.icon || style.icon;
@@ -37,24 +48,24 @@ export default function ToastContainer() {
         return (
           <div
             key={toast.id}
-            className={`toast-item ${toast.exiting ? 'toast-exit' : ''}`}
+            className={`toast-v2 ${toast.exiting ? 'toast-v2-exit' : ''}`}
             style={{
-              background: style.bg,
-              border: `1px solid ${style.border}`,
-              backdropFilter: 'blur(20px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+              '--toast-accent': style.accent,
+              '--toast-glow': style.glow,
             }}
           >
-            <div className="toast-icon" style={{ color: style.iconColor }}>
-              <Icon size={18} />
+            <div className="toast-v2-accent" />
+            <div className="toast-v2-icon" style={{ color: style.accent, background: style.bg }}>
+              <Icon size={16} strokeWidth={2.5} />
             </div>
-            <div className="toast-body">
-              {toast.title && <div className="toast-title">{toast.title}</div>}
-              {toast.message && <div className="toast-message">{toast.message}</div>}
+            <div className="toast-v2-body">
+              {toast.title && <div className="toast-v2-title">{toast.title}</div>}
+              {toast.message && <div className="toast-v2-message">{toast.message}</div>}
             </div>
-            <button className="toast-close" onClick={() => dismissToast(toast.id)}>
-              <X size={14} />
+            <button className="toast-v2-close" onClick={() => dismissToast(toast.id)}>
+              <X size={13} />
             </button>
+            <ToastProgress duration={toast.duration || 5000} accent={style.accent} />
           </div>
         );
       })}

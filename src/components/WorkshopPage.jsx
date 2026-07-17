@@ -193,19 +193,59 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
           const variants = typeof batch.batch_variants === 'string' ? JSON.parse(batch.batch_variants) : batch.batch_variants;
           console.log('[Workshop] Syncing', variants.length, 'variants to Tiendanube...');
           const results = [];
-          for (const v of variants) {
-            console.log('[Workshop] Variant:', v.variant_id, 'quantity:', v.quantity, 'current_stock:', v.current_stock);
-            if (v.variant_id && v.quantity > 0) {
-              const currentStock = v.current_stock ?? 0;
-              const newStock = currentStock + v.quantity;
-              const res = await api.updateVariantStock(batch.tiendanube_product_id, v.variant_id, newStock);
-              console.log('[Workshop] API result for variant', v.variant_id, ':', res);
-              results.push({ variant_id: v.variant_id, ok: res?.success !== false });
+          
+          // ── Optimized: Parallel API calls for better performance ──
+          const parallelSync = variants.filter(v => v.variant_id && v.quantity > 0).map(async (v) => {
+            const currentStock = v.current_stock ?? 0;
+            const newStock = currentStock + v.quantity;
+            console.log('[Workshop] Variant:', v.variant_id, 'quantity:', v.quantity, 'current_stock:', currentStock, 'new_stock:', newStock);
+            
+            // Update local inventory cache immediately for responsive UI
+            if (selectedBatch && selectedBatch.sizes && Array.isArray(selectedBatch.sizes)) {
+              const updatedSizes = selectedBatch.sizes.map(size => {
+                if (size.size === v.size) {
+                  const currentProduced = size.produced || 0;
+                  const currentDefect = size.defect || 0;
+                  const actualProduced = v.quantity;
+                  const newProduced = currentProduced + actualProduced;
+                  return { ...size, produced: newProduced };
+                }
+                return size;
+              });
+              if (selectedBatch.sizes.some((size, idx) => size !== updatedSizes[idx])) {
+                console.log('[Workshop] Updated local inventory cache with new stock:', { variant_id: v.variant_id, newStock });
+                setSelectedBatch(prev => ({ ...prev, sizes: updatedSizes }));
+              }
+            }
+            
+            // Call Tiendanube API
+            const res = await api.updateVariantStock(batch.tiendanube_product_id, v.variant_id, newStock);
+            console.log('[Workshop] API result for variant', v.variant_id, ':', res);
+            return { variant_id: v.variant_id, ok: res?.success !== false };
+          });
+          
+          const parallelResults = await Promise.allSettled(parallelSync);
+          
+          for (const result of parallelResults) {
+            if (result.status === 'fulfilled') {
+              results.push(result.value);
+            } else {
+              console.error('[Workshop] Parallel sync failed:', result.reason);
+              results.push({ variant_id: 'unknown', ok: false });
             }
           }
+          
           const synced = results.filter(r => r.ok).length;
-          console.log(`[Workshop] Synced ${synced}/${variants.length} variants to Tiendanube`);
-          addToast({ type: 'success', title: 'Stock sincronizado', message: `${synced}/${variants.length} variantes actualizadas en TiendaNueve` });
+          console.log(`[Workshop] Synced ${synced}/${variants.filter(v => v.variant_id && v.quantity > 0).length} variants to Tiendanube`);
+          
+          if (synced > 0) {
+            addToast({ 
+              type: 'success', 
+              title: 'Stock sincronizado', 
+              message: `${synced} variantes actualizadas en TiendaNueve — stock actualizado localmente instantáneamente` 
+            });
+          }
+          
           await logActivity('batch_synced_tiendanube', 'production_batch', batchId, batch?.product_name, {
             synced, total: variants.length, product_id: batch.tiendanube_product_id,
           });

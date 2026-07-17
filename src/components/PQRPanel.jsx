@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabase';
+import { useNotifications } from '../contexts/NotificationContext';
 import {
   Package, Truck, Warehouse, Plus, X, Save,
   Trash2, Edit3, Search, CheckCircle2, Clock,
@@ -24,7 +26,7 @@ const TRACKER_STEPS = [
 
 function getWhatsAppUrl(phone, name, orderNum) {
   if (!phone) return null;
-  const cleaned = phone.replace(/[^\d+]/g, '');
+  const cleaned = String(phone).replace(/[^\d+]/g, '');
   const digits = cleaned.startsWith('+') ? cleaned.substring(1) : cleaned;
   if (digits.length < 8) return null;
   const msg = `Hola ${name || 'Cliente'}, somos la tienda. Respecto a tu pedido #${orderNum || ''}, ¿cómo podemos ayudarte?`;
@@ -119,10 +121,13 @@ const WhatsAppBtn = ({ phone, name, orderNum, size = 'normal' }) => {
 //  MAIN COMPONENT
 // ═══════════════════════════════════════════════════════
 export default function PQRPanel({ session, rawOrders = [] }) {
+  const { addToast } = useNotifications();
   const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCase, setSelectedCase] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [orderSearch, setOrderSearch] = useState('');
@@ -133,6 +138,8 @@ export default function PQRPanel({ session, rawOrders = [] }) {
   const searchInputRef = useRef(null);
   const dropdownMenuRef = useRef(null);
   const lastPqrUpdateRef = useRef(null);
+  const mutatedIdsRef = useRef(new Set());
+  const mountedRef = useRef(true);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
 
   const [formData, setFormData] = useState({
@@ -143,6 +150,8 @@ export default function PQRPanel({ session, rawOrders = [] }) {
     customer_phone: '', products_involved: ''
   });
 
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+
   useEffect(() => { if (session?.user?.id) fetchCases(); }, [session]);
 
   // ── Supabase Realtime: cross-device PQR sync ───────────────────────────
@@ -152,19 +161,23 @@ export default function PQRPanel({ session, rawOrders = [] }) {
     const channel = supabase
       .channel('pqr-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'pqr_cases' }, (payload) => {
-        console.log('[PQR Realtime]', payload.eventType, payload.new?.id || payload.old?.id);
-        fetchCases();
+        const eventId = payload.eventType === 'DELETE' ? payload.old?.id : payload.new?.id;
+        if (eventId && mutatedIdsRef.current.has(eventId)) {
+          mutatedIdsRef.current.delete(eventId);
+          return;
+        }
+        console.log('[PQR Realtime]', payload.eventType, eventId);
+        fetchCases(false);
       })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') { realtimeActive = true; console.log('[PQR Realtime] Cross-device sync active'); }
       });
-    // Polling fallback: check every 30s if realtime isn't active
     const pollInterval = setInterval(async () => {
       if (realtimeActive) return;
       try {
         const { data } = await supabase.from('pqr_cases').select('id, updated_at').order('updated_at', { ascending: false }).limit(1).maybeSingle();
         if (data && (!lastPqrUpdateRef.current || data.updated_at > lastPqrUpdateRef.current)) {
-          if (lastPqrUpdateRef.current) fetchCases();
+          if (lastPqrUpdateRef.current) fetchCases(false);
           lastPqrUpdateRef.current = data.updated_at;
         }
       } catch {}
@@ -183,24 +196,18 @@ export default function PQRPanel({ session, rawOrders = [] }) {
     return () => { document.removeEventListener('mousedown', h); document.removeEventListener('touchstart', h); };
   }, []);
 
-  const updateDropdownPos = () => {
+  const updateDropdownPos = useCallback(() => {
     if (searchInputRef.current) {
       const rect = searchInputRef.current.getBoundingClientRect();
       setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
     }
-  };
-
-  useEffect(() => {
-    if (showDropdown) {
-      updateDropdownPos();
-    }
-  }, [showDropdown]);
+  }, []);
 
   // Auto-sync from Tiendanube when rawOrders change
   useEffect(() => {
     if (rawOrders.length === 0 || cases.length === 0) return;
     const sync = async () => {
-      let changed = false;
+      const updates = [];
       for (const pqr of cases) {
         if (!pqr.order_number) continue;
         const order = rawOrders.find(o => String(o.number || o.id) === String(pqr.order_number));
@@ -214,24 +221,34 @@ export default function PQRPanel({ session, rawOrders = [] }) {
         if (prods && !pqr.products_involved) upd.products_involved = prods;
         if (order.tracking_number && !pqr.original_tracking) upd.original_tracking = order.tracking_number;
         if (Object.keys(upd).length > 0) {
-          changed = true;
+          updates.push({ id: pqr.id, upd });
           await supabase.from('pqr_cases').update(upd).eq('id', pqr.id);
         }
       }
-      if (changed) fetchCases();
+      if (updates.length > 0) {
+        setCases(prev => prev.map(c => { const u = updates.find(u => u.id === c.id); return u ? { ...c, ...u.upd } : c; }));
+        updates.forEach(u => {
+          mutatedIdsRef.current.add(u.id);
+          setTimeout(() => mutatedIdsRef.current.delete(u.id), 5000);
+        });
+      }
     };
     sync();
   }, [rawOrders]);
 
-  const fetchCases = async () => {
+  const fetchCases = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const { data, error } = await supabase.from('pqr_cases').select('*').order('created_at', { ascending: false });
       if (error) throw error;
-      setCases(data || []);
+      if (mountedRef.current) {
+        const seen = new Set();
+        const deduped = (data || []).filter(c => { if (seen.has(c.id)) return false; seen.add(c.id); return true; });
+        setCases(deduped);
+      }
     } catch (e) {
       console.error('Error fetching PQR cases:', e);
-    } finally { setLoading(false); }
+    } finally { if (showLoading) setLoading(false); }
   };
 
   const matchedOrders = useMemo(() => {
@@ -267,7 +284,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
 
   const handleOpenCreate = () => { setFormData(resetForm()); setIsCreating(true); setSelectedCase(null); };
   const handleSelectCase = (c) => { setSelectedCase(c); setIsCreating(false); };
-  const handleClose = () => { setIsCreating(false); setSelectedCase(null); };
+  const handleClose = () => { if (savingRef.current) return; setIsCreating(false); setSelectedCase(null); };
 
   const handleEdit = () => {
     if (!selectedCase) return;
@@ -297,44 +314,82 @@ export default function PQRPanel({ session, rawOrders = [] }) {
   const handleChange = (e) => { const { name, value } = e.target; setFormData(prev => ({ ...prev, [name]: value })); };
 
   const handleSave = async () => {
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setSaving(true);
     try {
       const dbFields = { ...formData };
       if (isCreating && selectedCase) {
         const { error } = await supabase.from('pqr_cases').update(dbFields).eq('id', selectedCase.id);
         if (error) throw error;
+        mutatedIdsRef.current.add(selectedCase.id);
+        setTimeout(() => mutatedIdsRef.current.delete(selectedCase.id), 5000);
+        setCases(prev => prev.map(c => c.id === selectedCase.id ? { ...c, ...dbFields } : c));
+        setSelectedCase(prev => prev ? { ...prev, ...dbFields } : prev);
+        addToast({ type: 'pqr', title: 'Caso actualizado', message: `Caso #${formData.order_number || ''} actualizado correctamente` });
       } else {
-        const { error } = await supabase.from('pqr_cases').insert([{ ...dbFields, user_id: session.user.id }]);
+        const { data, error } = await supabase.from('pqr_cases').insert([{ ...dbFields, user_id: session.user.id }]).select().single();
         if (error) throw error;
+        mutatedIdsRef.current.add(data.id);
+        setTimeout(() => mutatedIdsRef.current.delete(data.id), 5000);
+        setCases(prev => [data, ...prev]);
+        addToast({ type: 'pqr', title: 'Caso creado', message: `Nuevo caso #${formData.order_number || ''} registrado exitosamente` });
       }
-      fetchCases(); handleClose();
+      handleClose();
     } catch (e) {
       console.error('Error saving PQR case:', e);
       if (e.message?.includes('column') || e.code === '42703') {
-        alert('Faltan columnas en la tabla pqr_cases. Ejecutá la migración 004 en Supabase SQL Editor.');
-      } else { alert('Error al guardar: ' + (e.message || 'Error desconocido')); }
+        addToast({ type: 'error', title: 'Error de esquema', message: 'Faltan columnas en pqr_cases. Ejecutá la migración 004 en Supabase SQL Editor.' });
+      } else {
+        addToast({ type: 'error', title: 'Error al guardar', message: e.message || 'Error desconocido al guardar el caso' });
+      }
+      fetchCases(false);
+    } finally {
+      setSaving(false);
+      savingRef.current = false;
     }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('¿Eliminar este caso permanentemente?')) return;
+    const removed = cases.find(c => c.id === id);
+    setCases(prev => prev.filter(c => c.id !== id));
+    if (selectedCase?.id === id) setSelectedCase(null);
     try {
-      await supabase.from('pqr_cases').delete().eq('id', id);
-      setSelectedCase(null); fetchCases();
-    } catch (e) { console.error('Error deleting PQR case:', e); }
+      const { error } = await supabase.from('pqr_cases').delete().eq('id', id);
+      if (error) throw error;
+      mutatedIdsRef.current.add(id);
+      setTimeout(() => mutatedIdsRef.current.delete(id), 5000);
+      addToast({ type: 'pqr', title: 'Caso eliminado', message: `Caso #${removed?.order_number || ''} eliminado permanentemente` });
+    } catch (e) {
+      console.error('Error deleting PQR case:', e);
+      if (removed) setCases(prev => [...prev, removed].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+      addToast({ type: 'error', title: 'Error al eliminar', message: e.message || 'No se pudo eliminar el caso' });
+    }
   };
 
   const handleStatusChange = async (newStatus) => {
     if (!selectedCase) return;
+    const oldStatus = selectedCase.tracker_status;
+    setCases(prev => prev.map(c => c.id === selectedCase.id ? { ...c, tracker_status: newStatus } : c));
+    setSelectedCase(prev => prev ? { ...prev, tracker_status: newStatus } : prev);
     try {
       const { error } = await supabase.from('pqr_cases').update({ tracker_status: newStatus }).eq('id', selectedCase.id);
       if (error) throw error;
-      setSelectedCase(prev => ({ ...prev, tracker_status: newStatus }));
-      fetchCases();
-    } catch (e) { console.error('Error updating status:', e); }
+      mutatedIdsRef.current.add(selectedCase.id);
+      setTimeout(() => mutatedIdsRef.current.delete(selectedCase.id), 5000);
+      const label = TRACKER_STEPS.find(s => s.id === newStatus)?.label || newStatus;
+      addToast({ type: 'pqr', title: 'Estado actualizado', message: `Caso #${selectedCase.order_number} → ${label}` });
+    } catch (e) {
+      console.error('Error updating status:', e);
+      setCases(prev => prev.map(c => c.id === selectedCase.id ? { ...c, tracker_status: oldStatus } : c));
+      setSelectedCase(prev => prev ? { ...prev, tracker_status: oldStatus } : prev);
+      addToast({ type: 'error', title: 'Error de estado', message: e.message || 'No se pudo actualizar el estado' });
+    }
   };
 
   const handleSendEmail = () => {
-    if (!selectedCase?.customer_email) { alert('Este caso no tiene email registrado.'); return; }
+    if (!selectedCase?.customer_email) { addToast({ type: 'warning', title: 'Sin email', message: 'Este caso no tiene email registrado' }); return; }
     const subject = encodeURIComponent(`Resolución de tu pedido #${selectedCase.order_number || ''}`);
     const body = encodeURIComponent(
       `Hola ${selectedCase.customer_name || 'Cliente'},\n\n` +
@@ -348,7 +403,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
   const handleRefreshFromTiendanube = async () => {
     if (!selectedCase || rawOrders.length === 0) return;
     const order = rawOrders.find(o => String(o.number || o.id) === String(selectedCase.order_number));
-    if (!order) { alert('Pedido no encontrado en Tiendanube.'); return; }
+    if (!order) { addToast({ type: 'warning', title: 'Pedido no encontrado', message: 'No se encontró el pedido en Tiendanube' }); return; }
     const c = order.customer || {};
     const prods = (order.products || []).map(p => `${p.name} x${p.quantity || 1}`).join(', ');
     const updates = {
@@ -356,11 +411,19 @@ export default function PQRPanel({ session, rawOrders = [] }) {
       customer_phone: c.phone || selectedCase.customer_phone, products_involved: prods || selectedCase.products_involved,
       original_tracking: order.tracking_number || selectedCase.original_tracking
     };
+    setCases(prev => prev.map(cs => cs.id === selectedCase.id ? { ...cs, ...updates } : cs));
+    setSelectedCase(prev => prev ? { ...prev, ...updates } : prev);
     try {
       const { error } = await supabase.from('pqr_cases').update(updates).eq('id', selectedCase.id);
       if (error) throw error;
-      setSelectedCase(prev => ({ ...prev, ...updates })); fetchCases();
-    } catch (e) { console.error('Error refreshing:', e); }
+      mutatedIdsRef.current.add(selectedCase.id);
+      setTimeout(() => mutatedIdsRef.current.delete(selectedCase.id), 5000);
+      addToast({ type: 'pqr', title: 'Datos actualizados', message: 'Información refrescada desde Tiendanube' });
+    } catch (e) {
+      console.error('Error refreshing:', e);
+      fetchCases(false);
+      addToast({ type: 'error', title: 'Error de actualización', message: e.message || 'No se pudieron actualizar los datos' });
+    }
   };
 
   const getStatus = (id) => {
@@ -374,9 +437,9 @@ export default function PQRPanel({ session, rawOrders = [] }) {
 
   const filteredCases = cases.filter(c => {
     const matchS = !searchTerm ||
-      c.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.customer_email?.toLowerCase().includes(searchTerm.toLowerCase());
+      String(c.order_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(c.customer_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(c.customer_email || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchF = filterStatus === 'all' || c.tracker_status === filterStatus;
     return matchS && matchF;
   });
@@ -391,9 +454,10 @@ export default function PQRPanel({ session, rawOrders = [] }) {
   const hasData = formData.customer_name || formData.customer_email || formData.customer_phone;
 
   const handleBulkRefresh = async () => {
-    if (rawOrders.length === 0) { alert('No hay pedidos de Tiendanube conectados.'); return; }
+    if (rawOrders.length === 0) { addToast({ type: 'warning', title: 'Sin pedidos', message: 'No hay pedidos de Tiendanube conectados' }); return; }
     setRefreshing(true);
     let updated = 0;
+    const updates = [];
     for (const pqr of cases) {
       if (!pqr.order_number) continue;
       const order = rawOrders.find(o => String(o.number || o.id) === String(pqr.order_number));
@@ -407,13 +471,20 @@ export default function PQRPanel({ session, rawOrders = [] }) {
       if (prods) upd.products_involved = prods;
       if (order.tracking_number) upd.original_tracking = order.tracking_number;
       if (Object.keys(upd).length > 0) {
+        updates.push({ id: pqr.id, upd });
         await supabase.from('pqr_cases').update(upd).eq('id', pqr.id);
         updated++;
       }
     }
-    await fetchCases();
+    if (updates.length > 0) {
+      setCases(prev => prev.map(c => { const u = updates.find(u => u.id === c.id); return u ? { ...c, ...u.upd } : c; }));
+      updates.forEach(u => {
+        mutatedIdsRef.current.add(u.id);
+        setTimeout(() => mutatedIdsRef.current.delete(u.id), 5000);
+      });
+    }
     setRefreshing(false);
-    alert(`Sincronización completa: ${updated} caso(s) actualizado(s).`);
+    addToast({ type: 'pqr', title: 'Sincronización completa', message: `${updated} caso(s) actualizado(s) desde Tiendanube` });
   };
 
   // ═══════════════════════════════════════════════════════
@@ -443,7 +514,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
                 title="Sincronizar todos con Tiendanube">
                 <RefreshCw size={13} />
               </button>
-              <button onClick={handleOpenCreate} style={{ ...S.btn, ...S.btnPrimary }}>
+              <button onClick={handleOpenCreate} disabled={saving} style={{ ...S.btn, ...S.btnPrimary, opacity: saving ? 0.5 : 1, pointerEvents: saving ? 'none' : 'auto' }}>
                 <Plus size={14} /> Nuevo
               </button>
             </div>
@@ -553,13 +624,21 @@ export default function PQRPanel({ session, rawOrders = [] }) {
 
         {/* ── CREATE / EDIT FORM ── */}
         {isCreating && (
-          <div style={{ flex: 1, overflowY: 'auto', animation: 'slideUp 0.35s ease' }}>
+          <div style={{ flex: 1, overflowY: 'auto', animation: 'slideUp 0.35s ease', position: 'relative' }}>
+            {saving && (
+              <div style={{ position: 'absolute', inset: 0, background: 'rgba(9,9,11,0.5)', backdropFilter: 'blur(4px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 24px', background: 'var(--surface)', borderRadius: 10, border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-lg)' }}>
+                  <div style={{ width: 18, height: 18, border: '2px solid var(--primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--on-surface)' }}>Guardando...</span>
+                </div>
+              </div>
+            )}
             <div style={{ padding: '18px 28px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, background: 'var(--surface)', zIndex: 5, backdropFilter: 'var(--glass-blur)' }}>
               <div>
                 <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: 'var(--on-surface)' }}>{selectedCase ? 'Editar Caso' : 'Nuevo Caso PQR'}</h2>
                 <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--on-surface-variant)' }}>{selectedCase ? `#${selectedCase.order_number}` : 'Busca un pedido de Tiendanube para autocompletar'}</p>
               </div>
-              <button onClick={handleClose} style={{ background: 'var(--surface-container-high)', border: 'none', color: 'var(--on-surface-variant)', cursor: 'pointer', padding: 8, borderRadius: 8, display: 'flex', transition: 'all 0.2s' }}
+              <button onClick={handleClose} disabled={saving} style={{ background: 'var(--surface-container-high)', border: 'none', color: 'var(--on-surface-variant)', cursor: saving ? 'not-allowed' : 'pointer', padding: 8, borderRadius: 8, display: 'flex', transition: 'all 0.2s', opacity: saving ? 0.4 : 1 }}
                 onMouseEnter={e => e.currentTarget.style.background = 'var(--error-container)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'var(--surface-container-high)'}>
                 <X size={16} />
@@ -696,8 +775,8 @@ export default function PQRPanel({ session, rawOrders = [] }) {
             {/* Footer */}
             <div style={{ padding: '14px 28px', borderTop: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'flex-end', gap: 8, background: 'var(--surface)', position: 'sticky', bottom: 0, backdropFilter: 'var(--glass-blur)' }}>
               <button onClick={handleClose} style={{ ...S.btn, ...S.btnOutline }}>Cancelar</button>
-              <button onClick={handleSave} style={{ ...S.btn, ...S.btnPrimary }}>
-                <Save size={13} /> {selectedCase ? 'Actualizar' : 'Crear Caso'}
+              <button onClick={handleSave} disabled={saving} style={{ ...S.btn, ...S.btnPrimary, opacity: saving ? 0.6 : 1, pointerEvents: saving ? 'none' : 'auto' }}>
+                <Save size={13} /> {saving ? 'Guardando...' : selectedCase ? 'Actualizar' : 'Crear Caso'}
               </button>
             </div>
           </div>
@@ -832,10 +911,9 @@ export default function PQRPanel({ session, rawOrders = [] }) {
         )}
       </div>
 
-      {/* DROPDOWN PORTAL — fixed positioned, never clipped by overflow */}
-      {showDropdown && matchedOrders.length > 0 && (
-        <div ref={dropdownMenuRef} style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, background: 'var(--surface)', border: '1px solid var(--border-subtle)', borderRadius: 10, maxHeight: 240, overflowY: 'auto', boxShadow: 'var(--shadow-lg)', zIndex: 9999, animation: 'slideUp 0.2s ease' }}>
-          {matchedOrders.map(order => (
+      {createPortal(
+        <div ref={dropdownMenuRef} style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, background: 'var(--surface)', border: '1px solid var(--border-subtle)', borderRadius: 10, maxHeight: 220, overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.4)', zIndex: 9999, animation: 'slideUp 0.2s ease' }}>
+          {showDropdown && matchedOrders.map(order => (
             <div key={order.id} onClick={(e) => { e.stopPropagation(); handleOrderSelect(order); setShowDropdown(false); }}
               style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border-subtle)', transition: 'all 0.15s' }}
               onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-container)'}
@@ -849,7 +927,8 @@ export default function PQRPanel({ session, rawOrders = [] }) {
               <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', opacity: 0.6, marginTop: 1 }}>{order.customer?.email} · {order.products?.length || 0} productos</div>
             </div>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
 
       <style>{`

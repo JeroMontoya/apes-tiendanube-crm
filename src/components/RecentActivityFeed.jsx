@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { ShoppingBag, UserPlus, Clock, Info } from 'lucide-react';
+import { ShoppingBag, UserPlus, Clock } from 'lucide-react';
+import MetricTooltip from './MetricTooltip';
 
 function timeAgo(dateStr) {
   if (!dateStr) return '';
@@ -94,9 +95,7 @@ export default function RecentActivityFeed({ clients, rawOrders, dateRange }) {
         <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--on-surface)' }}>
           <Clock color="var(--primary)" size={20} />
           Actividad Reciente
-          <div className="metric-info" title="Últimas órdenes recibidas y nuevos clientes registrados. Se actualiza automáticamente cada minuto.">
-            <Info size={14} color="var(--on-surface-variant)" style={{ cursor: 'help', opacity: 0.6 }} />
-          </div>
+          <MetricTooltip text="Últimas órdenes recibidas y nuevos clientes registrados. Se actualiza automáticamente cada minuto." />
         </h3>
         <span className="live-dot" data-tooltip="Datos en vivo"></span>
       </div>

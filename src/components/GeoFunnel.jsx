@@ -1,28 +1,38 @@
 import React, { useMemo, useState } from 'react';
-import { MapPin, Info } from 'lucide-react';
+import { MapPin } from 'lucide-react';
+import MetricTooltip from './MetricTooltip';
 /**
  * GeoFunnel — Embudo Geográfico por Ciudad y Provincia
  * Shows where customers are buying from, grouped by province,
  * with expandable city breakdowns.
+ * Respects date range filter.
  */
-export default function GeoFunnel({ clients, onSelectClient }) {
+export default function GeoFunnel({ clients, onSelectClient, dateRange }) {
   const [viewMode, setViewMode] = useState('province'); // 'province' | 'city'
   const [expandedKey, setExpandedKey] = useState(null);
 
   const { provinceData, cityData, totalRevenue, totalClients } = useMemo(() => {
     const arr = (clients || []).filter(c => (c.purchaseCount ?? 0) > 0);
     
-    // Aggregate geography from individual filtered purchases (not client-level fields)
+    // Get date range for filtering
+    const startDate = dateRange?.startDate || '';
+    const endDate = dateRange?.endDate || '';
+    
+    // Aggregate geography from individual DATE-FILTERED purchases
     const provinces = {};
     const cities = {};
     let totalRevenue = 0;
     let totalClients = arr.length;
 
     arr.forEach(c => {
-      const purchases = c.purchases || [];
-      const filteredPurchases = purchases.filter(p => p.amount > 0);
+      // Use date-filtered purchases (respects date range picker: hoy, ayer, 7d, este mes, etc.)
+      const purchases = (c.purchases || []).filter(p => {
+        if (!p.date) return false;
+        const d = typeof p.date === 'string' ? p.date.substring(0, 10) : '';
+        return d >= startDate && d <= endDate;
+      });
       
-      filteredPurchases.forEach(p => {
+      purchases.forEach(p => {
         const prov = p.province || c.province || 'Sin provincia';
         const city = p.city || c.city || 'Sin ciudad';
         const amt = p.amount || 0;
@@ -92,13 +102,11 @@ export default function GeoFunnel({ clients, onSelectClient }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--on-surface)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <MapPin size={20} color="#60a5fa" /> Embudo Geográfico de Ventas
-            <div className="metric-info" title="Muestra de qué ciudades y provincias vienen tus clientes y cuánto revenue genera cada zona. Útil para enfocar publicidad geográfica o detectar nuevas zonas de oportunidad.">
-              <Info size={14} color="var(--on-surface-variant)" style={{ cursor: 'help', opacity: 0.6 }} />
-            </div>
+            <MapPin size={20} color="#60a5fa" /> Embudo Geográfico
+            <MetricTooltip text="Muestra de qué ciudades y provincias vienen tus clientes en el periodo seleccionado (hoy, 7 dias, este mes, etc)." />
           </h3>
           <p style={{ fontSize: 12, color: 'var(--on-surface-variant)', margin: '4px 0 0' }}>
-            ¿De dónde compran tus clientes? — {totalClients} clientes, {formatCurrency(totalRevenue)} revenue
+            Distribución geográfica por periodo seleccionado — {totalClients} clientes, {formatCurrency(totalRevenue)} revenue
           </p>
         </div>
 

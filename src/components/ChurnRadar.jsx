@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { calculateChurnScore } from '../utils/predictiveEngine';
-import { AlertTriangle, TrendingDown, Info } from 'lucide-react';
+import { AlertTriangle, TrendingDown } from 'lucide-react';
+import MetricTooltip from './MetricTooltip';
 
 export default function ChurnRadar({ clients }) {
   const atRisk = useMemo(() => {
@@ -18,9 +19,9 @@ export default function ChurnRadar({ clients }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <AlertTriangle color="#ef4444" size={20} />
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--on-surface)' }}>Radar de Fuga (Churn)</h3>
-          <div className="metric-info" title="Clientes que llevan mucho tiempo sin comprar y podrían no volver. El % se calcula según frecuencia de compra y días desde la última compra.">
-            <Info size={14} color="var(--on-surface-variant)" style={{ cursor: 'help' }} />
-          </div>
+          <MetricTooltip text="Clientes que llevan mucho tiempo sin comprar y podrían no volver. El % se calcula según frecuencia de compra y días desde la última compra.">
+            <AlertTriangle color="#ef4444" size={20} />
+          </MetricTooltip>
         </div>
         <span style={{ fontSize: 12, color: 'var(--on-surface-variant)', fontWeight: 600 }}>Alto Riesgo</span>
       </div>

@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "backend": "node server/index.js",
+    "backend": "node server/server.js",
     "auto-connect": "node start-backend.js"
   },
   "devDependencies": {

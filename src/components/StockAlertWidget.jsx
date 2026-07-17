@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { PackageX, AlertTriangle, CheckCircle, Package, ChevronDown, RefreshCw, DollarSign, Filter, Search, Info } from 'lucide-react';
+import MetricTooltip from './MetricTooltip';
 
 const FILTERS = [
   { key: 'all', label: 'Todos' },
@@ -168,9 +169,9 @@ export default function StockAlertWidget({ clients, products, onRefresh, isRefre
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--on-surface)', lineHeight: 1.2, display: 'flex', alignItems: 'center', gap: 6 }}>
             Estado del Inventario
-            <div className="metric-info" title="Muestra productos sin stock y con stock bajo. Los productos 'Sin Stock' ya no están disponibles en tu tienda. 'Stock Bajo' significa que quedan pocos y podrían agotarse pronto.">
-              <Info size={12} color="var(--on-surface-variant)" style={{ cursor: 'help', opacity: 0.6 }} />
-            </div>
+            <MetricTooltip text="Muestra productos sin stock y con stock bajo. Los productos 'Sin Stock' ya no están disponibles en tu tienda. 'Stock Bajo' significa que quedan pocos y podrían agotarse pronto.">
+              <Info size={12} color="var(--on-surface-variant)" style={{ opacity: 0.6 }} />
+            </MetricTooltip>
           </div>
           <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', marginTop: 2, opacity: 0.7 }}>
             {!isConnected ? 'Conectá TiendaNube para ver el stock'
