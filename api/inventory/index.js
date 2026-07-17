@@ -54,8 +54,19 @@ async function getUserRole(userId) {
     .select('role')
     .eq('user_id', userId)
     .single();
-  if (error || !data) return 'viewer';
-  return data.role;
+  if (data) return data.role;
+
+  const { count } = await supabase
+    .from('inventory_user_roles')
+    .select('id', { count: 'exact', head: true });
+
+  const role = (!count || count === 0) ? 'admin' : 'viewer';
+
+  await supabase
+    .from('inventory_user_roles')
+    .upsert({ user_id: userId, role }, { onConflict: 'user_id' });
+
+  return role;
 }
 
 function hasPermission(role, action) {
