@@ -6,19 +6,6 @@
       "use": "@vercel/node"
     },
     {
-      "src": "api/inventory/index.js",
-      "use": "@vercel/node",
-      "config": { "includeFiles": ["api/inventory/**"] }
-    },
-    {
-      "src": "api/inventory/webhook-tiendanube.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "api/inventory/sync-to-tiendanube.js",
-      "use": "@vercel/node"
-    },
-    {
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
