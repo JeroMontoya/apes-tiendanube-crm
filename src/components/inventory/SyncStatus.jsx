@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
 import {
   RefreshCw, CheckCircle, AlertTriangle, Clock, Wifi, WifiOff,
-  ToggleLeft, ToggleRight, ArrowUpDown, Loader2, X,
+  ToggleLeft, ToggleRight, ArrowUpDown, Loader2, X, Webhook, ExternalLink,
 } from 'lucide-react';
 
 function formatTime(dateStr) {
@@ -27,6 +28,9 @@ const STATUS_CONFIG = {
 export default function SyncStatus({ connected, lastSync, onSync, events, autoSync, onToggleAutoSync }) {
   const [syncing, setSyncing] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [webhookLoading, setWebhookLoading] = useState(false);
+  const [webhookResult, setWebhookResult] = useState(null);
+  const [registeredWebhooks, setRegisteredWebhooks] = useState([]);
 
   const status = syncing ? 'syncing' : connected ? 'connected' : 'disconnected';
   const statusConfig = STATUS_CONFIG[status];
@@ -126,9 +130,130 @@ export default function SyncStatus({ connected, lastSync, onSync, events, autoSy
         </div>
       </div>
 
-      {/* Expanded: Recent Events */}
+      {/* Expanded: Recent Events + Webhook Config */}
       {expanded && (
         <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '14px 18px' }}>
+          {/* Webhook Registration */}
+          <div style={{
+            padding: '12px 14px', borderRadius: '10px',
+            background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)',
+            marginBottom: '14px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Webhook size={14} color="#6366f1" />
+                <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--on-surface)' }}>Webhook TiendaNube</span>
+              </div>
+            </div>
+            <p style={{ margin: '0 0 10px', fontSize: '11px', color: 'var(--on-surface-variant)', lineHeight: '1.5' }}>
+              Registra webhooks automáticamente para sincronizar stock, pedidos y productos en tiempo real.
+            </p>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                disabled={webhookLoading}
+                onClick={async () => {
+                  setWebhookLoading(true);
+                  setWebhookResult(null);
+                  try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    const res = await fetch('/api/inventory/register-webhook', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${session?.access_token}`,
+                      },
+                      body: JSON.stringify({ action: 'register' }),
+                    });
+                    const data = await res.json();
+                    setWebhookResult(data);
+                    if (data.results) {
+                      setRegisteredWebhooks(data.results.filter(r => r.status === 'registered' || r.status === 'already_registered'));
+                    }
+                  } catch (e) {
+                    setWebhookResult({ error: e.message });
+                  } finally {
+                    setWebhookLoading(false);
+                  }
+                }}
+                style={{
+                  padding: '7px 14px', borderRadius: '6px', border: 'none',
+                  background: webhookLoading ? 'rgba(99,102,241,0.5)' : '#6366f1',
+                  color: '#fff', fontSize: '11px', fontWeight: '700',
+                  cursor: webhookLoading ? 'wait' : 'pointer', fontFamily: 'inherit',
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                }}
+              >
+                {webhookLoading ? <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <Webhook size={12} />}
+                {webhookLoading ? 'Registrando...' : 'Registrar Webhooks'}
+              </button>
+              <button
+                onClick={async () => {
+                  setWebhookLoading(true);
+                  try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    const res = await fetch('/api/inventory/register-webhook', {
+                      headers: { Authorization: `Bearer ${session?.access_token}` },
+                    });
+                    const data = await res.json();
+                    setRegisteredWebhooks(data.webhooks || []);
+                  } catch (e) {
+                    console.error(e);
+                  } finally {
+                    setWebhookLoading(false);
+                  }
+                }}
+                style={{
+                  padding: '7px 14px', borderRadius: '6px',
+                  border: '1px solid var(--border-subtle)', background: 'transparent',
+                  color: 'var(--on-surface-variant)', fontSize: '11px', fontWeight: '600',
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                Ver Webhooks
+              </button>
+            </div>
+            {webhookResult && (
+              <div style={{ marginTop: '10px' }}>
+                {webhookResult.error ? (
+                  <div style={{ fontSize: '11px', color: '#ef4444', padding: '6px 10px', borderRadius: '6px', background: 'rgba(239,68,68,0.1)' }}>
+                    Error: {webhookResult.error}
+                  </div>
+                ) : webhookResult.results ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {webhookResult.results.map((r, i) => (
+                      <div key={i} style={{
+                        display: 'flex', alignItems: 'center', gap: '8px',
+                        padding: '5px 10px', borderRadius: '6px',
+                        background: r.status === 'registered' ? 'rgba(16,185,129,0.1)' :
+                          r.status === 'already_registered' ? 'rgba(59,130,246,0.1)' : 'rgba(239,68,68,0.1)',
+                        fontSize: '11px',
+                      }}>
+                        {r.status === 'registered' || r.status === 'already_registered' ?
+                          <CheckCircle size={12} color="#10b981" /> : <AlertTriangle size={12} color="#ef4444" />}
+                        <span style={{ fontWeight: 600, color: 'var(--on-surface)' }}>{r.event}</span>
+                        <span style={{
+                          marginLeft: 'auto', fontSize: '10px', padding: '2px 6px', borderRadius: '4px',
+                          background: r.status === 'registered' ? 'rgba(16,185,129,0.15)' :
+                            r.status === 'already_registered' ? 'rgba(59,130,246,0.15)' : 'rgba(239,68,68,0.15)',
+                          color: r.status === 'registered' ? '#10b981' :
+                            r.status === 'already_registered' ? '#3b82f6' : '#ef4444',
+                          fontWeight: 700,
+                        }}>
+                          {r.status === 'registered' ? 'Registrado' : r.status === 'already_registered' ? 'Ya existe' : 'Error'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            )}
+            {registeredWebhooks.length > 0 && !webhookResult && (
+              <div style={{ marginTop: '8px', fontSize: '10px', color: 'var(--on-surface-variant)' }}>
+                {registeredWebhooks.length} webhook(s) configurado(s)
+              </div>
+            )}
+          </div>
+
           <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--on-surface)', marginBottom: '10px' }}>
             Eventos Recientes
           </div>

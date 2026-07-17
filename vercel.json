@@ -36,6 +36,10 @@
       "destination": "/api/inventory/sync-to-tiendanube.js"
     },
     {
+      "source": "/api/inventory/register-webhook",
+      "destination": "/api/inventory/register-webhook.js"
+    },
+    {
       "source": "/api/inventory/(.*)",
       "destination": "/api/inventory/index.js"
     },
