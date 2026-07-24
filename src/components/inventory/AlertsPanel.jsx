@@ -6,7 +6,7 @@ import {
 
 const SEVERITY_CONFIG = {
   critical: { label: 'Crítica', color: '#ef4444', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.3)', icon: XCircle },
-  high: { label: 'Alta', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.3)', icon: AlertTriangle },
+  high: { label: 'Alta', color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.3)', icon: AlertTriangle },
   medium: { label: 'Media', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)', border: 'rgba(59,130,246,0.3)', icon: Bell },
   low: { label: 'Baja', color: '#64748b', bg: 'rgba(100,116,139,0.1)', border: 'rgba(100,116,139,0.3)', icon: Bell },
 };
@@ -103,7 +103,7 @@ export default function AlertsPanel({ alerts, onAcknowledge, onCheck, loading })
           disabled={loading}
           style={{
             padding: '10px 18px', borderRadius: '10px', border: 'none',
-            background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: '700',
+            background: '#3b82f6', color: 'var(--on-surface)', fontSize: '12px', fontWeight: '700',
             cursor: loading ? 'wait' : 'pointer', fontFamily: 'inherit',
             display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto',
           }}
@@ -170,7 +170,7 @@ export default function AlertsPanel({ alerts, onAcknowledge, onCheck, loading })
                 key={alert.id || i}
                 style={{
                   padding: '14px 16px', borderRadius: '12px',
-                  background: alert.acknowledged ? 'var(--surface-container-low, rgba(255,255,255,0.03))' : sev.bg,
+                  background: alert.acknowledged ? 'var(--surface-container-low, var(--surface-container-low))' : sev.bg,
                   border: `1px solid ${alert.acknowledged ? 'var(--border-subtle)' : sev.border}`,
                   opacity: alert.acknowledged ? 0.6 : 1,
                   display: 'flex', alignItems: 'center', gap: '12px',
@@ -179,7 +179,7 @@ export default function AlertsPanel({ alerts, onAcknowledge, onCheck, loading })
               >
                 <div style={{
                   width: '36px', height: '36px', borderRadius: '10px',
-                  background: alert.acknowledged ? 'var(--surface-container, rgba(255,255,255,0.05))' : `${sev.color}20`,
+                  background: alert.acknowledged ? 'var(--surface-container, var(--border-subtle))' : `${sev.color}20`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}>
                   <SevIcon size={18} color={alert.acknowledged ? 'var(--on-surface-variant)' : sev.color} />

@@ -137,7 +137,7 @@ const st = {
   }),
   previewBox: { background: COLORS.bg, borderRadius: 8, border: `1px solid ${COLORS.border}`, padding: 12, marginTop: 12, wordBreak: 'break-all', fontSize: 13, fontFamily: "'Fira Code', 'JetBrains Mono', monospace", lineHeight: 1.6, maxHeight: 200, overflow: 'auto' },
   paramLine: { display: 'flex', gap: 8, alignItems: 'baseline', padding: '2px 0' },
-  btnPrimary: { display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: COLORS.primaryDark, color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'background 0.15s' },
+  btnPrimary: { display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: COLORS.primaryDark, color: 'var(--on-surface)', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'background 0.15s' },
   btnSecondary: { display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: COLORS.surface, color: COLORS.textDim, border: `1px solid ${COLORS.border}`, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' },
   btnIcon: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, cursor: 'pointer', transition: 'all 0.15s' },
   toast: { position: 'fixed', bottom: 24, right: 24, display: 'flex', alignItems: 'center', gap: 8, padding: '12px 20px', background: COLORS.successBg, color: COLORS.successText, border: `1px solid ${COLORS.successBorder}`, borderRadius: 10, fontSize: 13, fontWeight: 500, zIndex: 9999, boxShadow: '0 8px 24px rgba(0,0,0,0.5)' },
@@ -750,7 +750,7 @@ export default function UTMBuilder() {
               <t.icon size={14} />
               {t.label}
               {t.id === 'history' && history.length > 0 && (
-                <span style={{ background: COLORS.primaryDark, color: '#fff', fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 10, marginLeft: 4 }}>
+                <span style={{ background: COLORS.primaryDark, color: 'var(--on-surface)', fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 10, marginLeft: 4 }}>
                   {history.length > 99 ? '99+' : history.length}
                 </span>
               )}

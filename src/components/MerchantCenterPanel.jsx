@@ -308,8 +308,8 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
                 Merchant Center Command
               </h1>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: isConfigured ? '#10b981' : '#f59e0b', boxShadow: `0 0 10px ${isConfigured ? '#10b981' : '#f59e0b'}` }}></span>
-                <span style={{ fontSize: 12, color: isConfigured ? '#10b981' : '#f59e0b', fontWeight: 600, letterSpacing: '1px' }}>{isConfigured ? 'SYSTEM ONLINE' : 'DEMO MODE'}</span>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: isConfigured ? '#10b981' : 'var(--primary-container)', boxShadow: `0 0 10px ${isConfigured ? '#10b981' : 'var(--primary-container)'}` }}></span>
+                <span style={{ fontSize: 12, color: isConfigured ? '#10b981' : 'var(--primary-container)', fontWeight: 600, letterSpacing: '1px' }}>{isConfigured ? 'SYSTEM ONLINE' : 'DEMO MODE'}</span>
                 <span style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginLeft: 8 }}>Merchant ID: {isConfigured ? merchantId : 'N/A (demo)'}</span>
               </div>
             </div>
@@ -322,7 +322,7 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
             {isRefreshing ? 'Sincronizando...' : 'Sincronizar'}
           </button>
           <a href={isConfigured ? `https://merchants.google.com/mc/overview?a=${merchantId}` : '#'} target="_blank" rel="noopener noreferrer"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.03)', color: 'var(--on-surface)', fontWeight: 600, fontSize: 13, textDecoration: 'none', transition: 'all 0.2s' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 12, border: '1px solid var(--border-medium)', background: 'var(--surface-container-low)', color: 'var(--on-surface)', fontWeight: 600, fontSize: 13, textDecoration: 'none', transition: 'all 0.2s' }}>
             <ExternalLink size={14} /> Consola GC
           </a>
         </div>
@@ -330,8 +330,8 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
 
       {!isConfigured && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 18px', borderRadius: 12, background: 'linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.04) 100%)', border: '1px solid rgba(245,158,11,0.25)' }}>
-          <Info size={16} color="#f59e0b" />
-          <span style={{ fontSize: 12, color: '#f59e0b', fontWeight: 600 }}>Modo Demo</span>
+          <Info size={16} color="var(--primary-container)" />
+          <span style={{ fontSize: 12, color: 'var(--primary-container)', fontWeight: 600 }}>Modo Demo</span>
           <span style={{ fontSize: 12, color: 'var(--on-surface-variant)' }}>— Configura Merchant ID y Service Account en Configuración para ver datos reales</span>
         </div>
       )}
@@ -342,7 +342,7 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
         <div className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '18px 20px', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, transparent 100%)', borderLeft: '3px solid #10b981' }}>
           <div style={{ position: 'relative', width: 52, height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="52" height="52" viewBox="0 0 100 100" style={{ position: 'absolute', transform: 'rotate(-90deg)' }}>
-              <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
+              <circle cx="50" cy="50" r="45" fill="none" stroke="var(--border-subtle)" strokeWidth="8" />
               <circle cx="50" cy="50" r="45" fill="none" stroke="#10b981" strokeWidth="8" strokeDasharray="283" strokeDashoffset={283 - (283 * healthScore) / 100} style={{ transition: 'stroke-dashoffset 1s ease-out' }} />
             </svg>
             <span style={{ fontSize: 16, fontWeight: 800, color: '#10b981' }}>{healthScore}%</span>
@@ -358,8 +358,8 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
           { label: 'Sin Stock', value: stats.outOfStock, icon: XCircle, color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
           { label: 'CTR Promedio', value: `${(stats.avgCtr * 100).toFixed(2)}%`, icon: Target, color: '#06b6d4', bg: 'rgba(6,182,212,0.1)' },
           { label: 'Clics Totales', value: stats.totalClicks.toLocaleString(), icon: Activity, color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
-          { label: 'Conversiones', value: stats.totalConversions.toLocaleString(), icon: ShoppingCart, color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
-          { label: 'ROAS', value: stats.roas > 0 ? stats.roas.toFixed(2) + 'x' : '—', icon: TrendingUp, color: stats.roas >= 3 ? '#10b981' : stats.roas >= 1 ? '#f59e0b' : '#ef4444', bg: 'rgba(245,158,11,0.1)' },
+          { label: 'Conversiones', value: stats.totalConversions.toLocaleString(), icon: ShoppingCart, color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.1)' },
+          { label: 'ROAS', value: stats.roas > 0 ? stats.roas.toFixed(2) + 'x' : '—', icon: TrendingUp, color: stats.roas >= 3 ? '#10b981' : stats.roas >= 1 ? 'var(--primary-container)' : '#ef4444', bg: 'rgba(245,158,11,0.1)' },
           { label: 'Sin Listar', value: `${unlistedRate}%`, icon: AlertCircle, color: unlistedRate > 30 ? '#ef4444' : '#10b981', bg: unlistedRate > 30 ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)' },
         ].map((kpi, i) => (
           <div key={i} className="glass-card" style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
@@ -373,7 +373,7 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 6, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 12, overflowX: 'auto' }}>
+      <div style={{ display: 'flex', gap: 6, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 12, overflowX: 'auto' }}>
         {[
           { id: 'overview', icon: HeartPulse, label: 'Radar' },
           { id: 'products', icon: Database, label: 'Catálogo SKUs' },
@@ -409,11 +409,11 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
                   const maxClicks = parseInt(topPerformers[0]?.metricValues?.[0]?.value || 1);
                   const barW = Math.max(4, (clicks / maxClicks) * 100);
                   return (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'rgba(0,0,0,0.2)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.03)' }}>
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'rgba(0,0,0,0.2)', borderRadius: 10, border: '1px solid var(--surface-container-low)' }}>
                       <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(6,182,212,0.1)', color: '#06b6d4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0 }}>{i + 1}</div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--on-surface)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 4 }}>{r.dimensionValues?.[1]?.value || r.dimensionValues?.[0]?.value}</div>
-                        <div style={{ height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 2, overflow: 'hidden' }}>
+                        <div style={{ height: 4, background: 'var(--border-subtle)', borderRadius: 2, overflow: 'hidden' }}>
                           <div style={{ height: '100%', width: `${barW}%`, background: 'linear-gradient(90deg, #06b6d4, #22d3ee)', borderRadius: 2, transition: 'width 0.8s ease-out' }} />
                         </div>
                       </div>
@@ -438,8 +438,8 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
                   const convs = parseInt(r.metricValues?.[4]?.value || 0);
                   const convVal = parseFloat(r.metricValues?.[5]?.value || 0);
                   return (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'rgba(0,0,0,0.2)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.03)' }}>
-                      <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(245,158,11,0.1)', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0 }}>{i + 1}</div>
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'rgba(0,0,0,0.2)', borderRadius: 10, border: '1px solid var(--surface-container-low)' }}>
+                      <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(245,158,11,0.1)', color: 'var(--primary-container)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0 }}>{i + 1}</div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--on-surface)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.dimensionValues?.[1]?.value || r.dimensionValues?.[0]?.value}</div>
                         <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', marginTop: 2 }}>{r.dimensionValues?.[2]?.value || 'Sin marca'}</div>
@@ -463,9 +463,9 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {feeds.map(f => (
-                    <div key={f.id} style={{ padding: 14, background: 'rgba(0,0,0,0.2)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.03)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div key={f.id} style={{ padding: 14, background: 'rgba(0,0,0,0.2)', borderRadius: 10, border: '1px solid var(--surface-container-low)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: f.processingStatus === 'success' ? '#10b981' : '#f59e0b', boxShadow: `0 0 8px ${f.processingStatus === 'success' ? '#10b981' : '#f59e0b'}` }}></span>
+                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: f.processingStatus === 'success' ? '#10b981' : 'var(--primary-container)', boxShadow: `0 0 8px ${f.processingStatus === 'success' ? '#10b981' : 'var(--primary-container)'}` }}></span>
                         <div>
                           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--on-surface)' }}>{f.name || f.id}</div>
                           <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', marginTop: 2 }}>{f.lastUpdated ? new Date(f.lastUpdated).toLocaleDateString() : 'N/A'}</div>
@@ -489,7 +489,7 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {[
                   { label: 'Productos aprobados y visibles', count: stats.inStock, total: stats.total, color: '#10b981' },
-                  { label: 'Stock bajo / limitado', count: stats.limited, total: stats.total, color: '#f59e0b' },
+                  { label: 'Stock bajo / limitado', count: stats.limited, total: stats.total, color: 'var(--primary-container)' },
                   { label: 'Fuera de stock / rechazados', count: stats.outOfStock, total: stats.total, color: '#ef4444' },
                   { label: 'Sin datos de pauta (no listados)', count: stats.productsWithoutPerf, total: stats.total, color: '#8b5cf6' },
                 ].map((d, i) => {
@@ -500,7 +500,7 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
                         <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--on-surface)' }}>{d.label}</span>
                         <span style={{ fontSize: 12, fontWeight: 800, color: d.color }}>{d.count} <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--on-surface-variant)' }}>({pct}%)</span></span>
                       </div>
-                      <div style={{ height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 2, overflow: 'hidden' }}>
+                      <div style={{ height: 4, background: 'var(--border-subtle)', borderRadius: 2, overflow: 'hidden' }}>
                         <div style={{ height: '100%', width: `${pct}%`, background: d.color, borderRadius: 2, transition: 'width 0.8s ease-out' }} />
                       </div>
                     </div>
@@ -514,21 +514,21 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
         {/* ── PRODUCTS TABLE ── */}
         {activeTab === 'products' && (
           <div className="glass-card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', height: 'calc(100vh - 350px)', minHeight: 500 }}>
-            <div style={{ padding: 16, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexWrap: 'wrap', gap: 12, background: 'rgba(0,0,0,0.2)' }}>
+            <div style={{ padding: 16, borderBottom: '1px solid var(--border-subtle)', display: 'flex', flexWrap: 'wrap', gap: 12, background: 'rgba(0,0,0,0.2)' }}>
               <div style={{ position: 'relative', flex: '1 1 300px' }}>
                 <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--on-surface-variant)' }} />
                 <input type="text" placeholder="Buscar SKU, título, marca..." value={search} onChange={e => setSearch(e.target.value)} 
-                  style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px 9px 36px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)', color: 'var(--on-surface)', fontSize: 13, outline: 'none' }} />
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px 9px 36px', borderRadius: 8, border: '1px solid var(--border-medium)', background: 'rgba(0,0,0,0.3)', color: 'var(--on-surface)', fontSize: 13, outline: 'none' }} />
               </div>
               <select value={filterAvailability} onChange={e => setFilterAvailability(e.target.value)} 
-                style={{ padding: '0 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)', color: 'var(--on-surface)', fontSize: 12, outline: 'none' }}>
+                style={{ padding: '0 14px', borderRadius: 8, border: '1px solid var(--border-medium)', background: 'rgba(0,0,0,0.3)', color: 'var(--on-surface)', fontSize: 12, outline: 'none' }}>
                 <option value="all">Todos</option>
                 <option value="in_stock">En Stock</option>
                 <option value="limited_availability">Stock Bajo</option>
                 <option value="out_of_stock">Sin Stock</option>
               </select>
               <select value={sortBy} onChange={e => setSortBy(e.target.value)}
-                style={{ padding: '0 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)', color: 'var(--on-surface)', fontSize: 12, outline: 'none' }}>
+                style={{ padding: '0 14px', borderRadius: 8, border: '1px solid var(--border-medium)', background: 'rgba(0,0,0,0.3)', color: 'var(--on-surface)', fontSize: 12, outline: 'none' }}>
                 <option value="performance">Por Performance</option>
                 <option value="price">Por Precio</option>
                 <option value="title">Por Nombre</option>
@@ -540,7 +540,7 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
                 <thead style={{ position: 'sticky', top: 0, background: 'rgba(20,20,20,0.95)', backdropFilter: 'blur(10px)', zIndex: 10 }}>
                   <tr>
                     {['Producto', 'Precio', 'Estado', 'Clics', 'Impr.', 'CTR', 'Conv.', 'ROAS'].map(h => (
-                      <th key={h} style={{ padding: '12px 14px', fontSize: 10, fontWeight: 700, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.8px', borderBottom: '1px solid rgba(255,255,255,0.05)', whiteSpace: 'nowrap' }}>{h}</th>
+                      <th key={h} style={{ padding: '12px 14px', fontSize: 10, fontWeight: 700, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.8px', borderBottom: '1px solid var(--border-subtle)', whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -557,7 +557,7 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
                       <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)', transition: 'background 0.15s' }} onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'} onMouseOut={e => e.currentTarget.style.background = 'transparent'}>
                         <td style={{ padding: '12px 14px' }}>
                           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                            <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(0,0,0,0.3)', border: '1px solid var(--outline)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                               {p.imageLink ? <img src={p.imageLink} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Package size={16} color="var(--on-surface-variant)" />}
                             </div>
                             <div style={{ minWidth: 0 }}>
@@ -575,15 +575,15 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
                         <td style={{ padding: '12px 14px' }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 12, fontSize: 10, fontWeight: 700,
                             background: p.availability === 'in_stock' ? 'rgba(16,185,129,0.1)' : p.availability === 'limited_availability' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)',
-                            color: p.availability === 'in_stock' ? '#10b981' : p.availability === 'limited_availability' ? '#f59e0b' : '#ef4444' }}>
+                            color: p.availability === 'in_stock' ? '#10b981' : p.availability === 'limited_availability' ? 'var(--primary-container)' : '#ef4444' }}>
                             {p.availability === 'in_stock' ? '✓ Online' : p.availability === 'limited_availability' ? '⚠ Low' : '✗ Offline'}
                           </span>
                         </td>
                         <td style={{ padding: '12px 14px', fontSize: 12, fontWeight: 700, color: 'var(--on-surface)', textAlign: 'right' }}>{clicks.toLocaleString()}</td>
                         <td style={{ padding: '12px 14px', fontSize: 12, color: 'var(--on-surface-variant)', textAlign: 'right' }}>{impr.toLocaleString()}</td>
-                        <td style={{ padding: '12px 14px', fontSize: 12, fontWeight: 600, textAlign: 'right', color: ctr > 0.02 ? '#10b981' : ctr > 0.01 ? '#f59e0b' : '#ef4444' }}>{(ctr * 100).toFixed(2)}%</td>
+                        <td style={{ padding: '12px 14px', fontSize: 12, fontWeight: 600, textAlign: 'right', color: ctr > 0.02 ? '#10b981' : ctr > 0.01 ? 'var(--primary-container)' : '#ef4444' }}>{(ctr * 100).toFixed(2)}%</td>
                         <td style={{ padding: '12px 14px', fontSize: 12, fontWeight: 700, textAlign: 'right', color: convs > 0 ? '#10b981' : 'var(--on-surface-variant)' }}>{convs}</td>
-                        <td style={{ padding: '12px 14px', fontSize: 12, fontWeight: 700, textAlign: 'right', color: roas >= 3 ? '#10b981' : roas >= 1 ? '#f59e0b' : roas > 0 ? '#ef4444' : 'var(--on-surface-variant)' }}>
+                        <td style={{ padding: '12px 14px', fontSize: 12, fontWeight: 700, textAlign: 'right', color: roas >= 3 ? '#10b981' : roas >= 1 ? 'var(--primary-container)' : roas > 0 ? '#ef4444' : 'var(--on-surface-variant)' }}>
                           {roas > 0 ? roas.toFixed(2) + 'x' : '—'}
                         </td>
                       </tr>
@@ -619,7 +619,7 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
                     ].map(s => (
                       <button key={s.key} onClick={() => setPerfSortBy(s.key)}
                         style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid', fontSize: 11, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s',
-                        borderColor: perfSortBy === s.key ? 'rgba(6,182,212,0.3)' : 'rgba(255,255,255,0.08)',
+                        borderColor: perfSortBy === s.key ? 'rgba(6,182,212,0.3)' : 'var(--outline)',
                         background: perfSortBy === s.key ? 'rgba(6,182,212,0.1)' : 'rgba(255,255,255,0.02)',
                         color: perfSortBy === s.key ? '#06b6d4' : 'var(--on-surface-variant)' }}>
                         {s.label}
@@ -644,14 +644,14 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
                         <div style={{ width: 20, fontSize: 11, fontWeight: 700, color: 'var(--on-surface-variant)', textAlign: 'center', flexShrink: 0 }}>{i + 1}</div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--on-surface)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.dimensionValues?.[1]?.value || r.dimensionValues?.[0]?.value}</div>
-                          <div style={{ height: 3, background: 'rgba(255,255,255,0.05)', borderRadius: 2, marginTop: 4, overflow: 'hidden' }}>
+                          <div style={{ height: 3, background: 'var(--border-subtle)', borderRadius: 2, marginTop: 4, overflow: 'hidden' }}>
                             <div style={{ height: '100%', width: `${barW}%`, background: 'linear-gradient(90deg, #06b6d4, #22d3ee)', borderRadius: 2 }} />
                           </div>
                         </div>
                         <div style={{ display: 'flex', gap: 20, flexShrink: 0 }}>
                           <div style={{ textAlign: 'right', minWidth: 60 }}><div style={{ fontSize: 11, fontWeight: 700, color: '#06b6d4' }}>{clicks.toLocaleString()}</div><div style={{ fontSize: 9, color: 'var(--on-surface-variant)' }}>Clics</div></div>
                           <div style={{ textAlign: 'right', minWidth: 60 }}><div style={{ fontSize: 11, fontWeight: 700, color: 'var(--on-surface)' }}>{convs}</div><div style={{ fontSize: 9, color: 'var(--on-surface-variant)' }}>Conv.</div></div>
-                          <div style={{ textAlign: 'right', minWidth: 60 }}><div style={{ fontSize: 11, fontWeight: 700, color: roas >= 3 ? '#10b981' : '#f59e0b' }}>{roas > 0 ? roas.toFixed(2) + 'x' : '—'}</div><div style={{ fontSize: 9, color: 'var(--on-surface-variant)' }}>ROAS</div></div>
+                          <div style={{ textAlign: 'right', minWidth: 60 }}><div style={{ fontSize: 11, fontWeight: 700, color: roas >= 3 ? '#10b981' : 'var(--primary-container)' }}>{roas > 0 ? roas.toFixed(2) + 'x' : '—'}</div><div style={{ fontSize: 9, color: 'var(--on-surface-variant)' }}>ROAS</div></div>
                           <div style={{ textAlign: 'right', minWidth: 80 }}><div style={{ fontSize: 11, fontWeight: 700, color: 'var(--on-surface)' }}>{formatCurrency(cost)}</div><div style={{ fontSize: 9, color: 'var(--on-surface-variant)' }}>Costo</div></div>
                         </div>
                       </div>
@@ -678,18 +678,18 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
                     <div key={i} style={{ padding: '12px 14px', background: 'rgba(0,0,0,0.15)', borderRadius: 8 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div style={{ width: 24, height: 24, borderRadius: 6, background: `hsl(${(i * 47) % 360}, 60%, 25%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: '#fff' }}>{b.brand.charAt(0).toUpperCase()}</div>
+                          <div style={{ width: 24, height: 24, borderRadius: 6, background: `hsl(${(i * 47) % 360}, 60%, 25%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: 'var(--on-surface)' }}>{b.brand.charAt(0).toUpperCase()}</div>
                           <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--on-surface)' }}>{b.brand}</span>
                         </div>
                         <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>{b.count} productos</span>
                       </div>
-                      <div style={{ height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 2, marginBottom: 8, overflow: 'hidden' }}>
+                      <div style={{ height: 4, background: 'var(--border-subtle)', borderRadius: 2, marginBottom: 8, overflow: 'hidden' }}>
                         <div style={{ height: '100%', width: `${barW}%`, background: `hsl(${(i * 47) % 360}, 60%, 50%)`, borderRadius: 2 }} />
                       </div>
                       <div style={{ display: 'flex', gap: 16 }}>
                         <span style={{ fontSize: 11, color: '#06b6d4', fontWeight: 600 }}>{b.clicks.toLocaleString()} clics</span>
                         <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>CTR {(b.ctr * 100).toFixed(2)}%</span>
-                        <span style={{ fontSize: 11, color: b.roas >= 3 ? '#10b981' : '#f59e0b', fontWeight: 600 }}>ROAS {b.roas > 0 ? b.roas.toFixed(2) + 'x' : '—'}</span>
+                        <span style={{ fontSize: 11, color: b.roas >= 3 ? '#10b981' : 'var(--primary-container)', fontWeight: 600 }}>ROAS {b.roas > 0 ? b.roas.toFixed(2) + 'x' : '—'}</span>
                         <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>{b.conversions} conv.</span>
                       </div>
                     </div>
@@ -712,13 +712,13 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                         <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--on-surface)', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.category}</span>
                       </div>
-                      <div style={{ height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 2, marginBottom: 8, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${barW}%`, background: 'linear-gradient(90deg, #f59e0b, #fbbf24)', borderRadius: 2 }} />
+                      <div style={{ height: 4, background: 'var(--border-subtle)', borderRadius: 2, marginBottom: 8, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${barW}%`, background: 'linear-gradient(90deg, var(--primary-container), #fbbf24)', borderRadius: 2 }} />
                       </div>
                       <div style={{ display: 'flex', gap: 16 }}>
                         <span style={{ fontSize: 11, color: '#06b6d4', fontWeight: 600 }}>{c.clicks.toLocaleString()} clics</span>
                         <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>CTR {(c.ctr * 100).toFixed(2)}%</span>
-                        <span style={{ fontSize: 11, color: c.roas >= 3 ? '#10b981' : '#f59e0b', fontWeight: 600 }}>ROAS {c.roas > 0 ? c.roas.toFixed(2) + 'x' : '—'}</span>
+                        <span style={{ fontSize: 11, color: c.roas >= 3 ? '#10b981' : 'var(--primary-container)', fontWeight: 600 }}>ROAS {c.roas > 0 ? c.roas.toFixed(2) + 'x' : '—'}</span>
                         <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>{c.conversions} conv.</span>
                       </div>
                     </div>
@@ -740,7 +740,7 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
               </div>
             ) : feeds.map(f => (
               <div key={f.id} className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
-                <div style={{ padding: 18, background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ padding: 18, background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <Database size={18} color="#06b6d4" />
                     <div>
@@ -749,7 +749,7 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
                     </div>
                   </div>
                   <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 10,
-                    color: f.processingStatus === 'success' ? '#10b981' : '#f59e0b',
+                    color: f.processingStatus === 'success' ? '#10b981' : 'var(--primary-container)',
                     background: f.processingStatus === 'success' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)' }}>
                     {f.processingStatus || 'UNKNOWN'}
                   </span>

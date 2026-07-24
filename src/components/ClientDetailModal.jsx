@@ -92,7 +92,7 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
           background: transparent;
         }
         .premium-scroll::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.1);
+          background: var(--border-medium);
           border-radius: 4px;
         }
         .premium-scroll:hover::-webkit-scrollbar-thumb {
@@ -100,12 +100,12 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
         }
         .linear-card {
           background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.05);
+          border: 1px solid var(--border-subtle);
           transition: all 0.2s ease;
         }
         .linear-card:hover {
           background: rgba(255, 255, 255, 0.04);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          border: 1px solid var(--border-medium);
         }
       `}</style>
 
@@ -127,15 +127,15 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
             background: '#09090B', // Zinc 950 - Vercel/Linear dark
             borderRadius: 16, width: '100%', maxWidth: 1040, height: '85vh',
             display: 'flex', overflow: 'hidden',
-            boxShadow: '0 40px 100px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1)', 
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            boxShadow: '0 40px 100px rgba(0,0,0,0.8), inset 0 1px 0 var(--border-medium)', 
+            border: '1px solid var(--outline)',
           }}
         >
           {/* LEFT SIDEBAR - PROFILE & KPIS */}
           <div style={{
             width: '320px', flexShrink: 0, 
             background: '#09090B',
-            borderRight: '1px solid rgba(255, 255, 255, 0.06)',
+            borderRight: '1px solid var(--glass-border)',
             display: 'flex', flexDirection: 'column', position: 'relative',
           }}>
             {/* Header Ambient Glow */}
@@ -146,8 +146,8 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
                 <div style={{ 
                   width: 48, height: 48, borderRadius: 12, 
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%)',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  background: 'linear-gradient(135deg, var(--border-medium) 0%, rgba(255,255,255,0.02) 100%)',
+                  border: '1px solid var(--border-medium)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 20, fontWeight: 600, color: '#E4E4E7',
                 }}>
@@ -161,7 +161,7 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     transition: 'all 0.2s'
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.color = '#FAFAFA'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+                  onMouseEnter={e => { e.currentTarget.style.color = '#FAFAFA'; e.currentTarget.style.background = 'var(--border-medium)'; }}
                   onMouseLeave={e => { e.currentTarget.style.color = '#71717A'; e.currentTarget.style.background = 'transparent'; }}
                 >
                   <X size={18} />
@@ -254,7 +254,7 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
                         <span style={{ fontSize: 12, color: '#E4E4E7', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.code}>
                           {c.code}
                         </span>
-                        <div style={{ width: 1, height: 12, background: 'rgba(255,255,255,0.1)' }} />
+                        <div style={{ width: 1, height: 12, background: 'var(--border-medium)' }} />
                         <span style={{ fontSize: 12, color: '#A1A1AA' }}>x{c.count}</span>
                       </div>
                     ))}
@@ -306,7 +306,7 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
                 {sortedPurchases.length > 0 ? (
                   <div style={{ position: 'relative', paddingLeft: 12 }}>
                     {/* Minimalist Vertical Line */}
-                    <div style={{ position: 'absolute', left: 0, top: 8, bottom: 20, width: 1, background: 'rgba(255,255,255,0.08)' }} />
+                    <div style={{ position: 'absolute', left: 0, top: 8, bottom: 20, width: 1, background: 'var(--outline)' }} />
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                       {sortedPurchases.map((p, idx) => {
@@ -358,7 +358,7 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12 }}>
                                     <div style={{ 
                                       display: 'flex', alignItems: 'center', gap: 4, 
-                                      fontSize: 11, color: '#A1A1AA', background: 'rgba(255,255,255,0.03)',
+                                      fontSize: 11, color: '#A1A1AA', background: 'var(--surface-container-low)',
                                       padding: '4px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.04)'
                                     }}>
                                       <Tag size={10} />
@@ -411,7 +411,7 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
                   </div>
                 ) : (
                   <div style={{ padding: '60px 0', textAlign: 'center' }}>
-                    <div style={{ width: 48, height: 48, borderRadius: 24, background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 24, background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', border: '1px solid var(--border-subtle)' }}>
                       <Package size={20} color="#52525B" />
                     </div>
                     <div style={{ fontSize: 14, color: '#E4E4E7', fontWeight: 500, marginBottom: 4 }}>Sin transacciones</div>
@@ -467,7 +467,7 @@ function Badge({ segment }) {
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 6,
       padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600,
-      background: 'rgba(255,255,255,0.03)', color: s.fg, border: '1px solid rgba(255,255,255,0.08)',
+      background: 'var(--surface-container-low)', color: s.fg, border: '1px solid var(--outline)',
     }}>
       {isVip && <Star size={10} fill="currentColor" />}
       {s.label}

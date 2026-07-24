@@ -60,8 +60,8 @@ export default function MetricTooltip({ text, children, width = 260 }) {
             borderRadius: 12,
             background: 'rgba(24, 24, 27, 0.96)',
             backdropFilter: 'blur(20px) saturate(180%)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            boxShadow: '0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03)',
+            border: '1px solid var(--outline)',
+            boxShadow: '0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px var(--surface-container-low)',
             color: '#E4E4E7',
             fontSize: 12,
             fontWeight: 500,
@@ -79,8 +79,8 @@ export default function MetricTooltip({ text, children, width = 260 }) {
             width: 10,
             height: 10,
             background: 'rgba(24, 24, 27, 0.96)',
-            borderRight: '1px solid rgba(255,255,255,0.08)',
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
+            borderRight: '1px solid var(--outline)',
+            borderBottom: '1px solid var(--outline)',
           }} />
         </div>,
         document.body

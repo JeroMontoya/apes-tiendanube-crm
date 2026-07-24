@@ -71,8 +71,7 @@ export default function FrequencyFunnel({ clients, onSelectClient }) {
       };
     });
   }, [clients]);
-
-  const TIER_COLORS = ['#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981'];
+  const TIER_COLORS = ['#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#f43f5e'];
 
   const formatCurrency = (v) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v);
 
@@ -84,10 +83,10 @@ export default function FrequencyFunnel({ clients, onSelectClient }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
           <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--on-surface)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Repeat size={20} color="#60a5fa" /> Embudo de Frecuencia de Compra
-            <MetricTooltip text="Clientes activos en el periodo seleccionado, clasificados por su numero TOTAL de compras historicas. Ejemplo: si 'Jairo Carrasco' tiene 2 compras en total y 1 cae en 'Este Mes', aparece en el tier '2 compras' (su frecuencia real). Revenue y Ticket Promedio corresponden al periodo seleccionado." />
+            <Repeat size={20} color="var(--primary)" /> ¿Cuántas veces compran tus clientes?
+            <MetricTooltip text="Muestra cuántas veces ha comprado cada cliente en total." />
           </h3>
-          <p style={{ fontSize: 12, color: 'var(--on-surface-variant)', margin: '4px 0 0' }}>Clientes del periodo clasificados por frecuencia historica de compra</p>
+          <p style={{ fontSize: 12, color: 'var(--on-surface-variant)', margin: '4px 0 0' }}>Clientes clasificados por número de compras</p>
         </div>
       </div>
 
@@ -147,7 +146,7 @@ export default function FrequencyFunnel({ clients, onSelectClient }) {
                         display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 6,
                       }}>
                         {tier.barWidth > 15 && (
-                          <span style={{ fontSize: 10, fontWeight: 700, color: '#FFF' }}>{tier.pct}%</span>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--on-surface)' }}>{tier.pct}%</span>
                         )}
                       </div>
                     </div>

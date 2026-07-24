@@ -208,7 +208,7 @@ function LeadCard({ lead, onRefresh }) {
           )}
           {lead.cart_total > 0 && (
             <span style={{ color: '#A08240', fontSize: '11px', fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-              ${lead.cart_total.toLocaleString('es-AR')}
+              ${lead.cart_total.toLocaleString('es-CO')}
             </span>
           )}
           {lead.related_order_id && (

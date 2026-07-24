@@ -21,7 +21,7 @@ function formatTime(dateStr) {
 const STATUS_CONFIG = {
   connected: { label: 'Conectado', color: '#10b981', bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.3)' },
   disconnected: { label: 'Desconectado', color: '#ef4444', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.3)' },
-  syncing: { label: 'Sincronizando', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.3)' },
+  syncing: { label: 'Sincronizando', color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.3)' },
   error: { label: 'Error', color: '#ef4444', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.3)' },
 };
 
@@ -63,7 +63,7 @@ export default function SyncStatus({ connected, lastSync, onSync, events, autoSy
           transition: 'background 0.15s',
         }}
         onClick={() => setExpanded(!expanded)}
-        onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-container-low, rgba(255,255,255,0.03))'; }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-container-low, var(--surface-container-low))'; }}
         onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
       >
         {/* Status Dot */}
@@ -81,7 +81,7 @@ export default function SyncStatus({ connected, lastSync, onSync, events, autoSy
             <span style={{ fontSize: '13px', fontWeight: '700', color: statusConfig.color }}>
               TiendaNube · {statusConfig.label}
             </span>
-            {syncing && <Loader2 size={13} color="#f59e0b" style={{ animation: 'spin 1s linear infinite' }} />}
+            {syncing && <Loader2 size={13} color="var(--primary-container)" style={{ animation: 'spin 1s linear infinite' }} />}
           </div>
           <div style={{ fontSize: '11px', color: 'var(--on-surface-variant)', marginTop: '1px' }}>
             Última sync: {formatTime(lastSync)}
@@ -115,7 +115,7 @@ export default function SyncStatus({ connected, lastSync, onSync, events, autoSy
               padding: '8px 14px', borderRadius: '8px',
               border: 'none',
               background: syncing ? 'rgba(59,130,246,0.5)' : '#3b82f6',
-              color: '#fff', fontSize: '12px', fontWeight: '700',
+              color: 'var(--on-surface)', fontSize: '12px', fontWeight: '700',
               cursor: syncing ? 'wait' : 'pointer', fontFamily: 'inherit',
               display: 'flex', alignItems: 'center', gap: '6px',
             }}
@@ -178,7 +178,7 @@ export default function SyncStatus({ connected, lastSync, onSync, events, autoSy
                 style={{
                   padding: '7px 14px', borderRadius: '6px', border: 'none',
                   background: webhookLoading ? 'rgba(99,102,241,0.5)' : '#6366f1',
-                  color: '#fff', fontSize: '11px', fontWeight: '700',
+                  color: 'var(--on-surface)', fontSize: '11px', fontWeight: '700',
                   cursor: webhookLoading ? 'wait' : 'pointer', fontFamily: 'inherit',
                   display: 'flex', alignItems: 'center', gap: '6px',
                 }}
@@ -270,7 +270,7 @@ export default function SyncStatus({ connected, lastSync, onSync, events, autoSy
                 return (
                   <div key={event.timestamp || i} style={{
                     padding: '10px 12px', borderRadius: '8px',
-                    background: 'var(--surface-container-low, rgba(255,255,255,0.03))',
+                    background: 'var(--surface-container-low, var(--surface-container-low))',
                     display: 'flex', alignItems: 'center', gap: '10px',
                   }}>
                     {isSync ? (
@@ -278,7 +278,7 @@ export default function SyncStatus({ connected, lastSync, onSync, events, autoSy
                     ) : event.type === 'stock' ? (
                       <ArrowUpDown size={13} color="#3b82f6" style={{ flexShrink: 0 }} />
                     ) : (
-                      <AlertTriangle size={13} color="#f59e0b" style={{ flexShrink: 0 }} />
+                      <AlertTriangle size={13} color="var(--primary-container)" style={{ flexShrink: 0 }} />
                     )}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--on-surface)' }}>

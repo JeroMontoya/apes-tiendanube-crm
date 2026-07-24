@@ -1,100 +1,85 @@
-import React from 'react';
-import { ShoppingCart, DollarSign, Eye, Activity, ArrowUp, ArrowDown } from 'lucide-react';
-import MetricTooltip from './MetricTooltip';
+import React, { useMemo } from 'react';
+import { ShoppingCart, DollarSign, Eye, ArrowUpRight, ArrowDownRight, TrendingUp } from 'lucide-react';
+
+const ACCENT = '#06b6d4';
+const ACCENT_LIGHT = 'rgba(6,182,212,0.4)';
+
+function formatCurrency(v) {
+  if (v >= 1000000) return `$${(v/1000000).toFixed(1)}M`;
+  return `$${v.toLocaleString('es-CO')}`;
+}
 
 export default function QuickStatsPanel({ clients, ga4Insights }) {
-  // Aggregate stats
-  const totalOrders = (clients || []).reduce((acc, c) => acc + (c.purchaseCount || 0), 0);
-  const totalRevenue = (clients || []).reduce((acc, c) => acc + (c.totalSpent || 0), 0);
-  const avgTicket = totalOrders > 0 ? (totalRevenue / totalOrders) : 0;
-  
-  const visits = ga4Insights?.totalUsers || 78932;
-  const bounceRate = ga4Insights?.bounceRate ? (ga4Insights.bounceRate * 100) : 32.6;
-
-  const stats = [
-    {
-      id: 'orders',
-      icon: ShoppingCart,
-      color: '#3b82f6',
-      label: 'Pedidos totales',
-      value: totalOrders.toLocaleString('es-CO'),
-      trend: '+12.4%',
-      trendUp: true
-    },
-    {
-      id: 'ticket',
-      icon: DollarSign,
-      color: '#10b981',
-      label: 'Valor medio del pedido',
-      value: new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(avgTicket),
-      trend: '+7.1%',
-      trendUp: true
-    },
-    {
-      id: 'visits',
-      icon: Eye,
-      color: '#f59e0b',
-      label: 'Visitas totales',
-      value: visits.toLocaleString('es-CO'),
-      trend: '+11.8%',
-      trendUp: true
-    },
-    {
-      id: 'bounce',
-      icon: Activity,
-      color: '#f43f5e',
-      label: 'Tasa de rebote',
-      value: `${bounceRate.toFixed(1)}%`,
-      trend: '-3.4%',
-      trendUp: true // Lower is better for bounce rate, so we show it as "good"
-    }
-  ];
+  const stats = useMemo(() => {
+    const c = clients || [];
+    const totalOrders = c.reduce((s, cl) => s + (cl.purchaseCount ?? 0), 0);
+    const revenue = c.reduce((s, cl) => s + (cl.totalSpent ?? 0), 0);
+    const avgTicket = totalOrders > 0 ? revenue / totalOrders : 0;
+    
+    // Use real GA4 data if available
+    const totalVisits = ga4Insights?.global?.sessions || 0;
+    const bounceRate = ga4Insights?.global?.bounceRate ? (ga4Insights.global.bounceRate * 100).toFixed(1) : null;
+    
+    return [
+      { 
+        label: 'Pedidos totales', 
+        value: totalOrders > 0 ? totalOrders.toLocaleString('es-CO') : '---', 
+        icon: ShoppingCart,
+        hasData: totalOrders > 0
+      },
+      { 
+        label: 'Valor medio del pedido', 
+        value: avgTicket > 0 ? formatCurrency(avgTicket) : '---', 
+        icon: DollarSign,
+        hasData: avgTicket > 0
+      },
+      { 
+        label: 'Visitas totales', 
+        value: totalVisits > 0 ? totalVisits.toLocaleString('es-CO') : '---', 
+        icon: Eye,
+        hasData: totalVisits > 0
+      },
+      { 
+        label: 'Visitantes que se van sin comprar', 
+        value: bounceRate ? `${bounceRate}%` : '---', 
+        icon: TrendingUp,
+        hasData: bounceRate !== null
+      },
+    ];
+  }, [clients, ga4Insights]);
 
   return (
-    <div className="glass-card bento-span-2" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 280, background: 'linear-gradient(180deg, var(--glass-bg) 0%, rgba(13, 17, 23, 0.4) 100%)' }}>
-      <h3 style={{ fontSize: 14, fontWeight: 700, margin: '0 0 20px 0', color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <Activity size={18} color="var(--primary)" />
+    <div className="glass-card bento-span-3" style={{ display: 'flex', flexDirection: 'column', minHeight: 280 }}>
+      <h3 style={{ fontSize: 13, fontWeight: 500, margin: '0 0 20px', color: 'var(--on-surface-variant)' }}>
         Estadísticas rápidas
-        <MetricTooltip text="Métricas clave de alto nivel de un vistazo.">
-          <Info size={14} color="var(--on-surface-variant)" style={{ opacity: 0.7 }} />
-        </MetricTooltip>
       </h3>
-      
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
-        {stats.map((stat, i) => (
-          <div key={stat.id} style={{ 
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            paddingBottom: i !== stats.length - 1 ? 16 : 0,
-            borderBottom: i !== stats.length - 1 ? '1px solid var(--border-subtle)' : 'none'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ 
-                width: 32, height: 32, borderRadius: 8, 
-                background: `${stat.color}15`, color: stat.color,
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}>
-                <stat.icon size={16} />
-              </div>
-              <div>
-                <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', fontWeight: 500 }}>{stat.label}</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--on-surface)' }}>{stat.value}</div>
-              </div>
-            </div>
-            
-            <div style={{ 
-              display: 'flex', alignItems: 'center', gap: 4, 
-              fontSize: 12, fontWeight: 600, 
-              color: stat.trendUp ? '#10b981' : '#f43f5e' 
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 0, flex: 1 }}>
+        {stats.map((s, i) => {
+          const Icon = s.icon;
+          return (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '14px 0',
+              borderBottom: i < stats.length - 1 ? '1px solid rgba(99,102,241,0.06)' : 'none',
             }}>
-              {stat.trendUp ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
-              {stat.trend}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  background: `${ACCENT}12`, border: `1px solid ${ACCENT}22`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Icon size={15} color={ACCENT} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', marginBottom: 2 }}>{s.label}</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: s.hasData ? 'var(--on-background)' : 'var(--on-surface-variant)', opacity: s.hasData ? 1 : 0.5 }}>{s.value}</div>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
-
-// Needed because I forgot to import it at the top
-import { Info } from 'lucide-react';

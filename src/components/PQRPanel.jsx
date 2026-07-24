@@ -19,7 +19,7 @@ const RETURN_REASONS = [
 ];
 
 const TRACKER_STEPS = [
-  { id: 'sent_to_us', label: 'Recibido', icon: Inbox, color: '#f59e0b', gradient: 'linear-gradient(135deg, #f59e0b, #f97316)' },
+  { id: 'sent_to_us', label: 'Recibido', icon: Inbox, color: 'var(--primary-container)', gradient: 'linear-gradient(135deg, var(--primary-container), #f97316)' },
   { id: 'in_warehouse', label: 'En Bodega', icon: Warehouse, color: '#3b82f6', gradient: 'linear-gradient(135deg, #3b82f6, #6366f1)' },
   { id: 'sent_to_client', label: 'Resuelto', icon: CheckCircle2, color: '#10b981', gradient: 'linear-gradient(135deg, #10b981, #059669)' }
 ];
@@ -66,11 +66,11 @@ const S = {
     transition: 'all 0.25s cubic-bezier(0.16,1,0.3,1)'
   },
   btnPrimary: {
-    background: 'linear-gradient(135deg, #3b82f6, #6366f1)', color: '#fff',
+    background: 'linear-gradient(135deg, #3b82f6, #6366f1)', color: 'var(--on-surface)',
     boxShadow: '0 4px 16px rgba(59,130,246,0.35)'
   },
   btnSecondary: {
-    background: 'rgba(255,255,255,0.06)', color: 'var(--on-surface)',
+    background: 'var(--glass-border)', color: 'var(--on-surface)',
     border: '1px solid var(--glass-border)'
   },
   btnGhost: {
@@ -86,7 +86,7 @@ const S = {
     border: '1px solid rgba(59,130,246,0.3)'
   },
   btnSuccess: {
-    background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff',
+    background: 'linear-gradient(135deg, #10b981, #059669)', color: 'var(--on-surface)',
     boxShadow: '0 4px 16px rgba(16,185,129,0.3)'
   }
 };
@@ -107,7 +107,7 @@ const WhatsAppBtn = ({ phone, name, orderNum, size = 'normal' }) => {
   }
   return (
     <a href={url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-      style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: small ? '3px 8px' : '6px 14px', borderRadius: 8, background: 'linear-gradient(135deg, #25D366, #128C7E)', color: '#fff', textDecoration: 'none', fontSize: small ? 10 : 12, fontWeight: 600, fontFamily: 'Inter, sans-serif', boxShadow: '0 2px 8px rgba(37,211,102,0.3)', transition: 'all 0.2s', cursor: 'pointer' }}
+      style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: small ? '3px 8px' : '6px 14px', borderRadius: 8, background: 'linear-gradient(135deg, #25D366, #128C7E)', color: 'var(--on-surface)', textDecoration: 'none', fontSize: small ? 10 : 12, fontWeight: 600, fontFamily: 'Inter, sans-serif', boxShadow: '0 2px 8px rgba(37,211,102,0.3)', transition: 'all 0.2s', cursor: 'pointer' }}
       onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(37,211,102,0.4)'; }}
       onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(37,211,102,0.3)'; }}
     >
@@ -469,7 +469,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
 
   const getStatus = (id) => {
     const map = {
-      sent_to_us: { label: 'Pendiente', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', icon: Clock },
+      sent_to_us: { label: 'Pendiente', color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.1)', icon: Clock },
       in_warehouse: { label: 'En Bodega', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)', icon: Warehouse },
       sent_to_client: { label: 'Resuelto', color: '#10b981', bg: 'rgba(16,185,129,0.1)', icon: CheckCircle2 }
     };
@@ -572,7 +572,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
             </div>
             {pqr.customer_name && <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--on-surface-variant)', marginBottom: 2 }}>{pqr.customer_name}</div>}
             <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', opacity: 0.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              Eliminado: {pqr.deleted_at ? new Date(pqr.deleted_at).toLocaleDateString('es-AR') : '—'}
+              Eliminado: {pqr.deleted_at ? new Date(pqr.deleted_at).toLocaleDateString('es-CO') : '—'}
             </div>
           </div>
         );
@@ -616,7 +616,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
           {/* Stats Row */}
           <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
             {[
-              { l: 'Pendientes', v: stats.pending, c: '#f59e0b', emoji: '⏳' },
+              { l: 'Pendientes', v: stats.pending, c: 'var(--primary-container)', emoji: '⏳' },
               { l: 'Bodega', v: stats.warehouse, c: '#3b82f6', emoji: '📦' },
               { l: 'Resueltos', v: stats.resolved, c: '#10b981', emoji: '✅' }
             ].map((s, i) => (
@@ -1007,12 +1007,12 @@ export default function PQRPanel({ session, rawOrders = [] }) {
                     {/* Guía 2: Devolución del Cliente */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: selectedCase.return_tracking ? 'rgba(245,158,11,0.06)' : 'rgba(255,255,255,0.02)', border: `1px solid ${selectedCase.return_tracking ? 'rgba(245,158,11,0.2)' : 'var(--border-subtle)'}`, transition: 'all 0.2s' }}>
                       <div style={{ width: 28, height: 28, borderRadius: 7, background: selectedCase.return_tracking ? 'rgba(245,158,11,0.12)' : 'var(--surface-container-high)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <RotateCcw size={13} color={selectedCase.return_tracking ? '#f59e0b' : 'var(--on-surface-variant)'} />
+                        <RotateCcw size={13} color={selectedCase.return_tracking ? 'var(--primary-container)' : 'var(--on-surface-variant)'} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Devolución del Cliente</div>
                         {selectedCase.return_tracking ? (
-                          <div style={{ fontSize: 12, fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#f59e0b', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedCase.return_tracking}</div>
+                          <div style={{ fontSize: 12, fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: 'var(--primary-container)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedCase.return_tracking}</div>
                         ) : (
                           <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', opacity: 0.4, marginTop: 2, fontStyle: 'italic' }}>Esperando devolución del cliente</div>
                         )}

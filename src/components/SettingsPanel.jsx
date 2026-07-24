@@ -107,7 +107,7 @@ export default function SettingsPanel({ connectionStatus, session, workspaceData
       }} />
       <div style={{
         width: 44, height: 44, borderRadius: 12,
-        background: 'rgba(255, 255, 255, 0.05)',
+        background: 'var(--border-subtle)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: 22, flexShrink: 0,
       }}>
@@ -118,7 +118,7 @@ export default function SettingsPanel({ connectionStatus, session, workspaceData
           {title}
           <span style={{
             fontSize: 9, padding: '2px 7px', borderRadius: 10,
-            background: status === 'active' ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.1)',
+            background: status === 'active' ? 'rgba(16,185,129,0.1)' : 'var(--border-medium)',
             color: status === 'active' ? '#10b981' : 'var(--on-surface-variant)',
             textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 700
           }}>
@@ -140,7 +140,7 @@ export default function SettingsPanel({ connectionStatus, session, workspaceData
 
   const inputStyle = {
     width: '100%', boxSizing: 'border-box', padding: '10px 14px', borderRadius: 8,
-    border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)',
+    border: '1px solid var(--border-medium)', background: 'rgba(0,0,0,0.3)',
     color: 'var(--on-surface)', fontSize: 13, outline: 'none', fontFamily: 'monospace',
     transition: 'border-color 0.2s',
   };
@@ -192,7 +192,7 @@ export default function SettingsPanel({ connectionStatus, session, workspaceData
               onChange={e => setMcMerchantId(e.target.value)}
               style={inputStyle}
               onFocus={e => e.target.style.borderColor = 'rgba(6,182,212,0.5)'}
-              onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+              onBlur={e => e.target.style.borderColor = 'var(--border-medium)'}
             />
           </div>
           <div>
@@ -205,7 +205,7 @@ export default function SettingsPanel({ connectionStatus, session, workspaceData
                 rows={3}
                 style={{ ...inputStyle, resize: 'vertical', minHeight: 60, paddingRight: 40 }}
                 onFocus={e => e.target.style.borderColor = 'rgba(6,182,212,0.5)'}
-                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                onBlur={e => e.target.style.borderColor = 'var(--border-medium)'}
               />
             </div>
           </div>
@@ -216,9 +216,9 @@ export default function SettingsPanel({ connectionStatus, session, workspaceData
       </div>
 
       {/* Google Analytics 4 Config */}
-      <div className="glass-card" style={{ padding: 24, borderLeft: '3px solid #f59e0b' }}>
+      <div className="glass-card" style={{ padding: 24, borderLeft: '3px solid var(--primary-container)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-          <BarChart3 size={20} color="#f59e0b" />
+          <BarChart3 size={20} color="var(--primary-container)" />
           <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--on-surface)' }}>Google Analytics 4</h3>
         </div>
         <div style={{ marginBottom: 14 }}>
@@ -237,7 +237,7 @@ export default function SettingsPanel({ connectionStatus, session, workspaceData
             id="ga4-reuse-mc"
             checked={ga4ReuseMC}
             onChange={e => setGa4ReuseMC(e.target.checked)}
-            style={{ width: 16, height: 16, accentColor: '#f59e0b' }}
+            style={{ width: 16, height: 16, accentColor: 'var(--primary-container)' }}
           />
           <label htmlFor="ga4-reuse-mc" style={{ fontSize: 13, color: 'var(--on-surface)', cursor: 'pointer' }}>
             Reutilizar credenciales de Merchant Center (mismo Service Account)
@@ -256,7 +256,7 @@ export default function SettingsPanel({ connectionStatus, session, workspaceData
           </div>
         )}
         <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', background: 'rgba(245,158,11,0.05)', padding: '10px 14px', borderRadius: 8, border: '1px solid rgba(245,158,11,0.1)' }}>
-          <strong style={{ color: '#f59e0b' }}>Instrucciones:</strong> El Property ID es un número que encuentras en GA4 → Administrador → Detalles del Flujo de Datos → Stream Web. El Service Account debe tener permisos de <code style={{ background: 'rgba(0,0,0,0.3)', padding: '1px 4px', borderRadius: 3 }}>Lector</code> en tu propiedad GA4.
+          <strong style={{ color: 'var(--primary-container)' }}>Instrucciones:</strong> El Property ID es un número que encuentras en GA4 → Administrador → Detalles del Flujo de Datos → Stream Web. El Service Account debe tener permisos de <code style={{ background: 'rgba(0,0,0,0.3)', padding: '1px 4px', borderRadius: 3 }}>Lector</code> en tu propiedad GA4.
         </div>
       </div>
 
@@ -276,7 +276,7 @@ export default function SettingsPanel({ connectionStatus, session, workspaceData
               onChange={e => setScSiteUrl(e.target.value)}
               style={inputStyle}
               onFocus={e => e.target.style.borderColor = 'rgba(66,133,244,0.5)'}
-              onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+              onBlur={e => e.target.style.borderColor = 'var(--border-medium)'}
             />
           </div>
           <div>
@@ -289,7 +289,7 @@ export default function SettingsPanel({ connectionStatus, session, workspaceData
                 rows={3}
                 style={{ ...inputStyle, resize: 'vertical', minHeight: 60, paddingRight: 40 }}
                 onFocus={e => e.target.style.borderColor = 'rgba(66,133,244,0.5)'}
-                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                onBlur={e => e.target.style.borderColor = 'var(--border-medium)'}
               />
             </div>
           </div>
@@ -371,7 +371,7 @@ export default function SettingsPanel({ connectionStatus, session, workspaceData
           style={{
             display: 'flex', alignItems: 'center', gap: 8, padding: '12px 28px', borderRadius: 12,
             border: 'none', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-            color: '#fff', fontWeight: 700, fontSize: 14, cursor: saving ? 'wait' : 'pointer',
+            color: 'var(--on-surface)', fontWeight: 700, fontSize: 14, cursor: saving ? 'wait' : 'pointer',
             boxShadow: '0 4px 20px rgba(99,102,241,0.3)', transition: 'all 0.2s',
           }}
         >

@@ -82,7 +82,7 @@ const EventDrawer = ({ isOpen, onClose, onSave, selectedDate, existingEvent }) =
                      { id: 'CAMPAIGN', label: 'Campaña Meta', color: '#10b981' },
                      { id: 'PROMO', label: 'Promoción', color: '#8b5cf6' },
                      { id: 'ACTIVITY', label: 'Actividad / Tarea', color: '#3b82f6' },
-                     { id: 'HOLIDAY', label: 'Fecha Importante', color: '#f59e0b' }
+                     { id: 'HOLIDAY', label: 'Fecha Importante', color: 'var(--primary-container)' }
                   ].map(cat => (
                      <div 
                         key={cat.id}
@@ -140,7 +140,7 @@ const EventDrawer = ({ isOpen, onClose, onSave, selectedDate, existingEvent }) =
           <button onClick={onClose} style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid var(--outline-variant)', background: 'transparent', color: 'var(--on-surface)', fontWeight: 600, cursor: 'pointer' }}>
             Cancelar
           </button>
-          <button form="event-form" type="submit" disabled={!title.trim() || !startDate || !endDate} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: 'var(--primary)', color: '#fff', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button form="event-form" type="submit" disabled={!title.trim() || !startDate || !endDate} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: 'var(--primary)', color: 'var(--on-surface)', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
             <Save size={16} /> Guardar Evento
           </button>
         </div>

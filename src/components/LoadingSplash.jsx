@@ -8,7 +8,7 @@ const FEATURES = [
   { icon: Target, label: 'Metas Inteligentes', color: '#f43f5e', delay: 360 },
   { icon: Brain, label: 'Predicción Churn', color: '#06b6d4', delay: 480 },
   { icon: TrendingUp, label: 'ROAS Tracking', color: '#10b981', delay: 600 },
-  { icon: Shield, label: 'Seguridad Enterprise', color: '#f59e0b', delay: 720 },
+  { icon: Shield, label: 'Seguridad Enterprise', color: 'var(--primary-container)', delay: 720 },
 ];
 
 const LOADING_MESSAGES = [
@@ -278,7 +278,7 @@ export default function LoadingSplash({ onComplete, message: initialMessage }) {
       align-items: center;
       justify-content: center;
       box-shadow: 
-        0 0 0 1px rgba(255,255,255,0.1) inset,
+        0 0 0 1px var(--border-medium) inset,
         0 10px 40px rgba(var(--primary-rgb), 0.35),
         0 0 50px rgba(var(--primary-rgb), 0.15);
       position: relative;
@@ -399,7 +399,7 @@ export default function LoadingSplash({ onComplete, message: initialMessage }) {
       left: 0;
       right: 0;
       height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+      background: linear-gradient(90deg, transparent, var(--outline), transparent);
       animation: splash-shimmer 1.8s ease-in-out infinite;
       pointer-events: none;
       border-radius: var(--radius-xl);

@@ -298,15 +298,33 @@ async function handleOrderEvent(payload, eventType) {
   return { handled: true, order_id: orderId, client_id, stock_deducted };
 }
 
-async function broadcastSync(productId, stock) {
+async function broadcastStockSync(productId, stock) {
   try {
     await supabase.channel('inventory-sync').send({
       type: 'broadcast',
       event: 'stock-updated',
       payload: { product_id: productId, stock, source: 'tiendanube', timestamp: new Date().toISOString() },
     });
+    // Also notify frontend dashboard
+    await supabase.channel('cross-tab-sync').send({
+      type: 'broadcast',
+      event: 'data-changed',
+      payload: { type: 'product-changed', source: 'tiendanube', timestamp: new Date().toISOString() },
+    });
   } catch (e) {
     console.error('[webhook] Broadcast error (non-critical):', e.message);
+  }
+}
+
+async function broadcastOrderChanged(orderId, eventType) {
+  try {
+    await supabase.channel('cross-tab-sync').send({
+      type: 'broadcast',
+      event: 'data-changed',
+      payload: { type: 'order-changed', orderId, eventType, source: 'tiendanube', timestamp: new Date().toISOString() },
+    });
+  } catch (e) {
+    console.error('[webhook] Order broadcast error:', e.message);
   }
 }
 
@@ -349,15 +367,19 @@ export default async function handler(req, res) {
     if (eventType === 'product/updated') {
       result = { ...result, ...(await handleProductUpdated(payload)) };
       if (result.handled) {
-        await broadcastSync(result.product_id, null);
+        await broadcastStockSync(result.product_id, null);
       }
     } else if (eventType === 'variant/stock_updated') {
       result = { ...result, ...(await handleVariantStockUpdated(payload)) };
       if (result.handled) {
-        await broadcastSync(result.product_id, payload.stock);
+        await broadcastStockSync(result.product_id, payload.stock);
       }
     } else if (eventType === 'order/created' || eventType === 'order/paid' || eventType === 'order/updated') {
       result = { ...result, ...(await handleOrderEvent(payload, eventType)) };
+      
+      if (result.handled) {
+        await broadcastOrderChanged(payload.id, eventType);
+      }
 
       // ── WhatsApp Abandoned Cart: Track new unpaid orders for follow-up ──
       if (eventType === 'order/created' && payload.payment_status !== 'paid') {

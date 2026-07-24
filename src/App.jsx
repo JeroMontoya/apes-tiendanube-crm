@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from './lib/supabase';
-import { Award } from 'lucide-react';
 import { useRealtimeSync } from './hooks/useRealtimeSync';
 
 import Sidebar from './components/Sidebar';
@@ -54,12 +53,10 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 // Team System
 import { TeamProvider, useTeam } from './contexts/TeamContext';
-import WorkshopPage from './components/WorkshopPage';
 import ActivityLog from './components/ActivityLog';
 import ProductivityDashboard from './components/ProductivityDashboard';
 
 import TeamPanel from './components/TeamPanel';
-import { TeamMemberBadge } from './components/TeamPanel';
 
 // Data & Logic
 
@@ -98,8 +95,12 @@ export default function App() {
   // Theme State
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('theme');
-    if (saved) return saved;
-    return 'dark'; // Force premium dark mode by default
+    // Force light theme initially as requested by user if they had dark saved
+    if (saved === 'dark') {
+      localStorage.setItem('theme', 'light');
+      return 'light';
+    }
+    return saved || 'light';
   });
 
   useEffect(() => {
@@ -272,8 +273,10 @@ export default function App() {
       }
     };
     window.addEventListener('navigate-sidebar', handleNavigation);
+    window.addEventListener('navigate', handleNavigation);
     return () => {
       window.removeEventListener('navigate-sidebar', handleNavigation);
+      window.removeEventListener('navigate', handleNavigation);
     };
   }, []);
 
@@ -377,9 +380,12 @@ export default function App() {
       }
 
       // ════════════════════════════════════════════════════════════════════
-      // MAIN LOAD: Read from server cache snapshot (instant!)
+      // MAIN LOAD: Read from server cache snapshot (instant!) unless manual
       // ════════════════════════════════════════════════════════════════════
       try {
+        if (options?.isManual) {
+          throw new Error('Manual sync forces live data');
+        }
         const snapshotRes = await fetch('/api/data/snapshot');
         const snapshot = await snapshotRes.json();
 
@@ -638,25 +644,23 @@ export default function App() {
     return () => clearInterval(interval);
   }, [storeId, connectionStatus]);
 
-  // Manual sync: trigger server-side cron + reload snapshot
+  // Manual sync: fetch directly from Tiendanube via frontend API bypass server cache
   const handleManualSync = useCallback(async () => {
     setConnectionStatus('connecting');
     try {
-      // Trigger server-side sync
-      await fetch('/api/cron/sync', { method: 'GET' }).catch(() => {});
-      // Wait a moment for sync to complete, then load snapshot
-      await new Promise(r => setTimeout(r, 2000));
-      await refreshSnapshot();
+      if (workspaceData?.tiendanube_store_id && workspaceData?.tiendanube_access_token) {
+        await fetchRealData(workspaceData.tiendanube_store_id, workspaceData.tiendanube_access_token, { isManual: true });
+      }
       setConnectionStatus('connected');
     } catch (e) {
       console.error('[ManualSync] Error:', e);
       setConnectionStatus('connected');
     }
-  }, []);
+  }, [workspaceData]);
 
   const fetchRealData = async (sid, token, options = {}) => {
-    const { isManual = false, incremental = false } = options;
-    const isSilent = !isManual;
+    const { isManual = false, forceSilent = false, incremental = false } = options;
+    const isSilent = forceSilent ? true : !isManual;
     // Only show 'connecting' status on manual/initial syncs to avoid UI flicker
     if (!isSilent) setConnectionStatus('connecting');
     
@@ -1083,6 +1087,8 @@ function AppContent({
   const prevOrdersCountRef = useRef(0);
   const prevClientsCountRef = useRef(0);
 
+  const realtimeFetchTimerRef = useRef(null);
+
   // Real-time sync: SSE + Supabase Realtime + Broadcast
   const handleRealtimeEvent = useCallback((data) => {
     if (data.type === 'config-changed' || data.table === 'system_config') {
@@ -1092,13 +1098,15 @@ function AppContent({
       };
       loadConfig();
     }
-    if (data.type === 'order-changed' || data.event?.includes('order')) {
-      const token = workspaceData?.tiendanube_access_token;
-      if (storeId && token) fetchRealData(storeId, token, { isManual: false });
-    }
-    if (data.type === 'product-changed' || data.event?.includes('product')) {
-      const token = workspaceData?.tiendanube_access_token;
-      if (storeId && token) fetchRealData(storeId, token, { isManual: false });
+    
+    if (data.type === 'order-changed' || data.event?.includes('order') || data.type === 'product-changed' || data.event?.includes('product')) {
+      if (realtimeFetchTimerRef.current) clearTimeout(realtimeFetchTimerRef.current);
+      realtimeFetchTimerRef.current = setTimeout(() => {
+        const token = workspaceData?.tiendanube_access_token;
+        if (storeId && token) {
+          fetchRealData(storeId, token, { isManual: true, forceSilent: true });
+        }
+      }, 1500);
     }
   }, [storeId, workspaceData, setWorkspaceData, fetchRealData]);
 
@@ -1254,6 +1262,19 @@ function AppContent({
               <span style={{ color: syncConnected ? '#10b981' : '#ef4444' }}>{syncConnected ? 'Sync' : 'Offline'}</span>
             </div>
             <NotificationBell />
+            {currentMember && (
+              <div
+                title={currentMember.name || currentMember.email}
+                style={{
+                  width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
+                  background: 'var(--primary-container)', border: '1px solid var(--primary)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 13, fontWeight: 800, color: 'var(--primary)', cursor: 'default',
+                }}
+              >
+                {(currentMember.name || currentMember.email || '?').charAt(0).toUpperCase()}
+              </div>
+            )}
           </div>
         </div>
         
@@ -1287,6 +1308,8 @@ function AppContent({
             metaInsightsLoading={metaInsightsLoading}
             googleAdsData={googleAdsData}
             tiktokData={tiktokData}
+            setGoogleAdsData={setGoogleAdsData}
+            setTiktokData={setTiktokData}
             gscPerformance={gscPerformance}
             mcProducts={mcProducts}
             connectionStatus={connectionStatus}
@@ -1309,6 +1332,7 @@ function AppContent({
             fetchMetaInsights={fetchMetaInsights}
             setWorkspaceData={setWorkspaceData}
             handleManualSync={handleManualSync}
+            currentMember={currentMember}
           />
         </div>
       </main>
@@ -1333,42 +1357,42 @@ function AppViewRenderer(props) {
   const {
     activeView, filteredClients, tiendanubeProducts, rawOrders, session, storeId,
     workspaceData, isRefreshingStock, refreshStock, metaInsights, ga4Insights,
-    metaInsightsLoading, googleAdsData, tiktokData, gscPerformance, mcProducts,
+    metaInsightsLoading, googleAdsData, tiktokData, setGoogleAdsData, setTiktokData,
+    gscPerformance, mcProducts,
     connectionStatus, lastSync, handleConnect, dateRange, historicClients,
     unifiedClients, setSelectedClient, fetchRealData,
     competitors, landscape, insights, aiInsights, ciLoading,
     onRefreshCompetitive, onAddCompetitor, onAnalyzeCompetitor, onRemoveCompetitor,
-    fetchMetaInsights, setWorkspaceData, handleManualSync,
+    fetchMetaInsights, setWorkspaceData, handleManualSync, currentMember,
   } = props;
   switch(activeView) {
     case 'dashboard':
       return (
-        <div className="dashboard-grid-bg" style={{ minHeight: '100vh', margin: '-var(--space-xl)', padding: 'var(--space-xl)', borderRadius: 'var(--radius-lg)' }}>
-          <div className="section-header" style={{ marginBottom: 24 }}>
+        <div style={{ minHeight: '100vh' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
             <div>
-              <h1 style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, margin: 0, fontSize: 26, fontWeight: 700, color: 'var(--on-background)' }}>
                 Dashboard
                 <span className="live-dot" />
               </h1>
-              <p>Hola de nuevo, aquí está el resumen de tu negocio de hoy.</p>
+              <p style={{ margin: '4px 0 0', color: '#a89f88', fontSize: 14 }}>Bienvenido de vuelta{currentMember?.name ? `, ${currentMember.name.split(' ')[0]}` : ''}. Así va tu tienda hoy.</p>
             </div>
             {lastSync && (
               <div style={{ 
-                fontSize: 12, color: 'var(--on-surface-variant)', 
-                background: 'rgba(255,255,255,0.05)', 
-                padding: '6px 14px', borderRadius: 20, 
-                border: '1px solid rgba(255,255,255,0.08)',
-                display: 'flex', alignItems: 'center', gap: 6,
+                fontSize: 12, color: '#a89f88', 
+                background: 'rgba(99,102,241,0.06)', 
+                padding: '8px 16px', borderRadius: 20, 
+                border: '1px solid rgba(99,102,241,0.12)',
+                display: 'flex', alignItems: 'center', gap: 8,
                 fontWeight: 500
               }}>
-                <span className="live-dot" style={{ width: 6, height: 6 }} />
-                Última sinc: {lastSync.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                Última sinc: {lastSync.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
                 <button
                   onClick={handleManualSync}
                   title="Sincronizar ahora"
                   style={{
-                    marginLeft: 8, background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.3)',
-                    color: '#818cf8', borderRadius: 12, padding: '2px 8px', cursor: 'pointer',
+                    marginLeft: 4, background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)',
+                    color: 'var(--primary)', borderRadius: 12, padding: '3px 10px', cursor: 'pointer',
                     fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4,
                   }}
                 >
@@ -1378,22 +1402,36 @@ function AppViewRenderer(props) {
             )}
           </div>
           
-          <StatsCards clients={filteredClients} metaInsights={metaInsights} ga4Insights={ga4Insights} metaInsightsLoading={metaInsightsLoading} />
-          
-          <div className="bento-grid" style={{ marginTop: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
-            <SalesChartWidget rawOrders={rawOrders} />
-            <UsersChartWidget ga4Insights={ga4Insights} />
-            <PerformanceScoreGauge clients={filteredClients} metaInsights={metaInsights} ga4Insights={ga4Insights} />
-          </div>
-
-          <div className="bento-grid" style={{ marginBottom: 'var(--space-md)' }}>
-            <TrafficSourcesDonut ga4Insights={ga4Insights} />
-            <ConversionsChartWidget rawOrders={rawOrders} />
-            <TopProductsTable rawOrders={rawOrders} clients={filteredClients} />
-            <QuickStatsPanel clients={filteredClients} ga4Insights={ga4Insights} />
-          </div>
-
           <GoalTrackerBanner clients={filteredClients} dateRange={dateRange} />
+          
+          <StatsCards clients={filteredClients} rawOrders={rawOrders} dateRange={dateRange} metaInsights={metaInsights} ga4Insights={ga4Insights} metaInsightsLoading={metaInsightsLoading} />
+          
+          <div className="bento-grid" style={{ marginTop: 16, marginBottom: 16, gap: 14 }}>
+            <div className="bento-span-5" style={{ display: 'flex', flexDirection: 'column' }}>
+              <SalesChartWidget rawOrders={rawOrders} />
+            </div>
+            <div className="bento-span-5" style={{ display: 'flex', flexDirection: 'column' }}>
+              <UsersChartWidget rawOrders={rawOrders} />
+            </div>
+            <div className="bento-span-2" style={{ display: 'flex', flexDirection: 'column' }}>
+              <PerformanceScoreGauge clients={filteredClients} metaInsights={metaInsights} ga4Insights={ga4Insights} />
+            </div>
+          </div>
+
+          <div className="bento-grid" style={{ marginBottom: 16, gap: 14 }}>
+            <div className="bento-span-4" style={{ display: 'flex', flexDirection: 'column' }}>
+              <TrafficSourcesDonut ga4Insights={ga4Insights} />
+            </div>
+            <div className="bento-span-8" style={{ display: 'flex', flexDirection: 'column' }}>
+              <ConversionsChartWidget rawOrders={rawOrders} />
+            </div>
+            <div className="bento-span-8" style={{ display: 'flex', flexDirection: 'column' }}>
+              <TopProductsTable rawOrders={rawOrders} clients={filteredClients} />
+            </div>
+            <div className="bento-span-4" style={{ display: 'flex', flexDirection: 'column' }}>
+              <QuickStatsPanel clients={filteredClients} ga4Insights={ga4Insights} />
+            </div>
+          </div>
 
           <div className="bento-grid mt-md">
             <div className="bento-span-8" style={{ display: 'flex', flexDirection: 'column' }}>
@@ -1430,10 +1468,10 @@ function AppViewRenderer(props) {
           </div>
 
           <div className="bento-grid mt-md">
-            <div className="glass-card bento-span-7" style={{ padding: 0, overflow: 'hidden' }}>
+            <div className="glass-card bento-span-12" style={{ padding: 0, overflow: 'hidden', marginBottom: 16 }}>
               <FrequencyFunnel clients={filteredClients} onSelectClient={setSelectedClient} />
             </div>
-            <div className="glass-card bento-span-5" style={{ padding: 0, overflow: 'hidden' }}>
+            <div className="glass-card bento-span-12" style={{ padding: 0, overflow: 'hidden' }}>
                <GeoFunnel clients={filteredClients} onSelectClient={setSelectedClient} dateRange={dateRange} />
             </div>
           </div>
@@ -1520,7 +1558,8 @@ function AppViewRenderer(props) {
     case 'pipeline':
       return <CampaignPipeline session={session} unifiedClients={filteredClients} />;
     case 'predictive':
-      return <PredictiveIntelligence stockVelocity={stockVelocity} budgetGovernanceAlerts={budgetGovernanceAlerts} />;
+    case 'predictive_intelligence':
+      return <PredictiveIntelligence />;
     case 'pqr':
       return <PQRPanel session={session} rawOrders={rawOrders} n8nWebhookUrl={workspaceData?.n8n_webhook_url} />;
     case 'logistics':

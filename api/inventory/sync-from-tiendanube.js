@@ -49,7 +49,7 @@ export default async function handler(req, res) {
     let pageToken;
     do {
       const url = `https://api.tiendanube.com/v1/${storeId}/products?per_page=200${pageToken ? '&page_token=' + pageToken : ''}`;
-      const r = await rateLimitedFetch(url, { headers: { 'Authentication': `Bearer ${token}`, 'User-Agent': 'Onyx Core' } });
+      const r = await rateLimitedFetch(url, { headers: { 'Authentication': `Bearer ${token}`, 'User-Agent': 'Apes Tiendanube CRM' } });
       if (!r.ok) { const txt = await r.text(); console.error('[sync-from-tn] TN API error:', r.status, txt); break; }
       const products = await r.json();
       allProducts = allProducts.concat(products);

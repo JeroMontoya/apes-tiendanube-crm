@@ -39,19 +39,19 @@ const DeltaIndicator = ({ value, suffix = '' }) => {
 };
 
 const SkeletonCard = () => (
-  <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, padding: 20, border: '1px solid var(--border-subtle)' }}>
-    <div style={{ height: 12, width: 60, background: 'rgba(255,255,255,0.06)', borderRadius: 4, marginBottom: 10 }} />
-    <div style={{ height: 24, width: 100, background: 'rgba(255,255,255,0.08)', borderRadius: 4, marginBottom: 8 }} />
-    <div style={{ height: 12, width: 50, background: 'rgba(255,255,255,0.05)', borderRadius: 4 }} />
+  <div style={{ background: 'var(--surface-container-low)', borderRadius: 12, padding: 20, border: '1px solid var(--border-subtle)' }}>
+    <div style={{ height: 12, width: 60, background: 'var(--glass-border)', borderRadius: 4, marginBottom: 10 }} />
+    <div style={{ height: 24, width: 100, background: 'var(--outline)', borderRadius: 4, marginBottom: 8 }} />
+    <div style={{ height: 12, width: 50, background: 'var(--border-subtle)', borderRadius: 4 }} />
   </div>
 );
 
 const SkeletonTable = ({ rows = 5, cols = 6 }) => (
-  <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
+  <div style={{ background: 'var(--surface-container-low)', borderRadius: 12, border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
     {Array.from({ length: rows }).map((_, i) => (
       <div key={i} style={{ display: 'flex', gap: 16, padding: '14px 20px', borderBottom: '1px solid var(--border-subtle)' }}>
         {Array.from({ length: cols }).map((_, j) => (
-          <div key={j} style={{ height: 14, flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: 4 }} />
+          <div key={j} style={{ height: 14, flex: 1, background: 'var(--border-subtle)', borderRadius: 4 }} />
         ))}
       </div>
     ))}
@@ -143,8 +143,8 @@ const TikTokAdsPanel = ({ tiktokData, workspace, dateRange, onRefresh }) => {
             <Music size={20} color="#6366f1" />
           </div>
           <div>
-            <div style={{ height: 20, width: 160, background: 'rgba(255,255,255,0.08)', borderRadius: 4 }} />
-            <div style={{ height: 14, width: 120, background: 'rgba(255,255,255,0.05)', borderRadius: 4, marginTop: 6 }} />
+            <div style={{ height: 20, width: 160, background: 'var(--outline)', borderRadius: 4 }} />
+            <div style={{ height: 14, width: 120, background: 'var(--border-subtle)', borderRadius: 4, marginTop: 6 }} />
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>
@@ -188,11 +188,11 @@ const TikTokAdsPanel = ({ tiktokData, workspace, dateRange, onRefresh }) => {
           onClick={onRefresh}
           style={{
             display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 10,
-            border: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.03)', color: 'var(--on-surface)',
+            border: '1px solid var(--border-subtle)', background: 'var(--surface-container-low)', color: 'var(--on-surface)',
             cursor: 'pointer', fontSize: 13, fontWeight: 600, transition: 'all 0.2s',
           }}
           onMouseEnter={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.12)'; e.currentTarget.style.borderColor = '#6366f1'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface-container-low)'; e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}
         >
           <RefreshCw size={14} />
           Actualizar
@@ -206,7 +206,7 @@ const TikTokAdsPanel = ({ tiktokData, workspace, dateRange, onRefresh }) => {
             <div
               key={i}
               style={{
-                background: 'rgba(255,255,255,0.03)', borderRadius: 12, padding: '18px 16px',
+                background: 'var(--surface-container-low)', borderRadius: 12, padding: '18px 16px',
                 border: '1px solid var(--border-subtle)', transition: 'all 0.2s',
               }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.3)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
@@ -246,7 +246,7 @@ const TikTokAdsPanel = ({ tiktokData, workspace, dateRange, onRefresh }) => {
         {activeTab === 'Resumen' && (
           <div>
             <h3 style={{ margin: '0 0 16px', fontSize: 15, fontWeight: 700, color: 'var(--on-surface)' }}>Campañas con Mayor Gasto</h3>
-            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
+            <div style={{ background: 'var(--surface-container-low)', borderRadius: 12, border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '2fr repeat(5, 1fr)', padding: '12px 20px', borderBottom: '1px solid var(--border-subtle)', fontSize: 11, fontWeight: 600, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 <span>Campaña</span>
                 <span style={{ textAlign: 'right' }}>Impresiones</span>
@@ -290,7 +290,7 @@ const TikTokAdsPanel = ({ tiktokData, workspace, dateRange, onRefresh }) => {
                   { label: 'Tasa de Conversión', value: totals.clics > 0 ? formatPercent(totals.conversiones / totals.clics) : '0%' },
                   { label: 'Costo por Clic', value: formatCOP(totals.clics > 0 ? totals.gasto / totals.clics : 0) },
                 ].map((m, i) => (
-                  <div key={i} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: '14px 16px', border: '1px solid var(--border-subtle)' }}>
+                  <div key={i} style={{ background: 'var(--surface-container-low)', borderRadius: 10, padding: '14px 16px', border: '1px solid var(--border-subtle)' }}>
                     <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginBottom: 6 }}>{m.label}</div>
                     <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--on-surface)' }}>{m.value}</div>
                   </div>
@@ -312,7 +312,7 @@ const TikTokAdsPanel = ({ tiktokData, workspace, dateRange, onRefresh }) => {
                   onChange={e => setSearchFilter(e.target.value)}
                   style={{
                     width: '100%', padding: '9px 12px 9px 36px', borderRadius: 10, border: '1px solid var(--border-subtle)',
-                    background: 'rgba(255,255,255,0.03)', color: 'var(--on-surface)', fontSize: 13, outline: 'none',
+                    background: 'var(--surface-container-low)', color: 'var(--on-surface)', fontSize: 13, outline: 'none',
                   }}
                 />
               </div>
@@ -320,7 +320,7 @@ const TikTokAdsPanel = ({ tiktokData, workspace, dateRange, onRefresh }) => {
                 {sortedCampaigns.length} campañas
               </span>
             </div>
-            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
+            <div style={{ background: 'var(--surface-container-low)', borderRadius: 12, border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '2fr repeat(9, 1fr)', padding: '12px 20px', borderBottom: '1px solid var(--border-subtle)', fontSize: 11, fontWeight: 600, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 {['Nombre', 'Estado', 'Presupuesto', 'Impresiones', 'Clics', 'CTR', 'Gasto', 'Conversiones', 'CPA', 'ROAS'].map((col, i) => {
                   const keys = ['name', 'status', 'budget', 'impressions', 'clicks', 'ctr', 'spend', 'conversions', 'cpa', 'roas'];
@@ -396,7 +396,7 @@ const TikTokAdsPanel = ({ tiktokData, workspace, dateRange, onRefresh }) => {
                   onChange={e => setSearchFilter(e.target.value)}
                   style={{
                     width: '100%', padding: '9px 12px 9px 36px', borderRadius: 10, border: '1px solid var(--border-subtle)',
-                    background: 'rgba(255,255,255,0.03)', color: 'var(--on-surface)', fontSize: 13, outline: 'none',
+                    background: 'var(--surface-container-low)', color: 'var(--on-surface)', fontSize: 13, outline: 'none',
                   }}
                 />
               </div>
@@ -404,7 +404,7 @@ const TikTokAdsPanel = ({ tiktokData, workspace, dateRange, onRefresh }) => {
                 {filteredAds.length} anuncios
               </span>
             </div>
-            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
+            <div style={{ background: 'var(--surface-container-low)', borderRadius: 12, border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '2fr repeat(7, 1fr)', padding: '12px 20px', borderBottom: '1px solid var(--border-subtle)', fontSize: 11, fontWeight: 600, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 <span>Anuncio</span>
                 <span style={{ textAlign: 'right' }}>Campaña</span>
@@ -446,7 +446,7 @@ const TikTokAdsPanel = ({ tiktokData, workspace, dateRange, onRefresh }) => {
         {activeTab === 'Audiencia' && (
           <div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-              <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid var(--border-subtle)', padding: 20 }}>
+              <div style={{ background: 'var(--surface-container-low)', borderRadius: 12, border: '1px solid var(--border-subtle)', padding: 20 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
                   <Users size={16} color="#6366f1" />
                   <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--on-surface)' }}>Distribución por Edad</h3>
@@ -461,7 +461,7 @@ const TikTokAdsPanel = ({ tiktokData, workspace, dateRange, onRefresh }) => {
                           <span style={{ fontSize: 12, color: 'var(--on-surface)', fontWeight: 500 }}>{a.range}</span>
                           <span style={{ fontSize: 12, color: 'var(--on-surface-variant)' }}>{pct.toFixed(1)}%</span>
                         </div>
-                        <div style={{ width: '100%', height: 8, borderRadius: 4, background: 'rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                        <div style={{ width: '100%', height: 8, borderRadius: 4, background: 'var(--border-subtle)', overflow: 'hidden' }}>
                           <div
                             style={{
                               height: '100%', borderRadius: 4,
@@ -480,7 +480,7 @@ const TikTokAdsPanel = ({ tiktokData, workspace, dateRange, onRefresh }) => {
                 </div>
               </div>
 
-              <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid var(--border-subtle)', padding: 20 }}>
+              <div style={{ background: 'var(--surface-container-low)', borderRadius: 12, border: '1px solid var(--border-subtle)', padding: 20 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
                   <Users size={16} color="#8b5cf6" />
                   <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--on-surface)' }}>Distribución por Género</h3>
@@ -529,7 +529,7 @@ const TikTokAdsPanel = ({ tiktokData, workspace, dateRange, onRefresh }) => {
         {activeTab === 'Tendencia' && (
           <div>
             <h3 style={{ margin: '0 0 20px', fontSize: 15, fontWeight: 700, color: 'var(--on-surface)' }}>Rendimiento Diario</h3>
-            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid var(--border-subtle)', padding: 24 }}>
+            <div style={{ background: 'var(--surface-container-low)', borderRadius: 12, border: '1px solid var(--border-subtle)', padding: 24 }}>
               {(() => {
                 const dailyStats = tiktokData.dailyStats || [];
                 if (!dailyStats.length) return <p style={{ fontSize: 13, color: 'var(--on-surface-variant)', margin: 0 }}>Sin datos diarios disponibles</p>;

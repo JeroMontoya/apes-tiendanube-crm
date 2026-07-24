@@ -1,68 +1,92 @@
 import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { Info, ArrowUpRight, ArrowRight } from 'lucide-react';
-import MetricTooltip from './MetricTooltip';
+import { ArrowUpRight } from 'lucide-react';
+
+const ACCENT = '#8b5cf6';
+const ACCENT_LIGHT = 'rgba(139,92,246,0.4)';
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{
+      background: 'var(--surface)', border: `1px solid ${ACCENT}44`,
+      borderRadius: 8, padding: '8px 14px', boxShadow: `0 8px 32px rgba(0,0,0,0.5)`,
+    }}>
+      <p style={{ margin: 0, fontSize: 11, color: 'var(--on-surface-variant)', marginBottom: 4 }}>{label}</p>
+      <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: ACCENT }}>
+        {payload[0].value?.toLocaleString('es-CO')}
+      </p>
+    </div>
+  );
+};
 
 export default function ConversionsChartWidget({ rawOrders }) {
   const data = useMemo(() => {
-    return [
-      { date: '12 may', value: 800 },
-      { date: '13 may', value: 1200 },
-      { date: '14 may', value: 950 },
-      { date: '15 may', value: 1500 },
-      { date: '16 may', value: 1300 },
-      { date: '17 may', value: 1750 },
-      { date: '18 may', value: 1550 },
-    ];
+    const orders = rawOrders || [];
+    const byDay = {};
+    const now = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+      byDay[key] = 0;
+    }
+    orders.forEach(o => {
+      const d = new Date(o.created_at || o.date || new Date());
+      const key = d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+      if (byDay[key] !== undefined) byDay[key] += 1;
+    });
+    return Object.entries(byDay).map(([date, value]) => ({ date, value }));
   }, [rawOrders]);
-
-  const color = '#10b981'; // Green (but will use a gradient or fill)
+  
+  const totalConversions = data.reduce((s, d) => s + d.value, 0);
 
   return (
-    <div className="glass-card bento-span-3" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 300 }}>
+    <div className="glass-card bento-span-3" style={{ display: 'flex', flexDirection: 'column', minHeight: 280 }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
         <div>
-          <h3 style={{ fontSize: 13, fontWeight: 600, margin: 0, color: 'var(--on-surface-variant)', display: 'flex', alignItems: 'center', gap: 6 }}>
-            Conversiones
-            <MetricTooltip text="Número total de conversiones por día.">
-              <Info size={12} color="var(--on-surface-variant)" style={{ opacity: 0.7 }} />
-            </MetricTooltip>
+          <h3 style={{ fontSize: 13, fontWeight: 500, margin: 0, color: 'var(--on-surface-variant)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            Ventas realizadas
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: ACCENT, display: 'inline-block' }} />
           </h3>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, marginTop: 8 }}>
-            <span style={{ fontSize: 24, fontWeight: 700, color: 'var(--on-surface)', letterSpacing: '-0.5px' }}>2.156</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#10b981', fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
-              <ArrowUpRight size={14} /> +12,4%
-            </span>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, marginTop: 8 }}>
+            <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--on-background)', letterSpacing: '-0.5px' }}>{totalConversions.toLocaleString('es-CO')}</span>
           </div>
         </div>
-        <select style={{ 
-          background: 'transparent', border: '1px solid var(--border-subtle)', color: 'var(--on-surface)',
-          padding: '4px 8px', borderRadius: 6, fontSize: 12, cursor: 'pointer', outline: 'none'
+        <select style={{
+          background: `${ACCENT}12`, border: `1px solid ${ACCENT}33`,
+          color: ACCENT, padding: '4px 8px', borderRadius: 6, fontSize: 11, cursor: 'pointer', outline: 'none'
         }}>
           <option value="7d">7 días</option>
           <option value="30d">30 días</option>
         </select>
       </div>
 
-      <div style={{ flex: 1, width: '100%', marginLeft: -25 }}>
+      <div style={{ flex: 1, width: '100%' }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
-            <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--on-surface-variant)' }} dy={10} />
-            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--on-surface-variant)' }} tickFormatter={(val) => `${val/1000}k`} />
-            <Tooltip 
-              cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-              contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border-subtle)', borderRadius: 8 }}
-              itemStyle={{ color: 'var(--on-surface)', fontWeight: 600 }}
-            />
-            <Bar dataKey="value" fill={color} radius={[4, 4, 0, 0]} barSize={12} />
+          <BarChart data={data} margin={{ top: 5, right: 0, left: -25, bottom: 0 }} barCategoryGap="20%">
+            <defs>
+              <linearGradient id="convGold" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={ACCENT_LIGHT} stopOpacity={0.9}/>
+                <stop offset="100%" stopColor={ACCENT} stopOpacity={0.5}/>
+              </linearGradient>
+            </defs>
+            <XAxis dataKey="date" axisLine={false} tickLine={false}
+              tick={{ fontSize: 10, fill: 'var(--on-surface-variant)' }} dy={6} />
+            <YAxis axisLine={false} tickLine={false}
+              tick={{ fontSize: 10, fill: 'var(--on-surface-variant)' }}
+              tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(1)}K` : v} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: `${ACCENT}08` }} />
+            <Bar dataKey="value" fill="url(#convGold)" radius={[3, 3, 0, 0]} maxBarSize={32} />
           </BarChart>
         </ResponsiveContainer>
       </div>
-      
-      <div style={{ marginTop: 12, borderTop: '1px solid var(--border-subtle)', paddingTop: 12 }}>
-        <a href="#" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: 'var(--primary)' }}>
-          Ver embudo completo <ArrowRight size={14} />
-        </a>
+
+      <div 
+        style={{ marginTop: 'auto', paddingTop: 16, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}
+        onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'rendimiento' }))}
+      >
+        <span style={{ fontSize: 12, color: ACCENT, fontWeight: 500 }}>Ver embudo completo →</span>
       </div>
     </div>
   );

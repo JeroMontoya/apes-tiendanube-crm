@@ -36,14 +36,14 @@ const MOVEMENT_TYPES = [
   { id: 'receive', label: 'Recepción', icon: '⬇️', color: '#10b981', desc: 'Ingreso de mercadería' },
   { id: 'dispatch', label: 'Despacho', icon: '🚚', color: '#3b82f6', desc: 'Envío a cliente' },
   { id: 'transfer', label: 'Transferencia', icon: '↔️', color: '#8b5cf6', desc: 'Entre ubicaciones' },
-  { id: 'production_in', label: 'Producción', icon: '🔄', color: '#f59e0b', desc: 'Ingreso de taller' },
-  { id: 'return', label: 'Devolución', icon: '🔄', color: '#f59e0b', desc: 'Cliente devuelve' },
+  { id: 'production_in', label: 'Producción', icon: '🔄', color: 'var(--primary-container)', desc: 'Ingreso de taller' },
+  { id: 'return', label: 'Devolución', icon: '🔄', color: 'var(--primary-container)', desc: 'Cliente devuelve' },
   { id: 'adjustment', label: 'Ajuste', icon: '⚠️', color: '#ef4444', desc: 'Corrección manual' },
 ];
 
 const PRIORITY = {
   urgente: { label: 'Urgente', color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
-  alta: { label: 'Alta', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+  alta: { label: 'Alta', color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.1)' },
   normal: { label: 'Normal', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
   baja: { label: 'Baja', color: '#64748b', bg: 'rgba(100,116,139,0.1)' },
 };
@@ -565,7 +565,7 @@ export default function InventoryHub({
           <button style={{ padding: '10px 18px', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--surface)', color: 'var(--on-surface)', cursor: 'pointer', fontSize: '13px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Download size={14} /> Exportar
           </button>
-          <button style={{ padding: '10px 18px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #3b82f6, #10b981)', color: '#fff', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button style={{ padding: '10px 18px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #3b82f6, #10b981)', color: 'var(--on-surface)', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Plus size={14} /> Nueva Variante
           </button>
         </div>
@@ -580,7 +580,7 @@ export default function InventoryHub({
             {loc.sync && (
               <span style={{ 
                 width: '8px', height: '8px', borderRadius: '50%', 
-                background: syncStatus.web === 'synced' ? '#10b981' : syncStatus.web === 'syncing' ? '#f59e0b' : '#ef4444',
+                background: syncStatus.web === 'synced' ? '#10b981' : syncStatus.web === 'syncing' ? 'var(--primary-container)' : '#ef4444',
                 animation: syncStatus.web === 'syncing' ? 'pulse 1s infinite' : 'none'
               }} />
             )}
@@ -606,7 +606,7 @@ export default function InventoryHub({
               <div key={i} style={{ padding: '10px 14px', borderRadius: '8px', background: `var(--${alert.type}-container)`, border: `1px solid var(--${alert.type})`, display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: '280px' }}>
                 <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: `var(--${alert.type})` }} />
                 <span style={{ fontSize: '12px', color: `var(--${alert.type})`, flex: 1 }}>{alert.message}</span>
-                <button style={{ padding: '4px 10px', borderRadius: '6px', background: `var(--${alert.type})`, color: '#fff', fontSize: '11px', fontWeight: '600', border: 'none', cursor: 'pointer' }}>
+                <button style={{ padding: '4px 10px', borderRadius: '6px', background: `var(--${alert.type})`, color: 'var(--on-surface)', fontSize: '11px', fontWeight: '600', border: 'none', cursor: 'pointer' }}>
                   {alert.action === 'reorder' ? 'Pedir' : alert.action === 'plan' ? 'Planificar' : 'Preparar'}
                 </button>
               </div>
@@ -620,8 +620,8 @@ export default function InventoryHub({
         <StatCard label="Productos Únicos" value={stats.totalProducts} sub={`${stats.totalVariants} variantes`} color='#3b82f6' icon={<Box size={20} />} />
         <StatCard label="Stock Total" value={formatNumber(stats.totalStock)} color='#10b981' icon={<Package size={20} />} />
         <StatCard label="Valor Inventario" value={formatCurrency(stats.totalValue)} color='#8b5cf6' icon={<TrendingUp size={20} />} />
-        <StatCard label="En Producción" value={stats.inProduction} color='#f59e0b' icon={<RotateCcw size={20} />} />
-        <StatCard label="Stock Bajo" value={stats.lowStock} color='#f59e0b' icon={<AlertTriangle size={20} />} />
+        <StatCard label="En Producción" value={stats.inProduction} color='var(--primary-container)' icon={<RotateCcw size={20} />} />
+        <StatCard label="Stock Bajo" value={stats.lowStock} color='var(--primary-container)' icon={<AlertTriangle size={20} />} />
         <StatCard label="Sin Stock" value={stats.outOfStock} color='#ef4444' icon={<Package size={20} />} />
         <StatCard label="Ilimitados" value={stats.unlimited} color='#06b6d4' icon={<Sparkles size={20} />} />
         <StatCard label="Valor Total" value={formatCurrency(stats.totalValue)} color='#6366f1' icon={<TrendingUp size={20} />} />
@@ -650,7 +650,7 @@ export default function InventoryHub({
                   <div style={{ fontSize: '10px', color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Sin Stock</div>
                 </div>
                 <div style={{ padding: '8px', borderRadius: '8px', background: 'var(--surface-container-low)' }}>
-                  <div style={{ fontSize: '18px', fontWeight: '800', color: '#f59e0b', fontFamily: "'JetBrains Mono', monospace" }}>{d.low}</div>
+                  <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--primary-container)', fontFamily: "'JetBrains Mono', monospace" }}>{d.low}</div>
                   <div style={{ fontSize: '10px', color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Bajo</div>
                 </div>
                 <div style={{ padding: '8px', borderRadius: '8px', background: 'var(--surface-container-low)' }}>
@@ -809,7 +809,7 @@ function ProductRow({ product, index, onTransfer, onAdjust, selected, onSelect }
           {product.totalStock > 0 ? formatNumber(product.totalStock) : '∞'}
         </div>
         {product.totalReserved > 0 && (
-          <div style={{ fontSize: '10px', color: '#f59e0b' }}>({formatNumber(product.totalReserved)} reserv.)</div>
+          <div style={{ fontSize: '10px', color: 'var(--primary-container)' }}>({formatNumber(product.totalReserved)} reserv.)</div>
         )}
       </div>
       
@@ -851,7 +851,7 @@ function ProductRow({ product, index, onTransfer, onAdjust, selected, onSelect }
         <button onClick={e => { e.stopPropagation(); onTransfer(product); }} style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--surface)', color: 'var(--primary)', fontSize: '11px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
           <ArrowLeftRight size={12} /> Mover
         </button>
-        <button onClick={e => { e.stopPropagation(); onAdjust(product.locations[Object.keys(product.locations)[0]]); }} style={{ padding: '6px 10px', borderRadius: '8px', border: 'none', background: 'var(--primary)', color: '#fff', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
+        <button onClick={e => { e.stopPropagation(); onAdjust(product.locations[Object.keys(product.locations)[0]]); }} style={{ padding: '6px 10px', borderRadius: '8px', border: 'none', background: 'var(--primary)', color: 'var(--on-surface)', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
           <Edit3 size={12} /> Ajustar
         </button>
       </div>

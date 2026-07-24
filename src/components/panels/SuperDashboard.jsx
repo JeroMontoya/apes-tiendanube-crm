@@ -46,7 +46,7 @@ const fmt = (val, type = 'num') => {
   }
   if (type === 'pct') return `${v.toFixed(1)}%`;
   if (type === 'dec') return v.toFixed(2);
-  if (v >= 1000) return v.toLocaleString('es-AR');
+  if (v >= 1000) return v.toLocaleString('es-CO');
   return v.toFixed(v % 1 === 0 ? 0 : 1);
 };
 
@@ -62,7 +62,7 @@ export default function SuperDashboard({
   const kpis = [
     { label: 'ROAS Consolidado', val: consolidatedRoas, type: 'dec', color: '#10b981', icon: TrendingUp },
     { label: 'Impresiones SEO', val: gscPerformance?.totals?.impressions || 0, type: 'num', color: '#3b82f6', icon: Search },
-    { label: 'Sesiones Totales', val: ga4Insights?.global?.sessions || 0, type: 'num', color: '#f59e0b', icon: Globe },
+    { label: 'Sesiones Totales', val: ga4Insights?.global?.sessions || 0, type: 'num', color: 'var(--primary-container)', icon: Globe },
     { label: 'Conversiones (E-com)', val: ga4Insights?.ecommerce?.purchases || 0, type: 'num', color: '#8b5cf6', icon: ShoppingBag },
   ];
 
@@ -129,7 +129,7 @@ export default function SuperDashboard({
         {/* Ads Performance */}
         <div style={S.card}>
           <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Target size={14} color="#f59e0b" /> Rendimiento de Inversión (Ads)
+            <Target size={14} color="var(--primary-container)" /> Rendimiento de Inversión (Ads)
           </div>
           <table style={S.table}>
             <thead>
@@ -197,7 +197,7 @@ export default function SuperDashboard({
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0' }}>
               <span style={{ fontSize: 12, color: 'var(--on-surface)' }}>Rebote General (GA4)</span>
-              <span style={{ fontSize: 14, fontWeight: 800, color: '#f59e0b', fontFamily: 'JetBrains Mono, monospace' }}>{fmt(ga4Insights?.global?.bounceRate ? ga4Insights.global.bounceRate * 100 : 0, 'pct')}</span>
+              <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--primary-container)', fontFamily: 'JetBrains Mono, monospace' }}>{fmt(ga4Insights?.global?.bounceRate ? ga4Insights.global.bounceRate * 100 : 0, 'pct')}</span>
             </div>
           </div>
         </div>
@@ -219,7 +219,7 @@ export default function SuperDashboard({
           <button 
             onClick={generateActionPlan}
             disabled={loadingPlan}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#6366f1', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: 8, fontWeight: 600, cursor: loadingPlan ? 'not-allowed' : 'pointer', fontSize: 12, opacity: loadingPlan ? 0.7 : 1 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#6366f1', color: 'var(--on-surface)', border: 'none', padding: '10px 16px', borderRadius: 8, fontWeight: 600, cursor: loadingPlan ? 'not-allowed' : 'pointer', fontSize: 12, opacity: loadingPlan ? 0.7 : 1 }}
           >
             {loadingPlan ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Zap size={14} />}
             Generar Plan Estratégico

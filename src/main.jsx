@@ -42,7 +42,7 @@ class ErrorBoundary extends React.Component {
             borderRadius: '6px',
             fontSize: '12px',
             whiteSpace: 'pre-wrap',
-            border: '1px solid rgba(255,255,255,0.05)',
+            border: '1px solid var(--border-subtle)',
             color: '#6b7280'
           }}>
             {this.state.error?.toString()}

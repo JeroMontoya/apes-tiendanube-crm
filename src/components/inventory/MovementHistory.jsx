@@ -9,10 +9,10 @@ const MOVEMENT_TYPES = [
   { id: 'receive', label: 'Entró', color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
   { id: 'dispatch', label: 'Salió', color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
   { id: 'transfer', label: 'Movido', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
-  { id: 'adjustment', label: 'Ajuste', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+  { id: 'adjustment', label: 'Ajuste', color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.1)' },
   { id: 'sync', label: 'Sync', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
   { id: 'production_in', label: 'Producción', color: '#06b6d4', bg: 'rgba(6,182,212,0.1)' },
-  { id: 'return', label: 'Devolución', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+  { id: 'return', label: 'Devolución', color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.1)' },
 ];
 
 function formatDate(dateStr) {

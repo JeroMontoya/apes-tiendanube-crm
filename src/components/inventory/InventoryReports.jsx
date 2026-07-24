@@ -36,7 +36,7 @@ function MiniBar({ value, max, color, label }) {
         <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--on-surface)' }}>{label}</span>
         <span style={{ fontSize: '12px', fontWeight: '700', color, fontFamily: "'JetBrains Mono', monospace" }}>{formatCurrency(value)}</span>
       </div>
-      <div style={{ height: '8px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+      <div style={{ height: '8px', borderRadius: '4px', background: 'var(--border-subtle)', overflow: 'hidden' }}>
         <div style={{ height: '100%', borderRadius: '4px', width: `${pct}%`, background: color, transition: 'width 0.4s' }} />
       </div>
     </div>
@@ -110,7 +110,7 @@ export default function InventoryReports({ summary, movements, locations, produc
 
   const TYPE_COLORS = {
     receive: '#10b981', dispatch: '#ef4444', transfer: '#3b82f6',
-    adjustment: '#f59e0b', sync: '#8b5cf6', production_in: '#06b6d4', return: '#f59e0b',
+    adjustment: 'var(--primary-container)', sync: '#8b5cf6', production_in: '#06b6d4', return: 'var(--primary-container)',
   };
   const TYPE_LABELS = {
     receive: 'Recepción', dispatch: 'Despacho', transfer: 'Transferencia',
@@ -156,7 +156,7 @@ export default function InventoryReports({ summary, movements, locations, produc
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '4px', padding: '4px', borderRadius: '12px', background: 'var(--surface-container-low, rgba(255,255,255,0.03))', border: '1px solid var(--border-subtle)' }}>
+      <div style={{ display: 'flex', gap: '4px', padding: '4px', borderRadius: '12px', background: 'var(--surface-container-low, var(--surface-container-low))', border: '1px solid var(--border-subtle)' }}>
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -214,10 +214,10 @@ export default function InventoryReports({ summary, movements, locations, produc
                 ['Total Productos', summaryData.totalProducts, '#3b82f6'],
                 ['Stock Total', formatNumber(summaryData.totalStock), '#10b981'],
                 ['Valor Total', formatCurrency(summaryData.totalValue), '#8b5cf6'],
-                ['Stock Bajo', summary?.low_stock_count || 0, '#f59e0b'],
+                ['Stock Bajo', summary?.low_stock_count || 0, 'var(--primary-container)'],
                 ['Sin Stock', summary?.out_of_stock_count || 0, '#ef4444'],
               ].map(([label, value, color]) => (
-                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderRadius: '8px', background: 'var(--surface-container-low, rgba(255,255,255,0.03))' }}>
+                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderRadius: '8px', background: 'var(--surface-container-low, var(--surface-container-low))' }}>
                   <span style={{ fontSize: '13px', color: 'var(--on-surface-variant)' }}>{label}</span>
                   <span style={{ fontSize: '14px', fontWeight: '700', color, fontFamily: "'JetBrains Mono', monospace" }}>{value}</span>
                 </div>
@@ -245,7 +245,7 @@ export default function InventoryReports({ summary, movements, locations, produc
                       {data.count} mov. · {formatNumber(data.totalQty)} und.
                     </span>
                   </div>
-                  <div style={{ height: '8px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                  <div style={{ height: '8px', borderRadius: '4px', background: 'var(--border-subtle)', overflow: 'hidden' }}>
                     <div style={{ height: '100%', borderRadius: '4px', width: `${(data.count / movementStats.maxQty) * 100}%`, background: TYPE_COLORS[type] || '#3b82f6', transition: 'width 0.4s' }} />
                   </div>
                 </div>
@@ -266,7 +266,7 @@ export default function InventoryReports({ summary, movements, locations, produc
                     <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--on-surface-variant)', width: '20px', textAlign: 'right' }}>{i + 1}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--on-surface)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</div>
-                      <div style={{ height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.05)', marginTop: '3px', overflow: 'hidden' }}>
+                      <div style={{ height: '4px', borderRadius: '2px', background: 'var(--border-subtle)', marginTop: '3px', overflow: 'hidden' }}>
                         <div style={{ height: '100%', borderRadius: '2px', width: `${(qty / maxP) * 100}%`, background: '#3b82f6' }} />
                       </div>
                     </div>

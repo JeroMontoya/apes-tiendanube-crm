@@ -67,7 +67,7 @@ export default function SyncProgressOverlay({
           <circle 
             cx="70" cy="70" r="60" 
             fill="none" 
-            stroke="rgba(255,255,255,0.1)" 
+            stroke="var(--border-medium)" 
             strokeWidth="8"
           />
           <circle 
@@ -212,7 +212,7 @@ export default function SyncProgressOverlay({
                         ? 'rgba(16,185,129,0.15)' 
                         : isCurrent 
                           ? 'rgba(59,130,246,0.15)' 
-                          : 'rgba(255,255,255,0.03)',
+                          : 'var(--surface-container-low)',
                       border: isCompleted ? '1px solid rgba(16,185,129,0.3)' : isCurrent ? '1px solid rgba(59,130,246,0.3)' : '1px solid var(--border-subtle)',
                       display: 'flex', 
                       alignItems: 'center', 
@@ -239,7 +239,7 @@ export default function SyncProgressOverlay({
 
                   {/* Current step progress bar */}
                   {isCurrent && !isCompleted && (
-                    <div style={{ marginTop: 8, marginLeft: 46, height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden' }}>
+                    <div style={{ marginTop: 8, marginLeft: 46, height: 4, background: 'var(--outline)', borderRadius: 2, overflow: 'hidden' }}>
                       <div style={{ 
                         height: '100%', 
                         width: `${stepProgress}%`, 
@@ -270,7 +270,7 @@ export default function SyncProgressOverlay({
             fontWeight: 600,
             cursor: 'pointer',
             background: error ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'linear-gradient(135deg, #3b82f6, #06b6d4)',
-            color: '#fff',
+            color: 'var(--on-surface)',
             boxShadow: '0 4px 20px rgba(59,130,246,0.4)',
             transition: 'all 0.2s ease'
           }}

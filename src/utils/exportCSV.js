@@ -63,7 +63,7 @@ function splitName(fullName) {
  */
 function formatARS(value) {
   if (typeof value !== 'number' || Number.isNaN(value)) return '0';
-  return value.toLocaleString('es-AR', {
+  return value.toLocaleString('es-CO', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   });

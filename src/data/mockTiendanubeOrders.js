@@ -24,7 +24,7 @@ const mockTiendanubeOrders = [
       identification: '25.678.901',
     },
     total: '45000.00',
-    currency: 'ARS',
+    currency: 'COP',
     created_at: '2024-06-10T14:30:00-03:00',
     products: [
       { name: 'Hoodie APES Urban', price: '45000.00', quantity: 1 },
@@ -43,7 +43,7 @@ const mockTiendanubeOrders = [
       identification: '34.567.890',
     },
     total: '85000.00',
-    currency: 'ARS',
+    currency: 'COP',
     created_at: '2024-07-22T11:15:00-03:00',
     products: [
       { name: 'Campera APES Premium', price: '85000.00', quantity: 1 },
@@ -62,7 +62,7 @@ const mockTiendanubeOrders = [
       identification: '33.456.789',
     },
     total: '45000.00',
-    currency: 'ARS',
+    currency: 'COP',
     created_at: '2025-05-18T09:45:00-03:00',
     products: [
       { name: 'Buzo APES Street', price: '45000.00', quantity: 1 },
@@ -81,7 +81,7 @@ const mockTiendanubeOrders = [
       identification: '29.012.345',
     },
     total: '65000.00',
-    currency: 'ARS',
+    currency: 'COP',
     created_at: '2025-01-15T16:00:00-03:00',
     products: [
       { name: 'Jean APES Slim', price: '65000.00', quantity: 1 },
@@ -100,7 +100,7 @@ const mockTiendanubeOrders = [
       identification: '36.789.012',
     },
     total: '25000.00',
-    currency: 'ARS',
+    currency: 'COP',
     created_at: '2024-08-05T10:30:00-03:00',
     products: [
       { name: 'Remera APES Classic', price: '25000.00', quantity: 1 },
@@ -119,7 +119,7 @@ const mockTiendanubeOrders = [
       identification: '28.901.234',
     },
     total: '130000.00',
-    currency: 'ARS',
+    currency: 'COP',
     created_at: '2024-09-12T13:20:00-03:00',
     products: [
       { name: 'Campera APES Premium', price: '85000.00', quantity: 1 },
@@ -139,7 +139,7 @@ const mockTiendanubeOrders = [
       identification: '31.234.567',
     },
     total: '45000.00',
-    currency: 'ARS',
+    currency: 'COP',
     created_at: '2024-10-01T08:00:00-03:00',
     products: [
       { name: 'Hoodie APES Urban', price: '45000.00', quantity: 1 },
@@ -158,7 +158,7 @@ const mockTiendanubeOrders = [
       identification: '36.234.567',
     },
     total: '85000.00',
-    currency: 'ARS',
+    currency: 'COP',
     created_at: '2025-06-01T17:10:00-03:00',
     products: [
       { name: 'Campera APES Premium', price: '85000.00', quantity: 1 },
@@ -177,7 +177,7 @@ const mockTiendanubeOrders = [
       identification: '33.012.345',
     },
     total: '40000.00',
-    currency: 'ARS',
+    currency: 'COP',
     created_at: '2024-11-18T12:45:00-03:00',
     products: [
       { name: 'Pantalón APES Cargo', price: '40000.00', quantity: 1 },
@@ -196,7 +196,7 @@ const mockTiendanubeOrders = [
       identification: '37.890.123',
     },
     total: '18000.00',
-    currency: 'ARS',
+    currency: 'COP',
     created_at: '2025-02-03T15:30:00-03:00',
     products: [
       { name: 'Gorra APES Logo', price: '18000.00', quantity: 1 },
@@ -215,7 +215,7 @@ const mockTiendanubeOrders = [
       identification: '30.345.678',
     },
     total: '110000.00',
-    currency: 'ARS',
+    currency: 'COP',
     created_at: '2024-12-25T20:00:00-03:00',
     products: [
       { name: 'Jean APES Slim', price: '65000.00', quantity: 1 },
@@ -235,7 +235,7 @@ const mockTiendanubeOrders = [
       identification: '39.567.890',
     },
     total: '30000.00',
-    currency: 'ARS',
+    currency: 'COP',
     created_at: '2025-03-08T10:15:00-03:00',
     products: [
       { name: 'Bermuda APES Summer', price: '30000.00', quantity: 1 },
@@ -254,7 +254,7 @@ const mockTiendanubeOrders = [
       identification: '26.456.789',
     },
     total: '25000.00',
-    currency: 'ARS',
+    currency: 'COP',
     created_at: '2025-04-15T14:00:00-03:00',
     products: [
       { name: 'Remera APES Classic', price: '25000.00', quantity: 1 },
@@ -273,7 +273,7 @@ const mockTiendanubeOrders = [
       identification: '38.012.345',             // same DNI as HC-011
     },
     total: '25000.00',
-    currency: 'ARS',
+    currency: 'COP',
     created_at: '2025-06-10T09:00:00-03:00',
     products: [
       { name: 'Remera APES Classic', price: '25000.00', quantity: 1 },
@@ -292,7 +292,7 @@ const mockTiendanubeOrders = [
       identification: '35.234.567',
     },
     total: '65000.00',
-    currency: 'ARS',
+    currency: 'COP',
     created_at: '2024-10-30T11:45:00-03:00',
     products: [
       { name: 'Jean APES Slim', price: '65000.00', quantity: 1 },
@@ -311,7 +311,7 @@ const mockTiendanubeOrders = [
       identification: '40.678.901',
     },
     total: '72000.00',
-    currency: 'ARS',
+    currency: 'COP',
     created_at: '2025-01-28T16:30:00-03:00',
     products: [
       { name: 'Campera APES Premium', price: '72000.00', quantity: 1 },
@@ -330,7 +330,7 @@ const mockTiendanubeOrders = [
       identification: '38.901.234',
     },
     total: '70000.00',
-    currency: 'ARS',
+    currency: 'COP',
     created_at: '2025-03-20T13:00:00-03:00',
     products: [
       { name: 'Hoodie APES Urban', price: '45000.00', quantity: 1 },
@@ -350,7 +350,7 @@ const mockTiendanubeOrders = [
       identification: '27.012.345',
     },
     total: '85000.00',
-    currency: 'ARS',
+    currency: 'COP',
     created_at: '2024-11-05T18:20:00-03:00',
     products: [
       { name: 'Campera APES Premium', price: '85000.00', quantity: 1 },
@@ -369,7 +369,7 @@ const mockTiendanubeOrders = [
       identification: '41.234.567',
     },
     total: '45000.00',
-    currency: 'ARS',
+    currency: 'COP',
     created_at: '2025-06-15T12:00:00-03:00',
     products: [
       { name: 'Hoodie APES Urban', price: '45000.00', quantity: 1 },
@@ -388,7 +388,7 @@ const mockTiendanubeOrders = [
       identification: '36.123.890',
     },
     total: '90000.00',
-    currency: 'ARS',
+    currency: 'COP',
     created_at: '2025-05-22T09:30:00-03:00',
     products: [
       { name: 'Jean APES Slim', price: '65000.00', quantity: 1 },
@@ -408,7 +408,7 @@ const mockTiendanubeOrders = [
       identification: '41.890.123',
     },
     total: '45000.00',
-    currency: 'ARS',
+    currency: 'COP',
     created_at: '2025-04-28T15:45:00-03:00',
     products: [
       { name: 'Buzo APES Street', price: '45000.00', quantity: 1 },
@@ -427,7 +427,7 @@ const mockTiendanubeOrders = [
       identification: '39.234.567',
     },
     total: '110000.00',
-    currency: 'ARS',
+    currency: 'COP',
     created_at: '2025-06-02T11:00:00-03:00',
     products: [
       { name: 'Campera APES Premium', price: '72000.00', quantity: 1 },

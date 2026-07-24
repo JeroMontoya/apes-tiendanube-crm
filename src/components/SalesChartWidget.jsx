@@ -1,68 +1,95 @@
 import React, { useMemo } from 'react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Info, ArrowUpRight } from 'lucide-react';
 import MetricTooltip from './MetricTooltip';
 
+const ACCENT = '#10b981';
+const ACCENT_LIGHT = 'rgba(16,185,129,0.4)';
+
+function formatCurrency(v) {
+  if (v >= 1000000) return `$${(v / 1000000).toFixed(1)}M`;
+  if (v >= 1000) return `$${Math.round(v / 1000)}K`;
+  return `$${v}`;
+}
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{
+      background: 'var(--surface)', border: `1px solid ${ACCENT}44`,
+      borderRadius: 8, padding: '8px 14px', boxShadow: `0 8px 32px rgba(0,0,0,0.5)`,
+    }}>
+      <p style={{ margin: 0, fontSize: 11, color: 'var(--on-surface-variant)', marginBottom: 4 }}>{label}</p>
+      <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: ACCENT }}>
+        {formatCurrency(payload[0].value)}
+      </p>
+    </div>
+  );
+};
+
 export default function SalesChartWidget({ rawOrders }) {
   const data = useMemo(() => {
-    // Generar datos mock si no hay suficientes
-    // En la referencia es una curva suave con área de gradiente.
-    return [
-      { date: '12 may', value: 120000, label: '$120K' },
-      { date: '13 may', value: 180000, label: '$180K' },
-      { date: '14 may', value: 140000, label: '$140K' },
-      { date: '15 may', value: 110000, label: '$110K' },
-      { date: '16 may', value: 210000, label: '$210K' },
-      { date: '17 may', value: 185000, label: '$185K' },
-      { date: '18 may', value: 250000, label: '$250K' },
-    ];
+    const orders = rawOrders || [];
+    const byDay = {};
+    const now = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+      byDay[key] = 0;
+    }
+    orders.forEach(o => {
+      const d = new Date(o.created_at || o.date || new Date());
+      const key = d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+      if (byDay[key] !== undefined) byDay[key] += parseFloat(o.total || o.amount || 0);
+    });
+    return Object.entries(byDay).map(([date, value]) => ({ date, value }));
   }, [rawOrders]);
 
-  const color = '#3b82f6'; // Blue
+  const total = data.reduce((s, d) => s + d.value, 0);
 
   return (
-    <div className="glass-card bento-span-5" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 320 }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
+    <div className="glass-card bento-span-5" style={{ display: 'flex', flexDirection: 'column', minHeight: 320 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
-          <h3 style={{ fontSize: 13, fontWeight: 600, margin: 0, color: 'var(--on-surface-variant)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <h3 style={{ fontSize: 13, fontWeight: 500, margin: 0, color: 'var(--on-surface-variant)', display: 'flex', alignItems: 'center', gap: 6 }}>
             Ventas de la semana
             <MetricTooltip text="Evolución de ingresos en los últimos 7 días.">
-              <Info size={12} color="var(--on-surface-variant)" style={{ opacity: 0.7 }} />
+              <Info size={12} color="var(--on-surface-variant)" style={{ opacity: 0.6 }} />
             </MetricTooltip>
           </h3>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, marginTop: 8 }}>
-            <span style={{ fontSize: 24, fontWeight: 700, color: 'var(--on-surface)', letterSpacing: '-0.5px' }}>$1.248.760</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#10b981', fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
-              <ArrowUpRight size={14} /> +18,7%
+            <span style={{ fontSize: 28, fontWeight: 700, color: 'var(--on-background)', letterSpacing: '-0.5px' }}>
+              {total >= 1000000 ? (total/1000000).toFixed(3).replace('.', '.') : total.toLocaleString('es-CO')}
             </span>
           </div>
         </div>
-        <select style={{ 
-          background: 'transparent', border: '1px solid var(--border-subtle)', color: 'var(--on-surface)',
-          padding: '4px 8px', borderRadius: 6, fontSize: 12, cursor: 'pointer', outline: 'none'
+        <select style={{
+          background: `${ACCENT}12`, border: `1px solid ${ACCENT}33`,
+          color: ACCENT, padding: '5px 10px', borderRadius: 6, fontSize: 12, cursor: 'pointer', outline: 'none'
         }}>
           <option value="7d">7 días</option>
           <option value="30d">30 días</option>
         </select>
       </div>
 
-      <div style={{ flex: 1, width: '100%', marginLeft: -10 }}>
+      <div style={{ flex: 1, width: '100%' }}>
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+          <BarChart data={data} margin={{ top: 5, right: 0, left: -20, bottom: 0 }} barCategoryGap="25%">
             <defs>
-              <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={color} stopOpacity={0.4}/>
-                <stop offset="95%" stopColor={color} stopOpacity={0}/>
+              <linearGradient id="goldBar" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={ACCENT_LIGHT} stopOpacity={1}/>
+                <stop offset="100%" stopColor={ACCENT} stopOpacity={0.7}/>
               </linearGradient>
             </defs>
-            <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--on-surface-variant)' }} dy={10} />
-            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--on-surface-variant)' }} tickFormatter={(val) => `$${val/1000}k`} />
-            <Tooltip 
-              contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border-subtle)', borderRadius: 8 }}
-              itemStyle={{ color: 'var(--on-surface)', fontWeight: 600 }}
-            />
-            <Area type="monotone" dataKey="value" stroke={color} strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
-          </AreaChart>
+            <XAxis dataKey="date" axisLine={false} tickLine={false}
+              tick={{ fontSize: 11, fill: 'var(--on-surface-variant)' }} dy={8} />
+            <YAxis axisLine={false} tickLine={false}
+              tick={{ fontSize: 11, fill: 'var(--on-surface-variant)' }}
+              tickFormatter={(val) => formatCurrency(val)} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: `${ACCENT}08` }} />
+            <Bar dataKey="value" fill="url(#goldBar)" radius={[4, 4, 0, 0]} maxBarSize={40} />
+          </BarChart>
         </ResponsiveContainer>
       </div>
     </div>

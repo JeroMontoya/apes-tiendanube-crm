@@ -6,7 +6,7 @@ import {
 
 const ROLES = {
   admin: { label: 'Administrador', color: '#ef4444', bg: 'rgba(239,68,68,0.1)', desc: 'Acceso completo al sistema' },
-  manager: { label: 'Gerente', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', desc: 'Ajustar, transferir y crear productos' },
+  manager: { label: 'Gerente', color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.1)', desc: 'Ajustar, transferir y crear productos' },
   operator: { label: 'Operador', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)', desc: 'Solo ajustar stock' },
   viewer: { label: 'Visualizador', color: '#64748b', bg: 'rgba(100,116,139,0.1)', desc: 'Solo lectura' },
 };
@@ -120,7 +120,7 @@ function EditRoleModal({ user, locations, onSave, onClose }) {
         </div>
         <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
           <button onClick={onClose} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'transparent', color: 'var(--on-surface)', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
-          <button onClick={handleSave} disabled={saving} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: '#3b82f6', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: saving ? 'wait' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button onClick={handleSave} disabled={saving} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: '#3b82f6', color: 'var(--on-surface)', fontSize: '13px', fontWeight: '700', cursor: saving ? 'wait' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '8px' }}>
             {saving ? <RefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={14} />}
             Guardar Cambios
           </button>
@@ -190,7 +190,7 @@ function AddUserModal({ locations, onAdd, onClose }) {
         </div>
         <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
           <button onClick={onClose} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'transparent', color: 'var(--on-surface)', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
-          <button onClick={handleAdd} disabled={saving || !email} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: '#3b82f6', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: saving ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: !email ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button onClick={handleAdd} disabled={saving || !email} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: '#3b82f6', color: 'var(--on-surface)', fontSize: '13px', fontWeight: '700', cursor: saving ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: !email ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
             {saving ? <RefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Plus size={14} />}
             Agregar
           </button>
@@ -226,7 +226,7 @@ export default function UserRoles({ roles, locations, onUpdateRole, loading }) {
             {(roles || []).length} usuario{(roles || []).length !== 1 ? 's' : ''} registrado{(roles || []).length !== 1 ? 's' : ''}
           </p>
         </div>
-        <button onClick={() => setShowAddUser(true)} style={{ padding: '10px 18px', borderRadius: '10px', border: 'none', background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <button onClick={() => setShowAddUser(true)} style={{ padding: '10px 18px', borderRadius: '10px', border: 'none', background: '#3b82f6', color: 'var(--on-surface)', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Plus size={14} /> Agregar Usuario
         </button>
       </div>
@@ -272,7 +272,7 @@ export default function UserRoles({ roles, locations, onUpdateRole, loading }) {
         </div>
       ) : (
         <div style={{ borderRadius: '12px', border: '1px solid var(--border-subtle)', overflow: 'hidden', background: 'var(--surface)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr 120px 1fr 80px', gap: '12px', padding: '10px 16px', background: 'var(--surface-container-low, rgba(255,255,255,0.03))', borderBottom: '1px solid var(--border-subtle)', fontSize: '10px', fontWeight: '700', color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.5px', alignItems: 'center' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr 120px 1fr 80px', gap: '12px', padding: '10px 16px', background: 'var(--surface-container-low, var(--surface-container-low))', borderBottom: '1px solid var(--border-subtle)', fontSize: '10px', fontWeight: '700', color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.5px', alignItems: 'center' }}>
             <span>Nombre</span>
             <span>Email</span>
             <span>Rol</span>

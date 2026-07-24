@@ -164,7 +164,7 @@ const CampaignDrawer = ({ api, isOpen, onClose, campaign, onSaved }) => {
               </div>
               <div style={{ width: 140 }}>
                  <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--on-surface-variant)', marginBottom: 8, display: 'block' }}>Estado</label>
-                 <select value={status} onChange={e => setStatus(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--outline-variant)', background: 'var(--surface-container-lowest)', color: status === 'ACTIVE' ? '#10b981' : '#f59e0b', outline: 'none', fontWeight: 600 }}>
+                 <select value={status} onChange={e => setStatus(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--outline-variant)', background: 'var(--surface-container-lowest)', color: status === 'ACTIVE' ? '#10b981' : 'var(--primary-container)', outline: 'none', fontWeight: 600 }}>
                     <option value="ACTIVE">● Activa</option>
                     <option value="PAUSED">● Pausada</option>
                  </select>
@@ -318,7 +318,7 @@ const CampaignDrawer = ({ api, isOpen, onClose, campaign, onSaved }) => {
           <button onClick={onClose} style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid var(--outline-variant)', background: 'transparent', color: 'var(--on-surface)', fontWeight: 600, cursor: 'pointer' }}>
             Cancelar
           </button>
-          <button form="campaign-form" type="submit" disabled={saving || !name.trim()} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: 'var(--primary)', color: '#fff', fontWeight: 600, cursor: saving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button form="campaign-form" type="submit" disabled={saving || !name.trim()} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: 'var(--primary)', color: 'var(--on-surface)', fontWeight: 600, cursor: saving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
             {saving ? 'Guardando...' : (
               <>
                 <Save size={16} /> Guardar

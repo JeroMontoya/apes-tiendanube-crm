@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Target, Brain, TrendingUp,
   Megaphone, Globe, KanbanSquare, PackageSearch, ShoppingCart,
   Settings, Download, Menu, X, Zap, Calendar, Sun, Moon, Warehouse,
-  Hammer, BarChart3, Clock, ChevronDown, ChevronRight, MoreHorizontal,
+  Hammer, BarChart3, Clock, ChevronDown, ChevronRight, ChevronLeft, MoreHorizontal,
   BarChart2, MessageSquare, Repeat, FileText, Sparkles,
   Music, Video, Link, LogOut, Eye, Factory, Activity
 } from 'lucide-react';
@@ -69,6 +69,18 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
   const [mobileOpen, setMobileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [collapsed, setCollapsed] = useState({});
+  const [railCollapsed, setRailCollapsed] = useState(() => {
+    try { 
+      const stored = localStorage.getItem('apes_sidebar_rail');
+      if (stored !== null) return stored === 'true';
+      return true; // Start collapsed by default for the new dashboard
+    } catch { return true; }
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-sidebar', railCollapsed ? 'collapsed' : 'expanded');
+    try { localStorage.setItem('apes_sidebar_rail', String(railCollapsed)); } catch {}
+  }, [railCollapsed]);
   const teamCtx = useTeam();
   const hasPermission = teamCtx?.hasPermission || (() => true);
   const { logout } = teamCtx || {};
@@ -135,7 +147,15 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
             />
           )}
 
-          <aside className={`sidebar ${mobileOpen ? 'open' : ''}`}>
+          <aside className={`sidebar ${mobileOpen ? 'open' : ''} ${railCollapsed ? 'rail-collapsed' : ''}`}>
+            <button
+              className="sidebar-rail-toggle"
+              onClick={() => setRailCollapsed(v => !v)}
+              title={railCollapsed ? 'Expandir menú' : 'Minimizar menú'}
+            >
+              {railCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+            </button>
+
             {/* ── Logo ── */}
             <div className="sidebar-logo">
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -196,6 +216,7 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
                               key={item.id}
                               className={`sidebar-nav-item ${active ? 'active' : ''}`}
                               onClick={() => handleNavigate(item.id)}
+                              title={railCollapsed ? item.label : undefined}
                             >
                               <span className="nav-icon">
                                 <Icon size={16} strokeWidth={active ? 2.2 : 1.8} />
@@ -227,7 +248,10 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
                 <span className="live-dot" />
                 <span className="sidebar-footer-label">Sistema Activo</span>
               </div>
-              <p>Onyx Core v4.0</p>
+              <div className="collapse-content">
+                <p>Apes Tiendanube CRM</p>
+                <span>Panel Administrativo</span>
+              </div>
             </div>
           </aside>
         </>
@@ -377,7 +401,7 @@ function FloatingOrbNav({ activeView, onNavigate, moreOpen, setMoreOpen, theme, 
   const quickNav = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Inicio', color: '#3b82f6' },
     { id: 'clientes', icon: Users, label: 'Clientes', color: '#10b981' },
-    { id: 'taller_stock', icon: Factory, label: 'Control Taller', color: '#f59e0b' },
+    { id: 'taller_stock', icon: Factory, label: 'Control Taller', color: 'var(--primary-container)' },
     { id: 'marketing_center', icon: TrendingUp, label: 'Marketing', color: '#ec4899' },
     { id: 'ventas_view', icon: BarChart2, label: 'Ventas', color: '#06b6d4' },
   ];
@@ -414,13 +438,13 @@ function FloatingOrbNav({ activeView, onNavigate, moreOpen, setMoreOpen, theme, 
               className="orb-menu-item"
               style={{
                 background: isActive ? `${item.color}20` : 'transparent',
-                color: isActive ? item.color : 'rgba(255,255,255,0.5)',
+                color: isActive ? item.color : 'var(--on-surface-variant)',
                 animation: expanded ? `orbItemIn 0.3s ease ${i * 0.05}s both` : 'none',
               }}
             >
               <div className="orb-menu-icon" style={{
-                background: isActive ? `linear-gradient(135deg, ${item.color}25, ${item.color}05)` : 'rgba(255,255,255,0.03)',
-                boxShadow: isActive ? `0 4px 16px ${item.color}40, inset 0 2px 4px rgba(255,255,255,0.1)` : 'inset 0 2px 4px rgba(255,255,255,0.02)',
+                background: isActive ? `linear-gradient(135deg, ${item.color}25, ${item.color}05)` : 'var(--surface-container-low)',
+                boxShadow: isActive ? `0 4px 16px ${item.color}40, inset 0 2px 4px var(--border-medium)` : 'inset 0 2px 4px rgba(255,255,255,0.02)',
                 border: isActive ? `1px solid ${item.color}30` : '1px solid transparent',
               }}>
                 <Icon size={20} strokeWidth={isActive ? 2.4 : 1.8} />
@@ -430,20 +454,20 @@ function FloatingOrbNav({ activeView, onNavigate, moreOpen, setMoreOpen, theme, 
           );
         })}
 
-        <div style={{ width: 1, background: 'rgba(255,255,255,0.06)', margin: '6px 2px', alignSelf: 'stretch' }} />
+        <div style={{ width: 1, background: 'var(--glass-border)', margin: '6px 2px', alignSelf: 'stretch' }} />
 
         <button
           onClick={() => { setExpanded(false); setMoreOpen(true); }}
           className="orb-menu-item"
           style={{
-            background: moreOpen ? 'rgba(255,255,255,0.08)' : 'transparent',
-            color: moreOpen ? '#a855f7' : 'rgba(255,255,255,0.5)',
+            background: moreOpen ? 'var(--outline)' : 'transparent',
+            color: moreOpen ? '#a855f7' : 'var(--on-surface-variant)',
           }}
         >
           <div className="orb-menu-icon" style={{
-            background: moreOpen ? 'rgba(168,85,247,0.15)' : 'rgba(255,255,255,0.03)',
+            background: moreOpen ? 'rgba(168,85,247,0.15)' : 'var(--surface-container-low)',
             border: moreOpen ? '1px solid rgba(168,85,247,0.3)' : '1px solid transparent',
-            boxShadow: moreOpen ? '0 4px 16px rgba(168,85,247,0.3), inset 0 2px 4px rgba(255,255,255,0.1)' : 'inset 0 2px 4px rgba(255,255,255,0.02)',
+            boxShadow: moreOpen ? '0 4px 16px rgba(168,85,247,0.3), inset 0 2px 4px var(--border-medium)' : 'inset 0 2px 4px rgba(255,255,255,0.02)',
           }}>
             <Sparkles size={20} strokeWidth={moreOpen ? 2.4 : 1.8} />
           </div>

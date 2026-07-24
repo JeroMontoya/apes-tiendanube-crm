@@ -44,7 +44,7 @@ const LIFECYCLE_CONFIG = [
 ];
 
 const BEHAVIORAL_CONFIG = [
-  { key: 'alto_valor', label: 'Alto Valor', icon: '💎', color: '#F59E0B', filter: c => c.segmentTags?.includes('alto_valor') },
+  { key: 'alto_valor', label: 'Alto Valor', icon: '💎', color: 'var(--primary-container)', filter: c => c.segmentTags?.includes('alto_valor') },
   { key: 'riesgo_churn', label: 'Riesgo Fuga', icon: '⚠️', color: '#F97316', filter: c => c.segmentTags?.includes('riesgo_churn') },
   { key: 'dormido', label: 'Dormidos', icon: '💤', color: '#6B7280', filter: c => c.segmentTags?.includes('dormido') },
   { key: 'sensible_precio', label: 'Caza Descuentos', icon: '🎟️', color: '#EC4899', filter: c => c.segmentTags?.includes('sensible_precio') },
@@ -52,9 +52,9 @@ const BEHAVIORAL_CONFIG = [
 ];
 
 function formatARS(val) {
-  return new Intl.NumberFormat('es-AR', {
+  return new Intl.NumberFormat('es-CO', {
     style: 'currency',
-    currency: 'ARS',
+    currency: 'COP',
     maximumFractionDigits: 0,
   }).format(val);
 }

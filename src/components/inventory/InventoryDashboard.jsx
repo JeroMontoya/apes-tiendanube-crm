@@ -28,8 +28,8 @@ const MOVEMENT_TYPE_CONFIG = {
   receive: { label: 'Entró', color: '#10b981', icon: TrendingUp },
   dispatch: { label: 'Salió', color: '#ef4444', icon: TrendingDown },
   transfer: { label: 'Se movió', color: '#3b82f6', icon: ArrowLeftRight },
-  adjustment: { label: 'Ajuste', color: '#f59e0b', icon: RefreshCw },
-  return: { label: 'Devolución', color: '#f59e0b', icon: RefreshCw },
+  adjustment: { label: 'Ajuste', color: 'var(--primary-container)', icon: RefreshCw },
+  return: { label: 'Devolución', color: 'var(--primary-container)', icon: RefreshCw },
   production_in: { label: 'Producción', color: '#06b6d4', icon: Package },
   sync: { label: 'Sync', color: '#8b5cf6', icon: RefreshCw },
 };
@@ -148,7 +148,7 @@ export default function InventoryDashboard({ summary, alerts, movements, locatio
         <StatCard
           label="Necesitan atención"
           value={stats.lowStock + stats.outOfStock}
-          color="#f59e0b"
+          color="var(--primary-container)"
           icon={AlertTriangle}
           onClick={() => onAction?.('alerts')}
         />
@@ -263,7 +263,7 @@ export default function InventoryDashboard({ summary, alerts, movements, locatio
                   <div key={m.id || i} style={{
                     padding: '10px 12px',
                     borderRadius: '10px',
-                    background: 'var(--surface-container-low, rgba(255,255,255,0.03))',
+                    background: 'var(--surface-container-low, var(--surface-container-low))',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '10px',
@@ -309,7 +309,7 @@ export default function InventoryDashboard({ summary, alerts, movements, locatio
                 <span style={{
                   fontSize: '11px', fontWeight: '700',
                   padding: '2px 8px', borderRadius: '10px',
-                  background: '#ef4444', color: '#fff',
+                  background: '#ef4444', color: 'var(--on-surface)',
                 }}>
                   {activeAlerts.length}
                 </span>
@@ -335,7 +335,7 @@ export default function InventoryDashboard({ summary, alerts, movements, locatio
                     alignItems: 'center',
                     gap: '10px',
                   }}>
-                    <AlertTriangle size={16} color={isCrit ? '#ef4444' : '#f59e0b'} style={{ flexShrink: 0 }} />
+                    <AlertTriangle size={16} color={isCrit ? '#ef4444' : 'var(--primary-container)'} style={{ flexShrink: 0 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--on-surface)' }}>
                         {alert.message || alert.product_name || 'Alerta'}

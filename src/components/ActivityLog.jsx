@@ -6,11 +6,11 @@ const ACTION_CONFIG = {
   stock_increased: { icon: ArrowUpCircle, color: '#10b981', label: 'Stock +', template: (a) => `${a.target_name}: ${a.details?.delta > 0 ? '+' : ''}${a.details?.delta} unidades` },
   stock_decreased: { icon: ArrowDownCircle, color: '#ef4444', label: 'Stock -', template: (a) => `${a.target_name}: ${a.details?.delta} unidades` },
   stock_updated: { icon: Edit3, color: '#3b82f6', label: 'Stock Editado', template: (a) => `${a.target_name}: ${a.details?.old} → ${a.details?.new}` },
-  status_changed: { icon: Package, color: '#f59e0b', label: 'Estado', template: (a) => `${a.target_name}: ${a.details?.newStatus}` },
+  status_changed: { icon: Package, color: 'var(--primary-container)', label: 'Estado', template: (a) => `${a.target_name}: ${a.details?.newStatus}` },
   member_created: { icon: UserPlus, color: '#8b5cf6', label: 'Miembro', template: (a) => `Nuevo miembro: ${a.target_name} (${a.details?.role})` },
   member_updated: { icon: Edit3, color: '#3b82f6', label: 'Miembro', template: (a) => `Actualizado: ${a.target_name}` },
   member_deactivated: { icon: UserMinus, color: '#ef4444', label: 'Miembro', template: (a) => `Desactivado: ${a.target_name}` },
-  pqr_created: { icon: Package, color: '#f59e0b', label: 'PQR', template: (a) => `PQR: ${a.target_name}` },
+  pqr_created: { icon: Package, color: 'var(--primary-container)', label: 'PQR', template: (a) => `PQR: ${a.target_name}` },
   pqr_updated: { icon: Edit3, color: '#3b82f6', label: 'PQR', template: (a) => `PQR actualizado: ${a.target_name}` },
 };
 
@@ -49,8 +49,8 @@ export default function ActivityLog({ compact = false }) {
             value={filterMember}
             onChange={e => setFilterMember(e.target.value)}
             style={{
-              padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)',
-              background: 'rgba(255,255,255,0.05)', color: 'var(--on-surface)', fontSize: 12,
+              padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-medium)',
+              background: 'var(--border-subtle)', color: 'var(--on-surface)', fontSize: 12,
             }}
           >
             <option value="all">Todos los miembros</option>
@@ -62,8 +62,8 @@ export default function ActivityLog({ compact = false }) {
             value={filterAction}
             onChange={e => setFilterAction(e.target.value)}
             style={{
-              padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)',
-              background: 'rgba(255,255,255,0.05)', color: 'var(--on-surface)', fontSize: 12,
+              padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-medium)',
+              background: 'var(--border-subtle)', color: 'var(--on-surface)', fontSize: 12,
             }}
           >
             <option value="all">Todas las acciones</option>

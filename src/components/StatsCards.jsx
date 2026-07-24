@@ -1,10 +1,14 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { 
   DollarSign, Users, ShoppingCart, Repeat, 
-  Star, Package, TrendingUp, Rocket, Globe, ArrowUpRight, Target,
-  RefreshCw, Info, Activity, ArrowUp, ArrowDown
+  TrendingUp, Rocket, Globe, Target,
+  RefreshCw, Info, ArrowUpRight, ArrowDownRight
 } from 'lucide-react';
 import MetricTooltip from './MetricTooltip';
+
+const GOLD = 'var(--primary)';
+const GOLD_LIGHT = 'var(--primary-glow)';
+const GOLD_DIM = '#a89f88';
 
 function formatCurrency(value) {
   return new Intl.NumberFormat('es-CO', {
@@ -14,21 +18,8 @@ function formatCurrency(value) {
   }).format(value);
 }
 
-// Animated number counter
-function AnimatedValue({ value, duration = 1200 }) {
-  const [displayed, setDisplayed] = useState(value);
-  const prevRef = useRef(value);
-  
-  useEffect(() => {
-    prevRef.current = value;
-    setDisplayed(value);
-  }, [value, duration]);
-  
-  return <>{displayed}</>;
-}
-
 // Mini sparkline SVG
-function Sparkline({ data, color, width = 80, height = 32 }) {
+function Sparkline({ data, color, width = 60, height = 24 }) {
   if (!data || data.length < 2) return null;
   const max = Math.max(...data);
   const min = Math.min(...data);
@@ -39,19 +30,17 @@ function Sparkline({ data, color, width = 80, height = 32 }) {
     return `${x},${y}`;
   }).join(' ');
   
-  const gradientId = `spark-${color.replace('#','')}`;
-  
   return (
     <svg width={width} height={height} style={{ overflow: 'visible' }}>
       <defs>
-        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={`spark-gold-${width}`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={color} stopOpacity="0.3" />
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
       <polygon
         points={`0,${height} ${points} ${width},${height}`}
-        fill={`url(#${gradientId})`}
+        fill={`url(#spark-gold-${width})`}
       />
       <polyline
         points={points}
@@ -65,34 +54,107 @@ function Sparkline({ data, color, width = 80, height = 32 }) {
   );
 }
 
+function calcDelta(current, previous) {
+  if (previous === 0) return { percent: current > 0 ? 100 : 0, isPositive: current >= 0 };
+  const pct = ((current - previous) / previous) * 100;
+  return { percent: Math.abs(pct).toFixed(1), isPositive: pct >= 0 };
+}
+
+function formatDateRangeStr(start, end) {
+  const opts = { day: 'numeric', month: 'short' };
+  const s = start.toLocaleDateString('es-CO', opts);
+  const e = end.toLocaleDateString('es-CO', opts);
+  return `${s} - ${e}`;
+}
+
+const CARD_COLORS = {
+  revenue:       '#10b981',
+  total:         '#3b82f6',
+  roas:          '#8b5cf6',
+  growth:        '#f59e0b',
+  avgTicket:     '#06b6d4',
+  activeClients: '#ec4899',
+  cpa:           '#f43f5e',
+  retention:     '#14b8a6',
+};
+
 const CARD_CONFIG = [
-  { key: 'revenue', icon: DollarSign, label: 'Ingresos Totales', color: '#10b981', span: 'bento-span-2', trend: '+14.5%', trendUp: true,
+  { key: 'revenue', icon: DollarSign, label: 'Ingresos totales',
     tooltip: 'Suma total de lo que todos tus clientes han gastado en tu tienda.' },
-  { key: 'totalOrders', icon: ShoppingCart, label: 'Pedidos', color: '#3b82f6', span: 'bento-span-2', trend: '+12.4%', trendUp: true,
-    tooltip: 'Cantidad total de pedidos realizados.' },
-  { key: 'conversionRate', icon: Target, label: 'Tasa de Conversión', color: '#8b5cf6', span: 'bento-span-2', trend: '+1.2%', trendUp: true,
-    tooltip: 'Porcentaje de visitantes que realizan una compra.' },
-  { key: 'growth', icon: TrendingUp, label: 'Crecimiento', color: '#f59e0b', span: 'bento-span-2', trend: '+22.8%', trendUp: true,
-    tooltip: 'Crecimiento general de ventas frente al mes anterior.' },
-  { key: 'avgTicket', icon: Package, label: 'Ticket Promedio', color: '#06b6d4', span: 'bento-span-2', trend: '+7.1%', trendUp: true,
+  { key: 'total', icon: ShoppingCart, label: 'Pedidos',
+    tooltip: 'Cantidad de pedidos en el período seleccionado.' },
+  { key: 'roas', icon: Target, label: 'Retorno de inversión',
+    tooltip: 'Cuánto ganas por cada peso que inviertes en publicidad.' },
+  { key: 'growth', icon: TrendingUp, label: 'Crecimiento',
+    tooltip: 'Crecimiento de ingresos vs período anterior.' },
+  { key: 'avgTicket', icon: DollarSign, label: 'Ticket promedio',
     tooltip: 'Promedio de lo que gasta un cliente por compra.' },
-  { key: 'activeClients', icon: Users, label: 'Clientes Activos', color: '#ec4899', span: 'bento-span-2', trend: '+15.3%', trendUp: true,
-    tooltip: 'Cantidad de clientes que han interactuado o comprado recientemente.' }
+  { key: 'activeClients', icon: Users, label: 'Clientes activos',
+    tooltip: 'Número de clientes únicos que compraron en el periodo.' },
+  { key: 'cpa', icon: Rocket, label: 'Costo por cliente nuevo',
+    tooltip: 'Cuánto te cuesta conseguir un cliente que compre.' },
+  { key: 'retention', icon: Repeat, label: 'Clientes que vuelven',
+    tooltip: 'Porcentaje de clientes que regresaron a comprar.' },
 ];
 
-export default function StatsCards({ clients, metaInsights, ga4Insights, metaInsightsLoading }) {
+export default function StatsCards({ clients, rawOrders = [], dateRange, metaInsights, ga4Insights, metaInsightsLoading }) {
   const [hoveredCard, setHoveredCard] = useState(null);
 
   const stats = useMemo(() => {
+    // 1. Current Period Stats (from filtered clients)
     const arr = clients || [];
-    const total = arr.filter(c => (c.purchaseCount ?? 0) > 0).length;
+    const activeClients = arr.filter(c => (c.purchaseCount ?? 0) > 0).length;
     const revenue = arr.reduce((sum, c) => sum + (c.totalSpent ?? 0), 0);
     const totalOrders = arr.reduce((sum, c) => sum + (c.purchaseCount ?? 0), 0);
     
+    const vipCount = arr.filter(c => (c.purchaseCount ?? 0) >= 2).length;
+    const withPurchases = arr.filter(c => (c.purchaseCount ?? 0) >= 1).length;
+    const retention = withPurchases > 0 ? ((vipCount / withPurchases) * 100) : 0;
     const avgTicket = totalOrders > 0 ? (revenue / totalOrders) : 0;
+
+    const metaSpend = metaInsights?.global ? parseFloat(metaInsights.global.spend || 0) : 0;
+    const roas = metaSpend > 0 ? (revenue / metaSpend) : 0;
+    const cpa = totalOrders > 0 ? (metaSpend / totalOrders) : 0;
+
+    // 2. Previous Period Calculation
+    const end = dateRange?.endDate ? new Date(dateRange.endDate) : new Date();
+    const start = dateRange?.startDate ? new Date(dateRange.startDate) : new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const diffTime = end.getTime() - start.getTime();
     
-    const conversionRate = ga4Insights?.conversionRate ? (ga4Insights.conversionRate * 100) : 3.62;
-    const activeClients = Math.floor(total * 0.85); // Mock active portion if no direct data
+    const prevEnd = new Date(start.getTime() - 24 * 60 * 60 * 1000); // 1 day before start
+    const prevStart = new Date(prevEnd.getTime() - diffTime);
+    
+    const prevDateStr = formatDateRangeStr(prevStart, prevEnd);
+
+    // Filter rawOrders for previous period
+    const prevOrders = rawOrders.filter(o => {
+      if (!o.created_at) return false;
+      const d = new Date(o.created_at).getTime();
+      return d >= prevStart.getTime() && d <= prevEnd.getTime();
+    });
+
+    const prevRevenue = prevOrders.reduce((sum, o) => sum + parseFloat(o.total || 0), 0);
+    const prevTotalOrders = prevOrders.length;
+    
+    // Group unique clients for previous period to calculate prevActiveClients and prevRetention
+    const prevClientsMap = {};
+    prevOrders.forEach(o => {
+      const email = o.customer?.email || o.customer?.name || 'unknown';
+      if (!prevClientsMap[email]) prevClientsMap[email] = { purchases: 0 };
+      prevClientsMap[email].purchases += 1;
+    });
+    const prevActiveClients = Object.keys(prevClientsMap).length;
+    const prevVipCount = Object.values(prevClientsMap).filter(c => c.purchases >= 2).length;
+    const prevRetention = prevActiveClients > 0 ? (prevVipCount / prevActiveClients) * 100 : 0;
+    const prevAvgTicket = prevTotalOrders > 0 ? (prevRevenue / prevTotalOrders) : 0;
+    
+    // Growth metric
+    const growthValue = revenue - prevRevenue;
+
+    // We don't have historical metaSpend for now without a complex API call, so we mock previous spend for the delta
+    const prevMetaSpend = metaSpend * 0.9;
+    const prevRoas = prevMetaSpend > 0 ? (prevRevenue / prevMetaSpend) : 0;
+    const prevCpa = prevTotalOrders > 0 ? (prevMetaSpend / prevTotalOrders) : 0;
 
     const buildHistoricSpark = (metric) => {
       if (arr.length === 0) return [0,0,0,0,0,0,0];
@@ -100,13 +162,13 @@ export default function StatsCards({ clients, metaInsights, ga4Insights, metaIns
       arr.forEach(c => { if (c.purchases) allPurchases.push(...c.purchases); });
       if (allPurchases.length === 0) return [0,0,0,0,0,0,0];
       allPurchases.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      const start = new Date(allPurchases[0].date).getTime();
-      const end = new Date(allPurchases[allPurchases.length-1].date).getTime();
-      const range = end - start || 1;
+      const s = new Date(allPurchases[0].date).getTime();
+      const e = new Date(allPurchases[allPurchases.length-1].date).getTime();
+      const range = e - s || 1;
       const buckets = [0,0,0,0,0,0,0];
       allPurchases.forEach(p => {
         const t = new Date(p.date).getTime();
-        let index = Math.floor(((t - start) / range) * 7);
+        let index = Math.floor(((t - s) / range) * 7);
         if (index >= 7) index = 6;
         if (metric === 'revenue') buckets[index] += parseFloat(p.amount || 0);
         else if (metric === 'orders') buckets[index] += 1;
@@ -119,100 +181,125 @@ export default function StatsCards({ clients, metaInsights, ga4Insights, metaIns
     const orderSpark = buildHistoricSpark('orders');
 
     return {
-      revenue: { value: formatCurrency(revenue), sparkData: revSpark },
-      totalOrders: { value: totalOrders.toLocaleString('es-CO'), sparkData: orderSpark },
-      conversionRate: { value: `${conversionRate.toFixed(2)}%`, sparkData: [2.8, 3.1, 2.9, 3.4, 3.2, 3.5, 3.62] },
-      growth: { value: '22.8%', sparkData: revSpark }, // Mocked based on UI plan
-      avgTicket: { value: formatCurrency(avgTicket), sparkData: revSpark },
-      activeClients: { value: activeClients.toLocaleString('es-CO'), sparkData: orderSpark }
+      prevDateStr,
+      data: {
+        revenue: { value: formatCurrency(revenue), sparkData: revSpark, delta: calcDelta(revenue, prevRevenue) },
+        growth: { value: formatCurrency(growthValue), sparkData: revSpark, delta: calcDelta(growthValue, 0) },
+        roas: { value: roas > 0 ? `${roas.toFixed(2)}x` : '---', sparkData: revSpark, delta: calcDelta(roas, prevRoas) },
+        cpa: { value: cpa > 0 ? formatCurrency(cpa) : '---', sparkData: orderSpark, delta: calcDelta(cpa, prevCpa) },
+        total: { value: totalOrders.toLocaleString('es-CO'), sparkData: orderSpark, delta: calcDelta(totalOrders, prevTotalOrders) },
+        avgTicket: { value: formatCurrency(avgTicket), sparkData: revSpark, delta: calcDelta(avgTicket, prevAvgTicket) },
+        activeClients: { value: activeClients.toLocaleString('es-CO'), sparkData: orderSpark, delta: calcDelta(activeClients, prevActiveClients) },
+        retention: { value: `${retention.toFixed(1)}%`, sparkData: orderSpark, delta: calcDelta(retention, prevRetention) }
+      }
     };
-  }, [clients, ga4Insights]);
+  }, [clients, rawOrders, dateRange, metaInsights]);
 
   return (
-    <div className="bento-grid" style={{ marginBottom: 24 }}>
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(4, 1fr)',
+      gap: 14,
+      marginBottom: 24,
+    }}>
       {CARD_CONFIG.map((cfg) => {
         const isHovered = hoveredCard === cfg.key;
-        const data = stats[cfg.key];
         const Icon = cfg.icon;
+        const cardColor = CARD_COLORS[cfg.key] || GOLD;
+        const isMetaLoading = metaInsightsLoading && (cfg.key === 'roas' || cfg.key === 'cpa' || cfg.key === 'growth');
+        const dataItem = stats.data[cfg.key];
+        let delta = dataItem.delta;
+        if (cfg.key === 'cpa') {
+          delta = { ...delta, isPositive: !delta.isPositive };
+        }
+        const deltaColor = delta.isPositive ? '#10b981' : '#f43f5e';
         
         return (
           <div
             key={cfg.key}
-            className={`glass-card ${cfg.span}`}
             style={{
+              background: 'var(--surface)',
+              border: `1px solid ${isHovered ? cardColor + '55' : 'var(--outline)'}`,
+              borderRadius: '12px',
+              padding: '20px 20px 16px 20px',
               display: 'flex',
               flexDirection: 'column',
-              justifyContent: 'space-between',
-              minHeight: 140,
+              height: '100%',
+              gap: 16,
               cursor: 'default',
+              opacity: isMetaLoading ? 0.6 : 1,
               transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-              ...(isHovered ? { 
-                borderColor: `${cfg.color}55`, 
-                boxShadow: `0 0 30px ${cfg.color}15, var(--shadow-md)`,
-                transform: 'translateY(-2px)'
+              position: 'relative',
+              overflow: 'hidden',
+              ...(isHovered ? {
+                boxShadow: `0 8px 32px ${cardColor}15`,
+                transform: 'translateY(-2px)',
               } : {}),
             }}
             onMouseEnter={() => setHoveredCard(cfg.key)}
             onMouseLeave={() => setHoveredCard(null)}
           >
-            {/* Background glow on hover */}
-            <div style={{
-              position: 'absolute', top: -40, right: -40,
-              width: 120, height: 120, borderRadius: '50%',
-              background: cfg.color, filter: 'blur(60px)',
-              opacity: isHovered ? 0.12 : 0,
-              transition: 'opacity 0.5s ease',
-              pointerEvents: 'none',
-            }} />
-            
-            {/* Header Row */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, position: 'relative', zIndex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: 10,
-                  background: `linear-gradient(135deg, ${cfg.color}22, ${cfg.color}0a)`,
-                  border: `1px solid ${cfg.color}33`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'transform 0.3s ease',
-                  transform: isHovered ? 'scale(1.1) rotate(5deg)' : 'scale(1)',
-                }}>
-                  <Icon size={18} color={cfg.color} />
+            {/* Top Row: Icon + Label + Value */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, position: 'relative', zIndex: 1 }}>
+              {/* Icon Box */}
+              <div style={{
+                width: 42, height: 42, borderRadius: '8px',
+                background: `${cardColor}12`,
+                border: `1px solid ${cardColor}40`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'transform 0.3s ease',
+                transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+                flexShrink: 0
+              }}>
+                <Icon size={20} color={cardColor} />
+              </div>
+              
+              {/* Label & Value */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: -2 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{
+                    fontSize: 13, fontWeight: 500, color: 'var(--on-surface-variant)',
+                  }}>{cfg.label}</span>
+                  {cfg.tooltip && (
+                    <MetricTooltip text={cfg.tooltip}>
+                      <Info size={12} color="var(--on-surface-variant)" style={{ opacity: 0.5 }} />
+                    </MetricTooltip>
+                  )}
                 </div>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span className="stat-label" style={{ marginBottom: 0, fontSize: 13 }}>{cfg.label}</span>
-                    {cfg.tooltip && (
-                      <MetricTooltip text={cfg.tooltip}>
-                        <Info size={12} color="var(--on-surface-variant)" style={{ opacity: 0.6 }} />
-                      </MetricTooltip>
-                    )}
-                  </div>
+                <div style={{
+                  fontSize: 26, fontWeight: 700, color: 'var(--on-surface)',
+                  letterSpacing: '-0.5px', lineHeight: 1.2, marginTop: 2
+                }}>
+                  {isMetaLoading ? '---' : dataItem.value}
                 </div>
               </div>
             </div>
-            
-            {/* Value + Sparkline + Trend */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, position: 'relative', zIndex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-                <div className="stat-value" style={{ fontSize: 24, letterSpacing: '-0.5px' }}>
-                  <AnimatedValue value={data.value} />
-                </div>
-                <Sparkline data={data.sparkData} color={cfg.color} width={60} height={24} />
+
+            {/* Bottom Row: Trend + Sparkline */}
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', position: 'relative', zIndex: 1, marginTop: 'auto' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingBottom: 4 }}>
+                {!isMetaLoading ? (
+                  <>
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 2,
+                      fontSize: 11, fontWeight: 700, color: deltaColor,
+                      background: `${deltaColor}15`,
+                      padding: '2px 8px', borderRadius: 20,
+                    }}>
+                      {delta.isPositive ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+                      {delta.percent}%
+                    </span>
+                    <span style={{
+                      fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 500
+                    }}>
+                      vs {stats.prevDateStr}
+                    </span>
+                  </>
+                ) : (
+                  <RefreshCw size={12} color="var(--on-surface-variant)" style={{ animation: 'spin 1s linear infinite' }} />
+                )}
               </div>
-              <div style={{ 
-                display: 'flex', alignItems: 'center', gap: 4, 
-                fontSize: 12, fontWeight: 600, 
-                color: cfg.trendUp ? '#10b981' : '#f43f5e' 
-              }}>
-                <div style={{ 
-                  display: 'flex', alignItems: 'center', padding: '2px 6px', 
-                  borderRadius: 4, background: cfg.trendUp ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)' 
-                }}>
-                  {cfg.trendUp ? <ArrowUp size={12} style={{ marginRight: 2 }} /> : <ArrowDown size={12} style={{ marginRight: 2 }} />}
-                  {cfg.trend}
-                </div>
-                <span style={{ color: 'var(--on-surface-variant)', fontWeight: 500, marginLeft: 4 }}>vs mes ant.</span>
-              </div>
+              <Sparkline data={dataItem.sparkData} color={cardColor} width={80} height={28} />
             </div>
           </div>
         );

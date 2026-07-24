@@ -584,7 +584,7 @@ export function mapTiendanubeDataToUnified(customers, orders) {
       discount_coupon: order.discount_coupon,
       discount_gateway: order.discount_gateway,
       promotional_discount: order.promotional_discount,
-      currency: order.currency || 'ARS',
+      currency: order.currency || 'COP',
       created_at: order.created_at || new Date().toISOString(),
       shipping_address: order.shipping_address || null,
       billing_address: order.billing_address || null,

@@ -69,7 +69,7 @@ function fmtVal(val, type) {
   }
   if (type === 'pct') return `${Number(val).toFixed(1)}%`;
   if (type === 'dec') return Number(val).toFixed(2);
-  if (val >= 1000) return Number(val).toLocaleString('es-AR');
+  if (val >= 1000) return Number(val).toLocaleString('es-CO');
   return Number(val).toFixed(val % 1 === 0 ? 0 : 1);
 }
 
@@ -111,7 +111,7 @@ function GeneralTab({ data }) {
   const kpis = [
     { label: 'Ingresos Tiendanube', val: tn.total_revenue?.value, prev: tn.total_revenue?.previous, color: '#10b981', icon: ShoppingBag, type: 'currency' },
     { label: 'Tráfico Orgánico (GSC)', val: gsc.organic_clicks?.value, prev: gsc.organic_clicks?.previous, color: '#3b82f6', icon: Search, type: 'num' },
-    { label: 'Sesiones GA4', val: ga4.sessions?.value, prev: ga4.sessions?.previous, color: '#f59e0b', icon: BarChart2, type: 'num' },
+    { label: 'Sesiones GA4', val: ga4.sessions?.value, prev: ga4.sessions?.previous, color: 'var(--primary-container)', icon: BarChart2, type: 'num' },
     { label: 'Seguidores Instagram', val: ig.followers?.value, prev: ig.followers?.previous, color: '#e4405f', icon: Camera, type: 'num' },
   ];
 
@@ -156,7 +156,7 @@ function GeneralTab({ data }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {[
               { label: 'Aprobados', val: mc.approved || 0, color: '#10b981' },
-              { label: 'Pendientes', val: mc.pending || 0, color: '#f59e0b' },
+              { label: 'Pendientes', val: mc.pending || 0, color: 'var(--primary-container)' },
               { label: 'Rechazados', val: mc.disapproved || 0, color: '#ef4444' },
               { label: 'Total', val: mc.total || 0, color: 'var(--on-surface)' },
             ].map((item, i) => (
@@ -223,7 +223,7 @@ function GSCTab({ keywords }) {
                 <td style={{ ...S.td, textAlign: 'right', fontFamily: 'JetBrains Mono, monospace' }}>{fmtVal(kw.impressions)}</td>
                 <td style={{ ...S.td, textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', color: '#10b981' }}>{(kw.ctr * 100).toFixed(1)}%</td>
                 <td style={{ ...S.td, textAlign: 'right' }}>
-                  <span style={{ ...S.badge(kw.position <= 3 ? '#10b981' : kw.position <= 10 ? '#3b82f6' : '#f59e0b') }}>
+                  <span style={{ ...S.badge(kw.position <= 3 ? '#10b981' : kw.position <= 10 ? '#3b82f6' : 'var(--primary-container)') }}>
                     {kw.position.toFixed(1)}
                   </span>
                 </td>
@@ -244,7 +244,7 @@ function MerchantTab({ products }) {
   const statusColor = (s) => {
     if (s === 'APPROVED') return '#10b981';
     if (s === 'DISAPPROVED') return '#ef4444';
-    return '#f59e0b';
+    return 'var(--primary-container)';
   };
 
   return (
@@ -276,8 +276,8 @@ function MerchantTab({ products }) {
                 <td style={{ ...S.td, fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--on-surface-variant)' }}>{p.product_id}</td>
                 <td style={{ ...S.td, textAlign: 'right', fontFamily: 'JetBrains Mono, monospace' }}>{fmtVal(p.price_amount, 'currency')}</td>
                 <td style={S.td}><span style={S.badge(statusColor(p.approval_status))}>{p.approval_status}</span></td>
-                <td style={{ ...S.td, color: p.click_potential === 'HIGH' ? '#10b981' : p.click_potential === 'MEDIUM' ? '#f59e0b' : 'var(--on-surface-variant)' }}>{p.click_potential}</td>
-                <td style={{ ...S.td, fontSize: 10, color: 'var(--on-surface-variant)' }}>{new Date(p.last_synced_at).toLocaleDateString('es-AR')}</td>
+                <td style={{ ...S.td, color: p.click_potential === 'HIGH' ? '#10b981' : p.click_potential === 'MEDIUM' ? 'var(--primary-container)' : 'var(--on-surface-variant)' }}>{p.click_potential}</td>
+                <td style={{ ...S.td, fontSize: 10, color: 'var(--on-surface-variant)' }}>{new Date(p.last_synced_at).toLocaleDateString('es-CO')}</td>
               </tr>
             ))}
           </tbody>
@@ -343,7 +343,7 @@ function CompetitorsTab({ benchmarks, competitors }) {
                     </span>
                   </td>
                   <td style={{ ...S.td, textAlign: 'center' }}>
-                    <span style={{ ...S.badge(b.serp_position <= 3 ? '#10b981' : b.serp_position <= 10 ? '#3b82f6' : '#f59e0b') }}>
+                    <span style={{ ...S.badge(b.serp_position <= 3 ? '#10b981' : b.serp_position <= 10 ? '#3b82f6' : 'var(--primary-container)') }}>
                       #{b.serp_position}
                     </span>
                   </td>
@@ -356,13 +356,13 @@ function CompetitorsTab({ benchmarks, competitors }) {
 
       <div style={S.card}>
         <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Target size={12} color="#f59e0b" /> Índice de Competitividad
+          <Target size={12} color="var(--primary-container)" /> Índice de Competitividad
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 }}>
           {[
             { label: 'Muy Competitivo', count: benchmarks.filter(b => b.price_difference_pct < -10).length, color: '#10b981' },
             { label: 'Competitivo', count: benchmarks.filter(b => b.price_difference_pct >= -10 && b.price_difference_pct < 0).length, color: '#3b82f6' },
-            { label: 'Paridad', count: benchmarks.filter(b => b.price_difference_pct === 0).length, color: '#f59e0b' },
+            { label: 'Paridad', count: benchmarks.filter(b => b.price_difference_pct === 0).length, color: 'var(--primary-container)' },
             { label: 'Por Debajo', count: benchmarks.filter(b => b.price_difference_pct > 0 && b.price_difference_pct < 10).length, color: '#f97316' },
             { label: 'Por Arriba', count: benchmarks.filter(b => b.price_difference_pct >= 10).length, color: '#ef4444' },
           ].map((item, i) => (
@@ -388,7 +388,7 @@ function InstagramTab({ profile, media, engagement }) {
         {[
           { label: 'Seguidores', val: profile.followers_count, icon: Users, color: '#e4405f' },
           { label: 'Publicaciones', val: profile.media_count, icon: Camera, color: '#833AB4' },
-          { label: 'Likes Totales', val: engagement?.total_likes, icon: Zap, color: '#f59e0b' },
+          { label: 'Likes Totales', val: engagement?.total_likes, icon: Zap, color: 'var(--primary-container)' },
           { label: 'Comentarios', val: engagement?.total_comments, icon: Users, color: '#3b82f6' },
           { label: 'Promedio Likes/Post', val: engagement?.avg_likes_per_post, icon: TrendingUp, color: '#10b981' },
           { label: 'Promedio Comentarios/Post', val: engagement?.avg_comments_per_post, icon: TrendingUp, color: '#6366f1' },
@@ -418,7 +418,7 @@ function InstagramTab({ profile, media, engagement }) {
                   {m.caption || '(sin caption)'}
                 </div>
                 <div style={{ fontSize: 10, color: 'var(--on-surface-variant)' }}>
-                  {m.media_type} — {new Date(m.timestamp).toLocaleDateString('es-AR')}
+                  {m.media_type} — {new Date(m.timestamp).toLocaleDateString('es-CO')}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
@@ -508,7 +508,7 @@ export default function UnifiedMarketingCenter({ session }) {
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             {lastUpdate && (
               <span style={{ fontSize: 10, color: 'var(--on-surface-variant)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                <Clock size={10} /> Última sync: {new Date(lastUpdate).toLocaleString('es-AR')}
+                <Clock size={10} /> Última sync: {new Date(lastUpdate).toLocaleString('es-CO')}
               </span>
             )}
             <button onClick={handleSync} disabled={syncing} style={{
@@ -529,7 +529,7 @@ export default function UnifiedMarketingCenter({ session }) {
           {[
             { label: 'Tiendanube', ok: !!data.platforms?.tiendanube, color: '#10b981' },
             { label: 'Google SEO', ok: !!data.platforms?.gsc || data.gscKeywords?.length > 0, color: '#3b82f6' },
-            { label: 'Google Analytics', ok: !!data.platforms?.ga4, color: '#f59e0b' },
+            { label: 'Google Analytics', ok: !!data.platforms?.ga4, color: 'var(--primary-container)' },
             { label: 'Merchant Center', ok: (data.mcSummary?.total || 0) > 0, color: '#10b981' },
             { label: 'Instagram', ok: !!igData.profile, color: '#e4405f' },
             { label: 'Benchmarking', ok: (data.benchmarks?.length || 0) > 0, color: '#ef4444' },
@@ -591,7 +591,7 @@ export default function UnifiedMarketingCenter({ session }) {
                   <span style={{ fontWeight: 700, color: 'var(--on-surface)', textTransform: 'capitalize', minWidth: 100 }}>{log.platform}</span>
                   <span style={{ color: 'var(--on-surface-variant)', flex: 1 }}>{log.error_message || `${log.records_synced || 0} registros`}</span>
                   <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--on-surface-variant)' }}>
-                    {log.completed_at ? new Date(log.completed_at).toLocaleTimeString('es-AR') : '—'}
+                    {log.completed_at ? new Date(log.completed_at).toLocaleTimeString('es-CO') : '—'}
                   </span>
                 </div>
               ))}

@@ -162,10 +162,10 @@ export default function MetaAdsPanel({ workspace, onRefreshMeta, clients, metaIn
       <span style={{
         display: 'inline-flex', alignItems: 'center', gap: 6,
         background: isActive ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)',
-        color: isActive ? '#10b981' : '#f59e0b',
+        color: isActive ? '#10b981' : 'var(--primary-container)',
         padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700
       }}>
-        <span style={{ width: 6, height: 6, borderRadius: '50%', background: isActive ? '#10b981' : '#f59e0b' }} />
+        <span style={{ width: 6, height: 6, borderRadius: '50%', background: isActive ? '#10b981' : 'var(--primary-container)' }} />
         {isActive ? 'Activo' : 'Pausado'}
       </span>
     );
@@ -179,7 +179,7 @@ export default function MetaAdsPanel({ workspace, onRefreshMeta, clients, metaIn
         <div style={{
           position: 'fixed', top: 24, right: 24,
           background: toast.type === 'error' ? '#BA1A1A' : '#1A7B45',
-          color: '#fff', padding: '12px 20px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+          color: 'var(--on-surface)', padding: '12px 20px', borderRadius: 10, fontSize: 13, fontWeight: 600,
           zIndex: 9999, animation: 'fadeIn 0.3s', boxShadow: '0 4px 16px rgba(0,0,0,0.3)'
         }}>
           {toast.msg}
@@ -260,7 +260,7 @@ export default function MetaAdsPanel({ workspace, onRefreshMeta, clients, metaIn
           onClick={handleCreate}
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
-            background: 'var(--primary)', color: '#fff', padding: '10px 20px', 
+            background: 'var(--primary)', color: 'var(--on-surface)', padding: '10px 20px', 
             borderRadius: 8, border: 'none', fontWeight: 'bold', cursor: 'pointer'
           }}
         >
@@ -292,7 +292,7 @@ export default function MetaAdsPanel({ workspace, onRefreshMeta, clients, metaIn
       )}
 
       {/* Main Table Content */}
-      <div className="table-container" style={{ padding: 0, minHeight: 400, borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
+      <div className="table-container" style={{ padding: 0, minHeight: 400, borderRadius: 16, overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 400 }}>
             <Loader2 className="w-10 h-10 text-primary" style={{ animation: 'spin 1s linear infinite'}} />
@@ -433,7 +433,7 @@ export default function MetaAdsPanel({ workspace, onRefreshMeta, clients, metaIn
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
             <div style={{ background: 'var(--surface-container)', borderRadius: 16, padding: 24, textAlign: 'center', border: '1px solid var(--border-subtle)' }}>
               <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginBottom: 8, fontWeight: 600 }}>ROAS REAL (TODAS LAS PLATAFORMAS)</div>
-              <div style={{ fontSize: 48, fontWeight: 900, color: attribution.realROAS >= 4 ? '#10b981' : attribution.realROAS >= 2 ? '#f59e0b' : '#ef4444' }}>
+              <div style={{ fontSize: 48, fontWeight: 900, color: attribution.realROAS >= 4 ? '#10b981' : attribution.realROAS >= 2 ? 'var(--primary-container)' : '#ef4444' }}>
                 {attribution.realROAS.toFixed(2)}x
               </div>
               <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginTop: 4 }}>
@@ -476,7 +476,7 @@ export default function MetaAdsPanel({ workspace, onRefreshMeta, clients, metaIn
               </div>
               <div style={{ background: 'rgba(245,158,11,0.08)', borderRadius: 12, padding: 16, textAlign: 'center' }}>
                 <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 600 }}>ROAS</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: attribution.metaROAS >= 3 ? '#10b981' : '#f59e0b' }}>{attribution.metaROAS.toFixed(2)}x</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: attribution.metaROAS >= 3 ? '#10b981' : 'var(--primary-container)' }}>{attribution.metaROAS.toFixed(2)}x</div>
               </div>
               <div style={{ background: 'rgba(239,68,68,0.08)', borderRadius: 12, padding: 16, textAlign: 'center' }}>
                 <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 600 }}>CPA</div>
@@ -495,11 +495,11 @@ export default function MetaAdsPanel({ workspace, onRefreshMeta, clients, metaIn
                 </thead>
                 <tbody>
                   {attribution.allCampaigns.filter(c => c.platform === 'Meta').sort((a, b) => b.spend - a.spend).map((c, i) => (
-                    <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                    <tr key={i} style={{ borderBottom: '1px solid var(--surface-container-low)' }}>
                       <td style={{ padding: '10px 12px', fontSize: 13, fontWeight: 600 }}>{c.name}</td>
                       <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right' }}>${c.spend.toLocaleString('es-CO')}</td>
                       <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right', color: '#10b981' }}>${(c.revenue || 0).toLocaleString('es-CO')}</td>
-                      <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right', fontWeight: 700, color: (c.roas || 0) >= 3 ? '#10b981' : '#f59e0b' }}>{(c.roas || 0).toFixed(2)}x</td>
+                      <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right', fontWeight: 700, color: (c.roas || 0) >= 3 ? '#10b981' : 'var(--primary-container)' }}>{(c.roas || 0).toFixed(2)}x</td>
                     </tr>
                   ))}
                 </tbody>
@@ -529,14 +529,14 @@ export default function MetaAdsPanel({ workspace, onRefreshMeta, clients, metaIn
                     const platROAS = platSpend > 0 ? platCampaigns.reduce((s, c) => s + (c.revenue || 0), 0) / platSpend : 0;
                     const pct = attribution.totalSpend > 0 ? ((platSpend / attribution.totalSpend) * 100).toFixed(1) : 0;
                     return platCampaigns.length > 0 ? (
-                      <tr key={platform} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                      <tr key={platform} style={{ borderBottom: '1px solid var(--surface-container-low)' }}>
                         <td style={{ padding: '10px 12px', fontSize: 13, fontWeight: 700 }}>{platform === 'Meta' ? '📘' : platform === 'Google' ? '🔍' : '🎵'} {platform}</td>
                         <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right' }}>${platSpend.toLocaleString('es-CO')}</td>
                         <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right' }}>{platConv}</td>
-                        <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right', fontWeight: 700, color: platROAS >= 3 ? '#10b981' : '#f59e0b' }}>{platROAS.toFixed(2)}x</td>
+                        <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right', fontWeight: 700, color: platROAS >= 3 ? '#10b981' : 'var(--primary-container)' }}>{platROAS.toFixed(2)}x</td>
                         <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
-                            <div style={{ width: 60, height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 3, overflow: 'hidden' }}>
+                            <div style={{ width: 60, height: 6, background: 'var(--border-medium)', borderRadius: 3, overflow: 'hidden' }}>
                               <div style={{ height: '100%', width: pct + '%', background: platform === 'Meta' ? '#6366f1' : platform === 'Google' ? '#34a853' : '#ff0050', borderRadius: 3 }} />
                             </div>
                             {pct}%

@@ -38,7 +38,7 @@ const s = {
   productName: { fontSize: 13, fontWeight: 600, color: 'var(--on-surface)', flex: 1 },
   productMeta: { fontSize: 11, color: 'var(--on-surface-variant)' },
   crBadge: (color) => ({ display: 'inline-flex', alignItems: 'center', gap: 3, padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700, background: `${color}15`, color, border: `1px solid ${color}25` }),
-  btnPrimary: { display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer', letterSpacing: '0.02em' },
+  btnPrimary: { display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: 'var(--primary)', color: 'var(--on-surface)', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer', letterSpacing: '0.02em' },
   btnSecondary: { display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'transparent', color: 'var(--on-surface-variant)', border: '1px solid var(--border-subtle)', borderRadius: 6, fontSize: 13, fontWeight: 500, cursor: 'pointer' },
   emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 20px', color: 'var(--on-surface-variant)', gap: 12 },
   analysisBox: { background: 'var(--surface)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: 16, marginBottom: 12 },
@@ -47,7 +47,7 @@ const s = {
   copyCard: { background: 'var(--surface-elevated)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: 16, position: 'relative' },
   copyTitle: { fontSize: 14, fontWeight: 700, color: 'var(--on-surface)', marginBottom: 8 },
   copyDesc: { fontSize: 13, color: 'var(--on-surface)', lineHeight: 1.6, marginBottom: 12 },
-  ctaButton: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, letterSpacing: '0.02em' },
+  ctaButton: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: 'var(--primary)', color: 'var(--on-surface)', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, letterSpacing: '0.02em' },
   tag: { display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.03em', marginRight: 4 },
   loader: { display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 20px', color: 'var(--on-surface-variant)', gap: 8, fontSize: 13 },
   input: { width: '100%', padding: '8px 12px', background: 'var(--surface)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--on-surface)', fontSize: 13, outline: 'none', boxSizing: 'border-box' },
@@ -294,7 +294,7 @@ export default function CRODashboard({ session }) {
         </div>
         <div style={s.card}>
           <div style={s.cardTitle}>Revenue Total</div>
-          <div style={{ ...s.kpiValue, color: 'var(--success)', marginTop: 8 }}>${totalRevenue.toLocaleString('es-AR')}</div>
+          <div style={{ ...s.kpiValue, color: 'var(--success)', marginTop: 8 }}>${totalRevenue.toLocaleString('es-CO')}</div>
           <div style={s.kpiLabel}>Ingresos acumulados</div>
         </div>
       </div>
@@ -441,7 +441,7 @@ export default function CRODashboard({ session }) {
                   <div key={p.id || i} style={s.productRow} onClick={() => analyzeProduct(p, { estimated_views: views, orders, revenue })} onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.background = 'var(--primary-container)'; }} onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.background = 'transparent'; }}>
                     <div style={{ flex: 1 }}>
                       <div style={s.productName}>{typeof p.name === 'object' ? p.name.es || Object.values(p.name)[0] : p.name}</div>
-                      <div style={s.productMeta}><Eye size={10} style={{ marginRight: 3 }} />{views} vistas · <ShoppingCart size={10} style={{ marginRight: 3 }} />{orders} compras · <DollarSign size={10} style={{ marginRight: 3 }} />${revenue.toLocaleString('es-AR')}</div>
+                      <div style={s.productMeta}><Eye size={10} style={{ marginRight: 3 }} />{views} vistas · <ShoppingCart size={10} style={{ marginRight: 3 }} />{orders} compras · <DollarSign size={10} style={{ marginRight: 3 }} />${revenue.toLocaleString('es-CO')}</div>
                     </div>
                     <span style={s.crBadge(perf.color)}>{cr}% — {perf.label}</span>
                     <ChevronRight size={16} color="var(--on-surface-variant)" />

@@ -10,7 +10,7 @@ import {
 
 const ROLES = [
   { value: 'admin', label: 'Administrador', color: '#8b5cf6', icon: Crown, desc: 'Acceso total al sistema' },
-  { value: 'taller', label: 'Taller', color: '#f59e0b', icon: Wrench, desc: 'Producción, stock y materiales' },
+  { value: 'taller', label: 'Taller', color: 'var(--primary-container)', icon: Wrench, desc: 'Producción, stock y materiales' },
   { value: 'ventas', label: 'Ventas', color: '#10b981', icon: DollarSign, desc: 'Clientes, pipeline y ventas' },
   { value: 'atencion_cliente', label: 'Atención', color: '#3b82f6', icon: Headphones, desc: 'Clientes y soporte' },
 ];
@@ -38,7 +38,7 @@ const ACTION_ICONS = {
   member_created: { icon: UserPlus, color: '#10b981', label: 'Creó miembro' },
   member_updated: { icon: Edit3, color: '#3b82f6', label: 'Editó miembro' },
   member_deactivated: { icon: Trash2, color: '#ef4444', label: 'Eliminó miembro' },
-  permissions_updated: { icon: Shield, color: '#f59e0b', label: 'Cambió permisos' },
+  permissions_updated: { icon: Shield, color: 'var(--primary-container)', label: 'Cambió permisos' },
   permissions_reset: { icon: RefreshCw, color: '#8b5cf6', label: 'Restauró permisos' },
 };
 
@@ -116,7 +116,7 @@ export default function TeamPanel() {
           <div style={{
             padding: '40px 32px 28px', textAlign: 'center',
             background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(59,130,246,0.08))',
-            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            borderBottom: '1px solid var(--glass-border)',
           }}>
             <div style={{
               width: 64, height: 64, borderRadius: 18,
@@ -148,7 +148,7 @@ export default function TeamPanel() {
                   style={{
                     padding: '12px 24px', borderRadius: 12, border: 'none',
                     background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                    color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                    color: 'var(--on-surface)', fontWeight: 700, fontSize: 14, cursor: 'pointer',
                     display: 'inline-flex', alignItems: 'center', gap: 8,
                     boxShadow: '0 8px 24px rgba(99,102,241,0.3)',
                   }}>
@@ -165,8 +165,8 @@ export default function TeamPanel() {
                   return (
                     <div key={m.id} style={{
                       padding: '14px 16px', borderRadius: 14, cursor: 'default',
-                      background: isMe ? `${role.color}10` : 'rgba(255,255,255,0.03)',
-                      border: isMe ? `2px solid ${role.color}50` : '1px solid rgba(255,255,255,0.06)',
+                      background: isMe ? `${role.color}10` : 'var(--surface-container-low)',
+                      border: isMe ? `2px solid ${role.color}50` : '1px solid var(--glass-border)',
                       display: 'flex', alignItems: 'center', gap: 14, transition: 'all 0.15s',
                       position: 'relative',
                     }}>
@@ -193,7 +193,7 @@ export default function TeamPanel() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span style={{
                           fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 6,
-                          background: 'rgba(255,255,255,0.05)', color: 'var(--on-surface-variant)',
+                          background: 'var(--border-subtle)', color: 'var(--on-surface-variant)',
                         }}>{permCount} permisos</span>
                       </div>
                     </div>
@@ -218,7 +218,7 @@ export default function TeamPanel() {
           { label: 'Miembros', value: allMembers.length, icon: Users, color: '#8b5cf6', bg: 'rgba(139,92,246,0.08)' },
           { label: 'Roles activos', value: Object.values(roleDistribution).filter(v => v > 0).length, icon: Target, color: '#3b82f6', bg: 'rgba(59,130,246,0.08)' },
           { label: 'Permisos promedio', value: `${avgPermCoverage}%`, icon: Shield, color: '#10b981', bg: 'rgba(16,185,129,0.08)' },
-          { label: 'Actividad reciente', value: activityLog.length, icon: Activity, color: '#f59e0b', bg: 'rgba(245,158,11,0.08)' },
+          { label: 'Actividad reciente', value: activityLog.length, icon: Activity, color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.08)' },
         ].map((s, i) => (
           <div key={i} style={{
             padding: '16px 18px', borderRadius: 14, background: 'var(--surface)',
@@ -268,7 +268,7 @@ export default function TeamPanel() {
       </div>
 
       {/* ── Tab Bar ── */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: 'rgba(255,255,255,0.03)', borderRadius: 12, padding: 4 }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: 'var(--surface-container-low)', borderRadius: 12, padding: 4 }}>
         {[
           { id: 'team', label: 'Equipo', icon: Users },
           { id: 'matrix', label: 'Matriz de Permisos', icon: LayoutGrid },
@@ -294,9 +294,9 @@ export default function TeamPanel() {
             <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
               <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--on-surface-variant)' }} />
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por nombre o email..."
-                style={{ width: '100%', padding: '10px 14px 10px 36px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: 'var(--on-surface)', fontSize: 13, boxSizing: 'border-box' }} />
+                style={{ width: '100%', padding: '10px 14px 10px 36px', borderRadius: 10, border: '1px solid var(--outline)', background: 'rgba(255,255,255,0.04)', color: 'var(--on-surface)', fontSize: 13, boxSizing: 'border-box' }} />
             </div>
-            <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: 3 }}>
+            <div style={{ display: 'flex', gap: 4, background: 'var(--surface-container-low)', borderRadius: 10, padding: 3 }}>
               <button onClick={() => setRoleFilter('all')} style={{
                 padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600,
                 background: roleFilter === 'all' ? 'rgba(139,92,246,0.15)' : 'transparent',
@@ -312,7 +312,7 @@ export default function TeamPanel() {
             </div>
             {canManage && (
               <button onClick={() => { setForm({ name: '', email: '', role: 'taller' }); setEditingPerms(ROLE_DEFAULTS.taller || []); setView('create'); }}
-                style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 4px 16px rgba(99,102,241,0.25)', whiteSpace: 'nowrap' }}>
+                style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', color: 'var(--on-surface)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 4px 16px rgba(99,102,241,0.25)', whiteSpace: 'nowrap' }}>
                 <UserPlus size={14} /> Nuevo
               </button>
             )}
@@ -366,7 +366,7 @@ export default function TeamPanel() {
                           <RoleIcon size={10} /> {role.label}
                         </span>
                         {hasCustom && (
-                          <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: 'rgba(245,158,11,0.1)', color: '#f59e0b' }}>
+                          <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: 'rgba(245,158,11,0.1)', color: 'var(--primary-container)' }}>
                             Personalizado
                           </span>
                         )}
@@ -381,14 +381,14 @@ export default function TeamPanel() {
                         <Shield size={10} style={{ verticalAlign: 'middle', marginRight: 4 }} />
                         {permCount} de {TOTAL_PERMS} permisos
                       </span>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: permPct >= 80 ? '#10b981' : permPct >= 40 ? '#f59e0b' : '#ef4444' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: permPct >= 80 ? '#10b981' : permPct >= 40 ? 'var(--primary-container)' : '#ef4444' }}>
                         {permPct}%
                       </span>
                     </div>
-                    <div style={{ height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                    <div style={{ height: 4, borderRadius: 2, background: 'var(--glass-border)', overflow: 'hidden' }}>
                       <div style={{
                         height: '100%', width: `${permPct}%`, borderRadius: 2,
-                        background: permPct >= 80 ? 'linear-gradient(90deg, #10b981, #34d399)' : permPct >= 40 ? 'linear-gradient(90deg, #f59e0b, #fbbf24)' : 'linear-gradient(90deg, #ef4444, #f87171)',
+                        background: permPct >= 80 ? 'linear-gradient(90deg, #10b981, #34d399)' : permPct >= 40 ? 'linear-gradient(90deg, var(--primary-container), #fbbf24)' : 'linear-gradient(90deg, #ef4444, #f87171)',
                         transition: 'width 0.3s',
                       }} />
                     </div>
@@ -477,7 +477,7 @@ export default function TeamPanel() {
         <div style={{
           position: 'fixed', bottom: 24, right: 24, padding: '12px 20px', borderRadius: 12,
           background: toast.type === 'success' ? 'rgba(16,185,129,0.95)' : 'rgba(239,68,68,0.95)',
-          color: '#fff', fontSize: 13, fontWeight: 600, zIndex: 3000,
+          color: 'var(--on-surface)', fontSize: 13, fontWeight: 600, zIndex: 3000,
           boxShadow: '0 8px 32px rgba(0,0,0,0.3)', animation: 'slideUp 0.3s ease',
           display: 'flex', alignItems: 'center', gap: 8,
         }}>
@@ -506,7 +506,7 @@ function PermissionMatrix({ members, matrixFilter, setMatrixFilter }) {
         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <LayoutGrid size={16} color="#8b5cf6" /> Matriz de Permisos
         </div>
-        <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: 3 }}>
+        <div style={{ display: 'flex', gap: 4, background: 'var(--surface-container-low)', borderRadius: 8, padding: 3 }}>
           <button onClick={() => setMatrixFilter('all')} style={{
             padding: '5px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 10, fontWeight: 600,
             background: matrixFilter === 'all' ? 'rgba(139,92,246,0.15)' : 'transparent',
@@ -526,7 +526,7 @@ function PermissionMatrix({ members, matrixFilter, setMatrixFilter }) {
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <tr style={{ borderBottom: '1px solid var(--outline)' }}>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: 'var(--on-surface-variant)', fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5, position: 'sticky', left: 0, background: 'var(--surface)', zIndex: 1, minWidth: 140 }}>Permiso</th>
                 {members.map(m => (
                   <th key={m.id} style={{ padding: '12px 10px', textAlign: 'center', fontWeight: 700, color: 'var(--on-surface-variant)', fontSize: 10, minWidth: 80 }}>
@@ -609,7 +609,7 @@ function ActivityTimeline({ activityLog }) {
   return (
     <div>
       <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--on-surface)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-        <Activity size={16} color="#f59e0b" /> Historial de Actividad
+        <Activity size={16} color="var(--primary-container)" /> Historial de Actividad
       </div>
 
       {activityLog.length === 0 ? (
@@ -624,7 +624,7 @@ function ActivityTimeline({ activityLog }) {
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--on-surface-variant)', marginBottom: 8, paddingLeft: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
               <Clock size={12} /> {date}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, borderLeft: '2px solid rgba(255,255,255,0.06)', marginLeft: 6 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, borderLeft: '2px solid var(--glass-border)', marginLeft: 6 }}>
               {entries.map(entry => {
                 const action = ACTION_ICONS[entry.action] || { icon: Zap, color: '#888', label: entry.action };
                 const ActionIcon = action.icon;
@@ -704,7 +704,7 @@ function MemberDrawer({ member, onClose, onEdit, onDelete, canManage, isCurrent,
       }}>
         {/* Header */}
         <div style={{
-          padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)',
+          padding: '20px 24px', borderBottom: '1px solid var(--glass-border)',
           background: `linear-gradient(135deg, ${role.color}08, transparent)`,
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -729,7 +729,7 @@ function MemberDrawer({ member, onClose, onEdit, onDelete, canManage, isCurrent,
                     <RoleIcon size={10} /> {role.label}
                   </span>
                   {hasCustom && (
-                    <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: 'rgba(245,158,11,0.1)', color: '#f59e0b' }}>Permisos custom</span>
+                    <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: 'rgba(245,158,11,0.1)', color: 'var(--primary-container)' }}>Permisos custom</span>
                   )}
                 </div>
               </div>
@@ -743,7 +743,7 @@ function MemberDrawer({ member, onClose, onEdit, onDelete, canManage, isCurrent,
           {canManage && (
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
               <button onClick={onEdit} style={{
-                flex: 1, padding: '8px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)',
+                flex: 1, padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border-medium)',
                 background: 'rgba(255,255,255,0.04)', color: 'var(--on-surface)', fontSize: 12, fontWeight: 600,
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               }}>
@@ -771,14 +771,14 @@ function MemberDrawer({ member, onClose, onEdit, onDelete, canManage, isCurrent,
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <div style={{ flex: 1 }}>
-                <div style={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                <div style={{ height: 6, borderRadius: 3, background: 'var(--glass-border)', overflow: 'hidden' }}>
                   <div style={{
                     height: '100%', width: `${permPct}%`, borderRadius: 3,
-                    background: permPct >= 80 ? 'linear-gradient(90deg, #10b981, #34d399)' : permPct >= 40 ? 'linear-gradient(90deg, #f59e0b, #fbbf24)' : 'linear-gradient(90deg, #ef4444, #f87171)',
+                    background: permPct >= 80 ? 'linear-gradient(90deg, #10b981, #34d399)' : permPct >= 40 ? 'linear-gradient(90deg, var(--primary-container), #fbbf24)' : 'linear-gradient(90deg, #ef4444, #f87171)',
                   }} />
                 </div>
               </div>
-              <span style={{ fontSize: 13, fontWeight: 800, color: permPct >= 80 ? '#10b981' : permPct >= 40 ? '#f59e0b' : '#ef4444', minWidth: 36, textAlign: 'right' }}>
+              <span style={{ fontSize: 13, fontWeight: 800, color: permPct >= 80 ? '#10b981' : permPct >= 40 ? 'var(--primary-container)' : '#ef4444', minWidth: 36, textAlign: 'right' }}>
                 {permCount}/{TOTAL_PERMS}
               </span>
             </div>
@@ -790,19 +790,19 @@ function MemberDrawer({ member, onClose, onEdit, onDelete, canManage, isCurrent,
                 const pct = data.total > 0 ? (data.enabled / data.total) * 100 : 0;
                 return (
                   <div key={cat} style={{
-                    padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.03)',
-                    border: '1px solid rgba(255,255,255,0.05)',
+                    padding: '10px 12px', borderRadius: 10, background: 'var(--surface-container-low)',
+                    border: '1px solid var(--border-subtle)',
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                       <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: 4 }}>
                         <span>{catDef.icon}</span> {catDef.label}
                       </span>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: pct === 100 ? '#10b981' : pct > 0 ? '#f59e0b' : 'var(--on-surface-variant)' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: pct === 100 ? '#10b981' : pct > 0 ? 'var(--primary-container)' : 'var(--on-surface-variant)' }}>
                         {data.enabled}/{data.total}
                       </span>
                     </div>
-                    <div style={{ height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.05)', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${pct}%`, borderRadius: 2, background: pct === 100 ? '#10b981' : '#f59e0b', transition: 'width 0.3s' }} />
+                    <div style={{ height: 3, borderRadius: 2, background: 'var(--border-subtle)', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${pct}%`, borderRadius: 2, background: pct === 100 ? '#10b981' : 'var(--primary-container)', transition: 'width 0.3s' }} />
                     </div>
                   </div>
                 );
@@ -813,7 +813,7 @@ function MemberDrawer({ member, onClose, onEdit, onDelete, canManage, isCurrent,
           {/* Recent Activity */}
           <div>
             <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--on-surface)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Clock size={14} color="#f59e0b" /> Actividad Reciente
+              <Clock size={14} color="var(--primary-container)" /> Actividad Reciente
             </div>
             {memberActivity.length === 0 ? (
               <p style={{ fontSize: 12, color: 'var(--on-surface-variant)', textAlign: 'center', padding: 20 }}>Sin actividad reciente</p>
@@ -857,7 +857,7 @@ function FormDrawer({ view, form, setForm, editingPerms, setEditingPerms, expand
       }}>
         {/* Header */}
         <div style={{
-          padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)',
+          padding: '20px 24px', borderBottom: '1px solid var(--glass-border)',
           background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(99,102,241,0.06))',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         }}>
@@ -905,8 +905,8 @@ function FormDrawer({ view, form, setForm, editingPerms, setEditingPerms, expand
                     setEditingPerms(ROLE_DEFAULTS[r.value] || []);
                   }} style={{
                     padding: '14px', borderRadius: 12, cursor: 'pointer',
-                    background: selected ? `${r.color}10` : 'rgba(255,255,255,0.03)',
-                    border: selected ? `2px solid ${r.color}` : '2px solid rgba(255,255,255,0.06)',
+                    background: selected ? `${r.color}10` : 'var(--surface-container-low)',
+                    border: selected ? `2px solid ${r.color}` : '2px solid var(--glass-border)',
                     transition: 'all 0.15s',
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
@@ -935,7 +935,7 @@ function FormDrawer({ view, form, setForm, editingPerms, setEditingPerms, expand
                 {editingPerms.length} de {TOTAL_PERMS} activos
               </span>
             </div>
-            <div style={{ borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden', maxHeight: 360, overflowY: 'auto' }}>
+            <div style={{ borderRadius: 12, border: '1px solid var(--glass-border)', overflow: 'hidden', maxHeight: 360, overflowY: 'auto' }}>
               {catOrder.map(cat => {
                 const catDef = PERMISSION_CATEGORIES[cat];
                 const permsInCat = Object.entries(PERMISSION_DEFS).filter(([, def]) => def.cat === cat);
@@ -955,7 +955,7 @@ function FormDrawer({ view, form, setForm, editingPerms, setEditingPerms, expand
                         <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--on-surface)' }}>{catDef.label}</span>
                         <span style={{
                           fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 4,
-                          background: allEnabled ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.06)',
+                          background: allEnabled ? 'rgba(16,185,129,0.1)' : 'var(--glass-border)',
                           color: allEnabled ? '#10b981' : 'var(--on-surface-variant)',
                         }}>{enabledCount}/{permsInCat.length}</span>
                       </div>
@@ -991,8 +991,8 @@ function FormDrawer({ view, form, setForm, editingPerms, setEditingPerms, expand
                               </div>
                               <div style={{
                                 width: 18, height: 18, borderRadius: 5,
-                                background: enabled ? '#10b981' : 'rgba(255,255,255,0.06)',
-                                border: enabled ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                                background: enabled ? '#10b981' : 'var(--glass-border)',
+                                border: enabled ? 'none' : '1px solid var(--border-medium)',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                               }}>
                                 {enabled && <Check size={11} color="#fff" />}
@@ -1010,17 +1010,17 @@ function FormDrawer({ view, form, setForm, editingPerms, setEditingPerms, expand
         </div>
 
         {/* Footer */}
-        <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 10 }}>
+        <div style={{ padding: '16px 24px', borderTop: '1px solid var(--glass-border)', display: 'flex', gap: 10 }}>
           <button onClick={onCancel} style={{
-            flex: 1, padding: '11px 20px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)',
+            flex: 1, padding: '11px 20px', borderRadius: 10, border: '1px solid var(--border-medium)',
             background: 'rgba(255,255,255,0.04)', color: 'var(--on-surface-variant)', fontWeight: 600, fontSize: 13, cursor: 'pointer',
           }}>
             Cancelar
           </button>
           <button onClick={onSubmit} disabled={saving || !form.name.trim()} style={{
             flex: 2, padding: '11px 20px', borderRadius: 10, border: 'none',
-            background: saving || !form.name.trim() ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg, #8b5cf6, #6366f1)',
-            color: '#fff', fontWeight: 700, fontSize: 13,
+            background: saving || !form.name.trim() ? 'var(--border-subtle)' : 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+            color: 'var(--on-surface)', fontWeight: 700, fontSize: 13,
             cursor: saving || !form.name.trim() ? 'not-allowed' : 'pointer',
             opacity: saving || !form.name.trim() ? 0.5 : 1,
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -1035,7 +1035,7 @@ function FormDrawer({ view, form, setForm, editingPerms, setEditingPerms, expand
 
 // ── Shared Styles ──────────────────────────────────────────
 const labelStyle = { fontSize: 11, fontWeight: 600, color: 'var(--on-surface-variant)', display: 'block', marginBottom: 6 };
-const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'var(--on-surface)', fontSize: 13, boxSizing: 'border-box', marginBottom: 4 };
+const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border-medium)', background: 'var(--border-subtle)', color: 'var(--on-surface)', fontSize: 13, boxSizing: 'border-box', marginBottom: 4 };
 
 // ═══════════════════════════════════════════════════════════════════
 // TEAM MEMBER BADGE (Header)
@@ -1053,13 +1053,13 @@ export function TeamMemberBadge() {
 
   if (!currentMember) return null;
   const ROLE_ICONS = { admin: '👑', ventas: '💰', taller: '⚙️', atencion_cliente: '🎧' };
-  const ROLE_COLORS = { admin: '#f59e0b', ventas: '#10b981', taller: '#3b82f6', atencion_cliente: '#8b5cf6' };
+  const ROLE_COLORS = { admin: 'var(--primary-container)', ventas: '#10b981', taller: '#3b82f6', atencion_cliente: '#8b5cf6' };
 
   return (
     <div ref={dropdownRef} style={{ position: 'relative', zIndex: 9999 }}>
       <button onClick={() => setOpen(!open)} style={{
         display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderRadius: 10,
-        background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)',
+        background: 'var(--glass-border)', border: '1px solid var(--outline)',
         color: 'var(--on-surface)', cursor: 'pointer', fontSize: 13, fontWeight: 500
       }}>
         <div style={{ width: 26, height: 26, borderRadius: 8, background: ROLE_COLORS[currentMember.role] + '18',
@@ -1072,7 +1072,7 @@ export function TeamMemberBadge() {
       {open && (
         <div style={{
           position: 'absolute', top: '100%', right: 0, marginTop: 4, width: 220,
-          background: 'rgba(15,15,25,0.97)', border: '1px solid rgba(255,255,255,0.1)',
+          background: 'rgba(15,15,25,0.97)', border: '1px solid var(--border-medium)',
           borderRadius: 12, padding: 8, boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', marginBottom: 4 }}>
@@ -1085,7 +1085,7 @@ export function TeamMemberBadge() {
               <div style={{ fontSize: 10, color: ROLE_COLORS[currentMember.role] }}>{currentMember.email}</div>
             </div>
           </div>
-          <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '6px 0' }} />
+          <div style={{ height: 1, background: 'var(--outline)', margin: '6px 0' }} />
           <button onClick={() => { setOpen(false); logout?.(); }} style={{
             width: '100%', padding: '8px 10px', borderRadius: 8, border: 'none',
             background: 'rgba(239,68,68,0.08)', color: '#ef4444', cursor: 'pointer', fontSize: 12, fontWeight: 600

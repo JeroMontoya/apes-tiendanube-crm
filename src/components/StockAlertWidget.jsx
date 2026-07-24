@@ -158,7 +158,7 @@ export default function StockAlertWidget({ clients, products, onRefresh, isRefre
       >
         <div style={{
           width: 36, height: 36, borderRadius: 10,
-          background: 'linear-gradient(135deg, #f59e0b, #f97316)',
+          background: 'linear-gradient(135deg, var(--primary-container), #f97316)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: open ? '0 2px 12px rgba(245,158,11,0.3)' : '0 2px 8px rgba(245,158,11,0.15)',
           transition: 'box-shadow 0.2s', flexShrink: 0
@@ -197,7 +197,7 @@ export default function StockAlertWidget({ clients, products, onRefresh, isRefre
               <span style={{
                 display: 'inline-flex', alignItems: 'center', gap: 4,
                 padding: '3px 8px', borderRadius: 20, fontSize: 10, fontWeight: 700,
-                background: 'rgba(245,158,11,0.1)', color: '#f59e0b',
+                background: 'rgba(245,158,11,0.1)', color: 'var(--primary-container)',
                 border: '1px solid rgba(245,158,11,0.15)'
               }}>
                 <AlertTriangle size={9} /> {lowStock.length}
@@ -288,7 +288,7 @@ export default function StockAlertWidget({ clients, products, onRefresh, isRefre
                   {[
                     { count: outOfStock.length, label: 'Sin stock', color: '#ef4444', bg: 'rgba(239,68,68,0.08)', icon: <PackageX size={13} /> },
                     { count: lowStock.filter(i => i.status === 'high_value').length, label: 'Alto valor', color: '#a78bfa', bg: 'rgba(139,92,246,0.08)', icon: <DollarSign size={13} /> },
-                    { count: lowStock.filter(i => i.status !== 'high_value').length, label: 'Stock bajo', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', icon: <AlertTriangle size={13} /> },
+                    { count: lowStock.filter(i => i.status !== 'high_value').length, label: 'Stock bajo', color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.08)', icon: <AlertTriangle size={13} /> },
                     { count: inStockCount, label: 'Con stock', color: '#10b981', bg: 'rgba(16,185,129,0.08)', icon: <CheckCircle size={13} /> },
                   ].map((s, i) => (
                     <div key={i} style={{
@@ -380,8 +380,8 @@ export default function StockAlertWidget({ clients, products, onRefresh, isRefre
 
                       const borderColor = isOut ? 'rgba(239,68,68,0.12)' : (isHighValue ? 'rgba(139,92,246,0.12)' : (isCritical ? 'rgba(239,68,68,0.12)' : 'rgba(245,158,11,0.12)'));
                       const iconBg = isOut ? 'rgba(239,68,68,0.1)' : (isHighValue ? 'rgba(139,92,246,0.1)' : (isCritical ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)'));
-                      const iconColor = isOut ? '#ef4444' : (isHighValue ? '#a78bfa' : (isCritical ? '#ef4444' : '#f59e0b'));
-                      const barBg = isOut ? '#ef4444' : (isHighValue ? 'linear-gradient(90deg, #8b5cf6, #a78bfa)' : (isCritical ? 'linear-gradient(90deg, #ef4444, #f87171)' : 'linear-gradient(90deg, #f59e0b, #fbbf24)'));
+                      const iconColor = isOut ? '#ef4444' : (isHighValue ? '#a78bfa' : (isCritical ? '#ef4444' : 'var(--primary-container)'));
+                      const barBg = isOut ? '#ef4444' : (isHighValue ? 'linear-gradient(90deg, #8b5cf6, #a78bfa)' : (isCritical ? 'linear-gradient(90deg, #ef4444, #f87171)' : 'linear-gradient(90deg, var(--primary-container), #fbbf24)'));
 
                       return (
                         <div key={item.id}
@@ -423,7 +423,7 @@ export default function StockAlertWidget({ clients, products, onRefresh, isRefre
                               <span style={{
                                 fontSize: 8, fontWeight: 700, textTransform: 'uppercase',
                                 padding: '2px 6px', borderRadius: 4,
-                                background: 'rgba(245,158,11,0.15)', color: '#f59e0b',
+                                background: 'rgba(245,158,11,0.15)', color: 'var(--primary-container)',
                                 letterSpacing: '0.5px',
                               }}>
                                 Reponer

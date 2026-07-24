@@ -109,9 +109,9 @@ export default function GoogleAdsPanel({ googleAdsData, workspace, dateRange, on
   };
 
   const cardStyle = {
-    background: 'rgba(255,255,255,0.03)',
+    background: 'var(--surface-container-low)',
     borderRadius: 16, padding: 20,
-    border: '1px solid rgba(255,255,255,0.05)',
+    border: '1px solid var(--border-subtle)',
   };
 
   const tableHeaderStyle = {
@@ -122,7 +122,7 @@ export default function GoogleAdsPanel({ googleAdsData, workspace, dateRange, on
     color: 'var(--on-surface-variant)',
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
-    borderBottom: '1px solid rgba(255,255,255,0.05)',
+    borderBottom: '1px solid var(--border-subtle)',
     cursor: 'pointer',
     userSelect: 'none',
     whiteSpace: 'nowrap',
@@ -132,7 +132,7 @@ export default function GoogleAdsPanel({ googleAdsData, workspace, dateRange, on
     padding: '12px 16px',
     fontSize: 13,
     color: 'var(--on-surface)',
-    borderBottom: '1px solid rgba(255,255,255,0.03)',
+    borderBottom: '1px solid var(--surface-container-low)',
   };
 
   const tabBtnStyle = (isActive) => ({
@@ -174,7 +174,7 @@ export default function GoogleAdsPanel({ googleAdsData, workspace, dateRange, on
         </div>
         <div style={{ ...cardStyle, minHeight: 300 }}>
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} style={{ display: 'flex', gap: 16, padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+            <div key={i} style={{ display: 'flex', gap: 16, padding: '12px 0', borderBottom: '1px solid var(--surface-container-low)' }}>
               <SkeletonBlock width="25%" height={14} />
               <SkeletonBlock width="15%" height={14} />
               <SkeletonBlock width="15%" height={14} />
@@ -195,7 +195,7 @@ export default function GoogleAdsPanel({ googleAdsData, workspace, dateRange, on
         <p style={{ color: 'var(--on-surface-variant)', margin: '0 0 20px', fontSize: 14 }}>Conecta tu cuenta de Google Ads para ver el rendimiento de tus campañas.</p>
         <button onClick={handleRefresh} style={{
           display: 'flex', alignItems: 'center', gap: 8,
-          background: '#6366f1', color: '#fff', padding: '10px 24px',
+          background: '#6366f1', color: 'var(--on-surface)', padding: '10px 24px',
           borderRadius: 8, border: 'none', fontWeight: 600, cursor: 'pointer', fontSize: 14,
         }}>
           <RefreshCw size={16} /> Conectar
@@ -239,7 +239,7 @@ export default function GoogleAdsPanel({ googleAdsData, workspace, dateRange, on
                     <td style={tableCellStyle}>{fmtPct(c.ctr)}</td>
                     <td style={{ ...tableCellStyle, fontWeight: 600 }}>{fmtMoney(c.cost)}</td>
                     <td style={tableCellStyle}>{fmtNum(c.conversions)}</td>
-                    <td style={{ ...tableCellStyle, color: parseFloat(c.roas) >= 3 ? 'var(--success)' : parseFloat(c.roas) >= 1 ? '#f59e0b' : 'var(--error)', fontWeight: 600 }}>
+                    <td style={{ ...tableCellStyle, color: parseFloat(c.roas) >= 3 ? 'var(--success)' : parseFloat(c.roas) >= 1 ? 'var(--primary-container)' : 'var(--error)', fontWeight: 600 }}>
                       {parseFloat(c.roas || 0).toFixed(2)}x
                     </td>
                   </tr>
@@ -259,7 +259,7 @@ export default function GoogleAdsPanel({ googleAdsData, workspace, dateRange, on
               <div style={{ fontSize: 13, color: 'var(--on-surface-variant)', marginTop: 4 }}>Presupuesto total invertido</div>
             </div>
             <div style={{ flex: 2, position: 'relative' }}>
-              <div style={{ height: 12, borderRadius: 6, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+              <div style={{ height: 12, borderRadius: 6, background: 'var(--glass-border)', overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${Math.min((totalSpend / (prevSpend * 1.5)) * 100, 100)}%`, borderRadius: 6, background: 'linear-gradient(90deg, #6366f1, #818cf8)', transition: 'width 0.6s ease' }} />
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 11, color: 'var(--on-surface-variant)' }}>
@@ -313,10 +313,10 @@ export default function GoogleAdsPanel({ googleAdsData, workspace, dateRange, on
                         <span style={{
                           display: 'inline-flex', alignItems: 'center', gap: 5,
                           background: c.status === 'ENABLED' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)',
-                          color: c.status === 'ENABLED' ? '#10b981' : '#f59e0b',
+                          color: c.status === 'ENABLED' ? '#10b981' : 'var(--primary-container)',
                           padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
                         }}>
-                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.status === 'ENABLED' ? '#10b981' : '#f59e0b' }} />
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.status === 'ENABLED' ? '#10b981' : 'var(--primary-container)' }} />
                           {c.status === 'ENABLED' ? 'Activo' : 'Pausado'}
                         </span>
                       </td>
@@ -326,7 +326,7 @@ export default function GoogleAdsPanel({ googleAdsData, workspace, dateRange, on
                       <td style={{ ...tableCellStyle, fontWeight: 600 }}>{fmtMoney(c.cost)}</td>
                       <td style={tableCellStyle}>{fmtNum(c.conversions)}</td>
                       <td style={tableCellStyle}>{fmtMoney(cpa)}</td>
-                      <td style={{ ...tableCellStyle, color: parseFloat(c.roas) >= 3 ? 'var(--success)' : parseFloat(c.roas) >= 1 ? '#f59e0b' : 'var(--error)', fontWeight: 600 }}>
+                      <td style={{ ...tableCellStyle, color: parseFloat(c.roas) >= 3 ? 'var(--success)' : parseFloat(c.roas) >= 1 ? 'var(--primary-container)' : 'var(--error)', fontWeight: 600 }}>
                         {parseFloat(c.roas || 0).toFixed(2)}x
                       </td>
                     </tr>
@@ -396,7 +396,7 @@ export default function GoogleAdsPanel({ googleAdsData, workspace, dateRange, on
             onChange={(e) => setCampaignFilter(e.target.value)}
             style={{
               padding: '8px 12px', borderRadius: 8,
-              border: '1px solid rgba(255,255,255,0.08)',
+              border: '1px solid var(--outline)',
               background: 'rgba(255,255,255,0.04)',
               color: 'var(--on-surface)', fontSize: 13, outline: 'none', cursor: 'pointer',
             }}
@@ -480,7 +480,7 @@ export default function GoogleAdsPanel({ googleAdsData, workspace, dateRange, on
                     <span style={{
                       fontSize: 11, padding: '3px 8px', borderRadius: 6,
                       background: kw.matchType === 'EXACT' ? 'rgba(99,102,241,0.12)' : kw.matchType === 'PHRASE' ? 'rgba(245,158,11,0.12)' : 'rgba(107,114,128,0.12)',
-                      color: kw.matchType === 'EXACT' ? '#818cf8' : kw.matchType === 'PHRASE' ? '#f59e0b' : '#9ca3af',
+                      color: kw.matchType === 'EXACT' ? '#818cf8' : kw.matchType === 'PHRASE' ? 'var(--primary-container)' : '#9ca3af',
                       fontWeight: 600,
                     }}>
                       {kw.matchType || 'BROAD'}
@@ -497,7 +497,7 @@ export default function GoogleAdsPanel({ googleAdsData, workspace, dateRange, on
                         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                         width: 28, height: 28, borderRadius: 8,
                         background: parseInt(kw.qualityScore) >= 7 ? 'rgba(16,185,129,0.12)' : parseInt(kw.qualityScore) >= 5 ? 'rgba(245,158,11,0.12)' : 'rgba(239,68,68,0.12)',
-                        color: parseInt(kw.qualityScore) >= 7 ? '#10b981' : parseInt(kw.qualityScore) >= 5 ? '#f59e0b' : '#ef4444',
+                        color: parseInt(kw.qualityScore) >= 7 ? '#10b981' : parseInt(kw.qualityScore) >= 5 ? 'var(--primary-container)' : '#ef4444',
                         fontWeight: 700, fontSize: 12,
                       }}>
                         {kw.qualityScore}
@@ -540,15 +540,15 @@ export default function GoogleAdsPanel({ googleAdsData, workspace, dateRange, on
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 220, padding: '0 0 32px', position: 'relative' }}>
           <div style={{
             position: 'absolute', left: 0, right: 0, bottom: 30,
-            borderTop: '1px solid rgba(255,255,255,0.05)',
+            borderTop: '1px solid var(--border-subtle)',
           }} />
           <div style={{
             position: 'absolute', left: 0, right: 0, bottom: 95,
-            borderTop: '1px dashed rgba(255,255,255,0.05)',
+            borderTop: '1px dashed var(--border-subtle)',
           }} />
           <div style={{
             position: 'absolute', left: 0, right: 0, bottom: 160,
-            borderTop: '1px dashed rgba(255,255,255,0.05)',
+            borderTop: '1px dashed var(--border-subtle)',
           }} />
           {sorted.map((day, i) => {
             const costH = (parseFloat(day.cost || 0) / maxCost) * 170;
@@ -620,7 +620,7 @@ export default function GoogleAdsPanel({ googleAdsData, workspace, dateRange, on
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
             padding: '8px 16px', borderRadius: 8,
-            border: '1px solid rgba(255,255,255,0.08)',
+            border: '1px solid var(--outline)',
             background: 'rgba(255,255,255,0.04)',
             color: 'var(--on-surface)', fontSize: 13, fontWeight: 600,
             cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.6 : 1,
@@ -654,7 +654,7 @@ export default function GoogleAdsPanel({ googleAdsData, workspace, dateRange, on
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 0, overflowX: 'auto' }}>
+      <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 0, overflowX: 'auto' }}>
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -671,7 +671,7 @@ export default function GoogleAdsPanel({ googleAdsData, workspace, dateRange, on
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
           background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          border: '1px solid var(--outline)',
           borderRadius: 8, padding: '8px 12px', flex: 1, maxWidth: 320,
         }}>
           <Search size={14} color="var(--on-surface-variant)" />

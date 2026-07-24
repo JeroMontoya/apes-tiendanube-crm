@@ -46,7 +46,7 @@ export default function SalesView({ products, clients }) {
           { label: 'Productos', value: stats.totalProducts, color: '#3b82f6', icon: Package },
           { label: 'Disponibles', value: stats.totalProducts - stats.outOfStock, color: '#10b981', icon: ShoppingCart },
           { label: 'Sin Stock', value: stats.outOfStock, color: '#ef4444', icon: AlertTriangle },
-          { label: 'Stock Bajo', value: stats.lowStock, color: '#f59e0b', icon: TrendingUp },
+          { label: 'Stock Bajo', value: stats.lowStock, color: 'var(--primary-container)', icon: TrendingUp },
         ].map((s, i) => (
           <div key={i} className="glass-card" style={{
             padding: '14px 16px', borderLeft: `3px solid ${s.color}`,
@@ -72,7 +72,7 @@ export default function SalesView({ products, clients }) {
 
       {/* Product Availability */}
       <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--on-surface)' }}>Disponibilidad de Productos</span>
           <div style={{ position: 'relative' }}>
             <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--on-surface-variant)' }} />
@@ -80,7 +80,7 @@ export default function SalesView({ products, clients }) {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Buscar..."
-              style={{ padding: '7px 12px 7px 32px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'var(--on-surface)', fontSize: 12, width: 180, boxSizing: 'border-box' }}
+              style={{ padding: '7px 12px 7px 32px', borderRadius: 8, border: '1px solid var(--border-medium)', background: 'var(--border-subtle)', color: 'var(--on-surface)', fontSize: 12, width: 180, boxSizing: 'border-box' }}
             />
           </div>
         </div>
@@ -98,7 +98,7 @@ export default function SalesView({ products, clients }) {
                   {p.image?.src ? (
                     <img src={p.image.src} alt="" style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover' }} />
                   ) : (
-                    <div style={{ width: 32, height: 32, borderRadius: 6, background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 6, background: 'var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Package size={14} color="var(--on-surface-variant)" />
                     </div>
                   )}
@@ -106,10 +106,10 @@ export default function SalesView({ products, clients }) {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   {isOut && <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 6, background: '#ef444420', color: '#ef4444' }}>NO VENDER</span>}
-                  {isLow && <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 6, background: '#f59e0b20', color: '#f59e0b' }}>ÚLTIMAS UNIDADES</span>}
+                  {isLow && <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 6, background: 'var(--primary-container)20', color: 'var(--primary-container)' }}>ÚLTIMAS UNIDADES</span>}
                   <span style={{
                     fontSize: 14, fontWeight: 700,
-                    color: isOut ? '#ef4444' : isLow ? '#f59e0b' : p.hasInfinite ? '#06b6d4' : '#10b981',
+                    color: isOut ? '#ef4444' : isLow ? 'var(--primary-container)' : p.hasInfinite ? '#06b6d4' : '#10b981',
                   }}>
                     {p.hasInfinite ? '∞' : p.totalStock}
                   </span>

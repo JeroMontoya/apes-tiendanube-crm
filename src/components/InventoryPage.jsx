@@ -10,7 +10,7 @@ const STATUS_OPTIONS = [
   { key: 'unlimited', label: 'Stock ilimitado', color: '#06b6d4', bg: 'rgba(6,182,212,0.1)' },
   { key: 'in_stock', label: 'En stock', color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
   { key: 'in_production', label: 'En producción', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
-  { key: 'low_stock', label: 'Stock bajo', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+  { key: 'low_stock', label: 'Stock bajo', color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.1)' },
   { key: 'out_of_stock', label: 'Sin stock', color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
   { key: 'ready_to_ship', label: 'Listo para despachar', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
 ];
@@ -27,7 +27,7 @@ const FILTER_TABS = [
 const COLOR_MAP = {
   'negro': '#1a1a2e', 'black': '#1a1a2e', 'azul': '#3b82f6', 'blue': '#3b82f6',
   'rojo': '#ef4444', 'red': '#ef4444', 'blanco': '#f1f5f9', 'white': '#f1f5f9',
-  'verde': '#10b981', 'green': '#10b981', 'amarillo': '#f59e0b', 'yellow': '#f59e0b',
+  'verde': '#10b981', 'green': '#10b981', 'amarillo': 'var(--primary-container)', 'yellow': 'var(--primary-container)',
   'rosa': '#ec4899', 'pink': '#ec4899', 'morado': '#8b5cf6', 'purple': '#8b5cf6',
   'gris': '#64748b', 'gray': '#64748b', 'grey': '#64748b', 'naranja': '#f97316', 'orange': '#f97316',
   'beige': '#d4c5a9', 'crema': '#fef3c7', 'turquesa': '#06b6d4', 'cyan': '#06b6d4',
@@ -242,7 +242,7 @@ export default function InventoryPage({ products, onRefresh, isRefreshing, lastS
       <div style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 42, height: 42, borderRadius: 12, background: 'linear-gradient(135deg, #f59e0b, #f97316)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(245,158,11,0.25)' }}>
+            <div style={{ width: 42, height: 42, borderRadius: 12, background: 'linear-gradient(135deg, var(--primary-container), #f97316)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(245,158,11,0.25)' }}>
               <Warehouse size={22} color="#fff" />
             </div>
             <div>
@@ -269,7 +269,7 @@ export default function InventoryPage({ products, onRefresh, isRefreshing, lastS
             { count: stats.total, sub: `${stats.totalVariants} variantes`, label: 'Productos', color: 'var(--on-surface)', bg: 'var(--surface-container)', icon: <Package size={14} /> },
             { count: stats.infVariants, label: 'Ilimitados', color: '#06b6d4', bg: 'rgba(6,182,212,0.08)', icon: <Infinity size={14} /> },
             { count: stats.totalVariants - stats.outVariants - stats.lowVariants - stats.infVariants, label: 'En stock', color: '#10b981', bg: 'rgba(16,185,129,0.08)', icon: <CheckCircle size={14} /> },
-            { count: stats.lowVariants, label: 'Stock bajo', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', icon: <AlertTriangle size={14} /> },
+            { count: stats.lowVariants, label: 'Stock bajo', color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.08)', icon: <AlertTriangle size={14} /> },
             { count: stats.outVariants, label: 'Sin stock', color: '#ef4444', bg: 'rgba(239,68,68,0.08)', icon: <PackageX size={14} /> },
           ].map((s, i) => (
             <div key={i} style={{ flex: 1, padding: '10px 8px', borderRadius: 10, background: s.bg, textAlign: 'center', border: `1px solid ${s.color}18` }}>
@@ -354,7 +354,7 @@ export default function InventoryPage({ products, onRefresh, isRefreshing, lastS
                       <span>· {item.variants.length} variantes</span>
                     </div>
                   </div>
-                  <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: item.status === 'unlimited' ? '#06b6d4' : item.status === 'out_of_stock' ? '#ef4444' : item.status === 'low_stock' ? '#f59e0b' : 'var(--on-surface)', textAlign: 'center' }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: item.status === 'unlimited' ? '#06b6d4' : item.status === 'out_of_stock' ? '#ef4444' : item.status === 'low_stock' ? 'var(--primary-container)' : 'var(--on-surface)', textAlign: 'center' }}>
                     {item.status === 'unlimited' ? '∞' : item.totalStock}
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -401,7 +401,7 @@ export default function InventoryPage({ products, onRefresh, isRefreshing, lastS
                                 <button onClick={() => setEditingVariant(null)} style={{ width: 22, height: 22, borderRadius: 4, background: 'rgba(239,68,68,0.1)', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={10} /></button>
                               </div>
                             ) : (
-                              <span onClick={() => startEditVariant(v)} style={{ fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: v.stock === null ? '#06b6d4' : v.stock === 0 ? '#ef4444' : v.stock <= 5 ? '#f59e0b' : 'var(--on-surface)', cursor: 'pointer' }}>
+                              <span onClick={() => startEditVariant(v)} style={{ fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: v.stock === null ? '#06b6d4' : v.stock === 0 ? '#ef4444' : v.stock <= 5 ? 'var(--primary-container)' : 'var(--on-surface)', cursor: 'pointer' }}>
                                 {v.stock === null ? '∞' : v.stock}
                               </span>
                             )}
@@ -450,7 +450,7 @@ export default function InventoryPage({ products, onRefresh, isRefreshing, lastS
                 <div>{colorHex && <div style={{ width: 16, height: 16, borderRadius: 3, background: colorHex, border: '1px solid rgba(255,255,255,0.15)' }} />}</div>
                 <div style={{ fontWeight: 600, color: 'var(--on-surface)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: 12 }}>{v.productName}</div>
                 <div style={{ fontWeight: 600, color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                  {colorHex && <div style={{ width: 10, height: 10, borderRadius: 2, background: colorHex, border: '1px solid rgba(255,255,255,0.1)' }} />}
+                  {colorHex && <div style={{ width: 10, height: 10, borderRadius: 2, background: colorHex, border: '1px solid var(--border-medium)' }} />}
                   {v.color || (v.name ? <span style={{ fontSize: 10, opacity: 0.6 }}>{v.name}</span> : <span style={{ opacity: 0.3 }}>—</span>)}
                 </div>
                 <div style={{ fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: 'var(--on-surface)' }}>{v.size || '—'}</div>
@@ -463,7 +463,7 @@ export default function InventoryPage({ products, onRefresh, isRefreshing, lastS
                       <button onClick={() => setEditingVariant(null)} style={{ width: 20, height: 20, borderRadius: 4, background: 'rgba(239,68,68,0.1)', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={9} /></button>
                     </div>
                   ) : (
-                    <span onClick={() => startEditVariant(v)} style={{ fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: v.stock === null ? '#06b6d4' : v.stock === 0 ? '#ef4444' : v.stock <= 5 ? '#f59e0b' : 'var(--on-surface)', cursor: 'pointer' }}>
+                    <span onClick={() => startEditVariant(v)} style={{ fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: v.stock === null ? '#06b6d4' : v.stock === 0 ? '#ef4444' : v.stock <= 5 ? 'var(--primary-container)' : 'var(--on-surface)', cursor: 'pointer' }}>
                       {v.stock === null ? '∞' : v.stock}
                     </span>
                   )}

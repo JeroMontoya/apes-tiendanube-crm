@@ -12,7 +12,7 @@ function formatCurrency(v) {
 
 const STATUS_CONFIG = {
   in_stock: { label: 'OK', color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
-  low_stock: { label: 'Bajo', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+  low_stock: { label: 'Bajo', color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.1)' },
   out_of_stock: { label: 'Agotado', color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
 };
 
@@ -117,7 +117,7 @@ function ProductModal({ product, locations, onSave, onClose, isNew }) {
               <input style={fieldStyle} type="number" value={form.sell_price} onChange={(e) => setForm({ ...form, sell_price: parseFloat(e.target.value) || 0 })} />
             </div>
           </div>
-          <div style={{ padding: '14px', borderRadius: '12px', background: 'var(--surface-container-low, rgba(255,255,255,0.03))', border: '1px solid var(--border-subtle)' }}>
+          <div style={{ padding: '14px', borderRadius: '12px', background: 'var(--surface-container-low, var(--surface-container-low))', border: '1px solid var(--border-subtle)' }}>
             <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--on-surface)', marginBottom: '10px' }}>Stock mínimo por local</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
               {locations.map(loc => (
@@ -133,7 +133,7 @@ function ProductModal({ product, locations, onSave, onClose, isNew }) {
           <button onClick={onClose} style={{ padding: '10px 20px', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'transparent', color: 'var(--on-surface)', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>
             Cancelar
           </button>
-          <button onClick={handleSave} disabled={saving || !form.name || !form.sku} style={{ padding: '10px 20px', borderRadius: '10px', border: 'none', background: '#3b82f6', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: saving ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: !form.name || !form.sku ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button onClick={handleSave} disabled={saving || !form.name || !form.sku} style={{ padding: '10px 20px', borderRadius: '10px', border: 'none', background: '#3b82f6', color: 'var(--on-surface)', fontSize: '13px', fontWeight: '700', cursor: saving ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: !form.name || !form.sku ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
             {saving ? <RefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={14} />}
             {isNew ? 'Crear' : 'Guardar'}
           </button>
@@ -162,7 +162,7 @@ function ProductDetailModal({ product, locations, stock, onClose, onEdit, onAdju
             {product.image_url ? (
               <img src={product.image_url} alt="" style={{ width: '48px', height: '48px', borderRadius: '12px', objectFit: 'cover' }} />
             ) : (
-              <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--surface-container, rgba(255,255,255,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--surface-container, var(--border-subtle))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Package size={22} color="var(--on-surface-variant)" style={{ opacity: 0.3 }} />
               </div>
             )}
@@ -415,7 +415,7 @@ export default function ProductList({ products, locations, stock, onAdjust, onTr
           <button onClick={onRefresh} style={{ padding: '8px 14px', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--surface)', color: 'var(--on-surface)', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <RefreshCw size={13} />
           </button>
-          <button onClick={() => setShowCreateModal(true)} style={{ padding: '8px 14px', borderRadius: '10px', border: 'none', background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <button onClick={() => setShowCreateModal(true)} style={{ padding: '8px 14px', borderRadius: '10px', border: 'none', background: '#3b82f6', color: 'var(--on-surface)', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Plus size={13} /> Nuevo
           </button>
         </div>
@@ -424,7 +424,7 @@ export default function ProductList({ products, locations, stock, onAdjust, onTr
       {/* Table View */}
       {viewMode === 'table' && !isMobile && (
         <div style={{ borderRadius: '14px', border: '1px solid var(--border-subtle)', overflow: 'hidden', background: 'var(--surface)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '48px 1.5fr 100px 0.7fr repeat(' + locations.length + ', 80px) 100px 80px', gap: '0', padding: '10px 14px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--surface-container-low, rgba(255,255,255,0.03))', fontSize: '10px', fontWeight: '700', color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.5px', alignItems: 'center' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '48px 1.5fr 100px 0.7fr repeat(' + locations.length + ', 80px) 100px 80px', gap: '0', padding: '10px 14px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--surface-container-low, var(--surface-container-low))', fontSize: '10px', fontWeight: '700', color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.5px', alignItems: 'center' }}>
             <span></span>
             <span>Producto</span>
             <span>SKU</span>
@@ -459,13 +459,13 @@ export default function ProductList({ products, locations, stock, onAdjust, onTr
                     display: 'grid', gridTemplateColumns: '48px 1.5fr 100px 0.7fr repeat(' + locations.length + ', 80px) 100px 80px', gap: '0', padding: '10px 14px', borderBottom: '1px solid var(--border-subtle)', alignItems: 'center', fontSize: '12px', transition: 'background 0.1s', cursor: 'pointer',
                   }}
                   onClick={() => setDetailProduct(product)}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-container-low, rgba(255,255,255,0.03))'; }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-container-low, var(--surface-container-low))'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
                 >
                   {product.image_url ? (
                     <img src={product.image_url} alt="" style={{ width: '36px', height: '36px', borderRadius: '8px', objectFit: 'cover' }} />
                   ) : (
-                    <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'var(--surface-container, rgba(255,255,255,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'var(--surface-container, var(--border-subtle))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Package size={14} color="var(--on-surface-variant)" style={{ opacity: 0.3 }} />
                     </div>
                   )}
@@ -529,7 +529,7 @@ export default function ProductList({ products, locations, stock, onAdjust, onTr
                       <img src={product.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                   ) : (
-                    <div style={{ height: '130px', background: 'var(--surface-container, rgba(255,255,255,0.03))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ height: '130px', background: 'var(--surface-container, var(--surface-container-low))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Package size={32} color="var(--on-surface-variant)" style={{ opacity: 0.2 }} />
                     </div>
                   )}

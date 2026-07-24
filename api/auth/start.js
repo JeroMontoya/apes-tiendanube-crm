@@ -16,7 +16,7 @@ export default function handler(req, res) {
         </style>
       </head>
       <body>
-        <h2>Cargando Onyx Core...</h2>
+        <h2>Cargando Apes Tiendanube CRM...</h2>
         <script>
           window.location.href = '/?' + '${queryString}';
         </script>

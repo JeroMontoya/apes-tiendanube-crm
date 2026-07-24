@@ -10,7 +10,7 @@ import {
 // ─── Constants ─────────────────────────────────────────────────────────────────
 const PIPELINE_COLUMNS = [
   { id: 'seleccionado',     label: 'Seleccionados',      color: '#6366f1', icon: Target,         desc: 'Audiencia elegida para esta campaña' },
-  { id: 'contactado',       label: 'Contactados',        color: '#f59e0b', icon: Megaphone,      desc: 'Mensaje/email/ad enviado' },
+  { id: 'contactado',       label: 'Contactados',        color: 'var(--primary-container)', icon: Megaphone,      desc: 'Mensaje/email/ad enviado' },
   { id: 'interactuo',       label: 'Interactuaron',      color: '#3b82f6', icon: MousePointer,   desc: 'Abrieron, clickearon o respondieron' },
   { id: 'respondio',        label: 'Respondieron',       color: '#8b5cf6', icon: MessageSquare,  desc: 'Contacto directo o respuesta' },
   { id: 'compro',           label: 'Compraron',          color: '#22c55e', icon: CreditCard,     desc: 'Conversión exitosa' },
@@ -25,7 +25,7 @@ const PURCHASE_FILTERS = [
   { label: '5+ compras', min: 5, max: Infinity,  emoji: '🔴' },
 ];
 
-const CAMPAIGN_COLORS = ['#6366f1', '#f59e0b', '#22c55e', '#ec4899', '#8b5cf6', '#14b8a6', '#f43f5e'];
+const CAMPAIGN_COLORS = ['#6366f1', 'var(--primary-container)', '#22c55e', '#ec4899', '#8b5cf6', '#14b8a6', '#f43f5e'];
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 function formatCurrency(amount) {
@@ -492,7 +492,7 @@ export default function CampaignPipeline({ unifiedClients = [] }) {
               display: 'inline-flex', alignItems: 'center', gap: 8,
               padding: '10px 18px', borderRadius: 12,
               border: 'none', background: 'var(--primary)',
-              color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 500,
+              color: 'var(--on-surface)', cursor: 'pointer', fontSize: 14, fontWeight: 500,
             }}
           >
             <Plus size={16} />
@@ -527,7 +527,7 @@ export default function CampaignPipeline({ unifiedClients = [] }) {
         </div>
         <div className="glass-card" style={{ padding: '18px 20px', textAlign: 'center' }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 6 }}>Revenue</div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: '#f59e0b' }}>{formatCurrency(funnelMetrics.totalRevenue)}</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--primary-container)' }}>{formatCurrency(funnelMetrics.totalRevenue)}</div>
           <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 4 }}>
             <DollarSign size={12} /> generado
           </div>
@@ -554,7 +554,7 @@ export default function CampaignPipeline({ unifiedClients = [] }) {
                     width: `${pct}%`,
                     background: col.color,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 11, fontWeight: 700, color: '#fff',
+                    fontSize: 11, fontWeight: 700, color: 'var(--on-surface)',
                     transition: 'width 0.5s ease',
                     minWidth: count > 0 ? 30 : 0,
                   }}
@@ -616,7 +616,7 @@ export default function CampaignPipeline({ unifiedClients = [] }) {
                   onClick={handleBulkImport}
                   style={{
                     padding: '6px 14px', borderRadius: 20, marginLeft: 8,
-                    border: 'none', background: 'var(--primary)', color: '#fff',
+                    border: 'none', background: 'var(--primary)', color: 'var(--on-surface)',
                     cursor: 'pointer', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4,
                   }}
                 >
@@ -871,7 +871,7 @@ export default function CampaignPipeline({ unifiedClients = [] }) {
               <button
                 disabled={!newCampaign.name.trim()}
                 onClick={handleCreateCampaign}
-                style={{ padding: '12px 20px', borderRadius: 12, border: 'none', background: 'var(--primary)', color: '#fff', cursor: newCampaign.name.trim() ? 'pointer' : 'not-allowed', fontSize: 14, fontWeight: 600, opacity: newCampaign.name.trim() ? 1 : 0.5 }}
+                style={{ padding: '12px 20px', borderRadius: 12, border: 'none', background: 'var(--primary)', color: 'var(--on-surface)', cursor: newCampaign.name.trim() ? 'pointer' : 'not-allowed', fontSize: 14, fontWeight: 600, opacity: newCampaign.name.trim() ? 1 : 0.5 }}
               >
                 Crear Tablero
               </button>
@@ -916,7 +916,7 @@ export default function CampaignPipeline({ unifiedClients = [] }) {
               <button
                 disabled={!newLead.name.trim()}
                 onClick={handleAddNewLead}
-                style={{ padding: '10px 18px', borderRadius: 12, border: 'none', background: 'var(--primary)', color: '#fff', cursor: newLead.name.trim() ? 'pointer' : 'not-allowed', fontSize: 14, fontWeight: 500, opacity: newLead.name.trim() ? 1 : 0.5 }}
+                style={{ padding: '10px 18px', borderRadius: 12, border: 'none', background: 'var(--primary)', color: 'var(--on-surface)', cursor: newLead.name.trim() ? 'pointer' : 'not-allowed', fontSize: 14, fontWeight: 500, opacity: newLead.name.trim() ? 1 : 0.5 }}
               >
                 <Save size={16} /> Guardar
               </button>
@@ -927,7 +927,7 @@ export default function CampaignPipeline({ unifiedClients = [] }) {
 
       {/* ══════════ TOAST ══════════ */}
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, right: 24, padding: '12px 20px', borderRadius: 12, color: '#fff', fontSize: 14, fontWeight: 500, zIndex: 2000, boxShadow: '0 8px 32px rgba(0,0,0,0.25)', animation: 'slideInRight 0.3s ease', background: toast.type === 'warning' ? '#f59e0b' : '#22c55e' }}>
+        <div style={{ position: 'fixed', bottom: 24, right: 24, padding: '12px 20px', borderRadius: 12, color: 'var(--on-surface)', fontSize: 14, fontWeight: 500, zIndex: 2000, boxShadow: '0 8px 32px rgba(0,0,0,0.25)', animation: 'slideInRight 0.3s ease', background: toast.type === 'warning' ? 'var(--primary-container)' : '#22c55e' }}>
           {toast.message}
         </div>
       )}

@@ -86,10 +86,7 @@ export default function GeoFunnel({ clients, onSelectClient, dateRange }) {
 
   const data = viewMode === 'province' ? provinceData : cityData;
 
-  const GRADIENT_COLORS = [
-    'var(--primary)', '#7C3AED', '#DB2777', 'var(--warning)', 'var(--success)',
-    '#0891B2', '#4F46E5', '#9333EA', '#E11D48', 'var(--on-warning-container)',
-  ];
+  const GRADIENT_COLORS = ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#f43f5e', '#06b6d4', '#ec4899', '#14b8a6', '#ef4444', '#6366f1'];
 
   const formatCurrency = (v) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v);
 
@@ -102,16 +99,16 @@ export default function GeoFunnel({ clients, onSelectClient, dateRange }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--on-surface)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <MapPin size={20} color="#60a5fa" /> Embudo Geográfico
-            <MetricTooltip text="Muestra de qué ciudades y provincias vienen tus clientes en el periodo seleccionado (hoy, 7 dias, este mes, etc)." />
+            <MapPin size={20} color="var(--primary)" /> ¿De dónde son tus clientes?
+            <MetricTooltip text="Muestra de qué ciudades y provincias vienen tus clientes en el periodo seleccionado." />
           </h3>
           <p style={{ fontSize: 12, color: 'var(--on-surface-variant)', margin: '4px 0 0' }}>
-            Distribución geográfica por periodo seleccionado — {totalClients} clientes, {formatCurrency(totalRevenue)} revenue
+            Distribución por periodo — {totalClients} clientes, {formatCurrency(totalRevenue)} en ventas
           </p>
         </div>
 
         {/* Toggle Province/City */}
-        <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: 3, border: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ display: 'flex', background: 'var(--border-subtle)', borderRadius: 8, padding: 3, border: '1px solid var(--border-subtle)' }}>
           {[
             { id: 'province', label: 'Provincias' },
             { id: 'city', label: 'Ciudades' },
@@ -122,8 +119,8 @@ export default function GeoFunnel({ clients, onSelectClient, dateRange }) {
               style={{
                 padding: '6px 14px', borderRadius: 6, border: 'none', cursor: 'pointer',
                 fontSize: 12, fontWeight: viewMode === opt.id ? 600 : 500,
-                background: viewMode === opt.id ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
-                color: viewMode === opt.id ? '#60a5fa' : 'var(--on-surface-variant)',
+                background: viewMode === opt.id ? 'var(--primary-container)' : 'transparent',
+                color: viewMode === opt.id ? 'var(--primary)' : 'var(--on-surface-variant)',
                 transition: 'all 0.2s', fontFamily: 'inherit',
               }}
             >
@@ -143,10 +140,10 @@ export default function GeoFunnel({ clients, onSelectClient, dateRange }) {
             background: 'var(--surface-container-low)', borderRadius: '8px 8px 0 0',
           }}>
             <span>{viewMode === 'province' ? 'Provincia' : 'Ciudad'}</span>
-            <span>Revenue (participación)</span>
+            <span>Ventas (participación)</span>
             <span style={{ textAlign: 'center' }}>Clientes</span>
-            <span style={{ textAlign: 'right' }}>Revenue</span>
-            <span style={{ textAlign: 'right' }}>% del Total</span>
+            <span style={{ textAlign: 'right' }}>Ventas</span>
+            <span style={{ textAlign: 'right' }}>% del total</span>
           </div>
 
       {/* Data Rows */}
@@ -188,7 +185,7 @@ export default function GeoFunnel({ clients, onSelectClient, dateRange }) {
                     display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 6,
                   }}>
                     {item.barWidth > 20 && (
-                      <span style={{ fontSize: 10, fontWeight: 700, color: '#FFF' }}>{item.revPct}%</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--on-surface)' }}>{item.revPct}%</span>
                     )}
                   </div>
                 </div>

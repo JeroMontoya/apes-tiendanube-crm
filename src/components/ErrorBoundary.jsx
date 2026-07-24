@@ -41,7 +41,7 @@ export class ErrorBoundary extends React.Component {
               overflow: 'auto',
               color: '#6b7280',
               fontSize: 12,
-              border: '1px solid rgba(255,255,255,0.05)'
+              border: '1px solid var(--border-subtle)'
             }}>
               {this.state.error && this.state.error.toString()}
               {this.state.errorInfo && '\n\n' + this.state.errorInfo.componentStack}

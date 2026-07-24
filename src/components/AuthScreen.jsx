@@ -436,7 +436,7 @@ export default function AuthScreen({ onAuth }) {
           </button>
         </div>
 
-        <p style={styles.footer}>© {new Date().getFullYear()} Onyx Core · Todos los derechos reservados</p>
+        <p style={styles.footer}>© {new Date().getFullYear()} Apes CRM · Todos los derechos reservados</p>
       </div>
     </div>
   );

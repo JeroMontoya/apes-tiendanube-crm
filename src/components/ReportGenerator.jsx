@@ -143,7 +143,7 @@ const styles = {
   },
   btnPrimary: {
     background: '#6366f1',
-    color: '#fff',
+    color: 'var(--on-surface)',
   },
   btnSecondary: {
     background: 'rgba(99,102,241,0.15)',
@@ -183,7 +183,7 @@ const styles = {
     marginBottom: '8px',
     cursor: 'pointer',
     transition: 'all 0.2s',
-    background: 'rgba(255,255,255,0.03)',
+    background: 'var(--surface-container-low)',
   },
   sectionCardActive: {
     borderColor: '#6366f1',
@@ -225,7 +225,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     fontSize: '10px',
-    background: 'rgba(255,255,255,0.05)',
+    background: 'var(--border-subtle)',
     flexShrink: 0,
   },
   templateBar: {
@@ -238,7 +238,7 @@ const styles = {
     padding: '8px 14px',
     borderRadius: '8px',
     border: '1px solid var(--border-subtle, #333)',
-    background: 'rgba(255,255,255,0.03)',
+    background: 'var(--surface-container-low)',
     color: 'var(--on-surface-variant, #999)',
     fontSize: '12px',
     fontWeight: 600,
@@ -250,7 +250,7 @@ const styles = {
     padding: '10px 14px',
     borderRadius: '8px',
     border: '1px solid var(--border-subtle, #333)',
-    background: 'rgba(255,255,255,0.05)',
+    background: 'var(--border-subtle)',
     color: 'var(--on-surface, #e0e0e0)',
     fontSize: '14px',
     fontWeight: 600,
@@ -551,7 +551,7 @@ function GA4Section({ data }) {
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
           <KPICard label="Sesiones" value={formatNumber(sessions)} color="#3b82f6" />
           <KPICard label="Usuarios" value={formatNumber(users)} color="#22c55e" />
-          <KPICard label="Páginas Vistas" value={formatNumber(pageviews)} color="#f59e0b" />
+          <KPICard label="Páginas Vistas" value={formatNumber(pageviews)} color="var(--primary-container)" />
           <KPICard label="Tasa de Rebote" value={formatPercent(bounceRate)} color="#ef4444" />
         </div>
         {data?.topPages && data.topPages.length > 0 && (
@@ -580,7 +580,7 @@ function GSCSection({ data }) {
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
           <KPICard label="Impresiones" value={formatNumber(data?.totalImpressions || 0)} color="#3b82f6" />
           <KPICard label="Clics" value={formatNumber(data?.totalClicks || 0)} color="#22c55e" />
-          <KPICard label="CTR" value={formatPercent(data?.avgCtr || 0)} color="#f59e0b" />
+          <KPICard label="CTR" value={formatPercent(data?.avgCtr || 0)} color="var(--primary-container)" />
           <KPICard label="Posición Media" value={(data?.avgPosition || 0).toFixed(1)} color="#8b5cf6" />
         </div>
         {data?.topQueries && data.topQueries.length > 0 && (

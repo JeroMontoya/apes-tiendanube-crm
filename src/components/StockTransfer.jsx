@@ -14,8 +14,8 @@ const MOVEMENT_TYPES = [
   { id: 'receive', label: 'Recepción', icon: '⬇️', color: '#10b981', desc: 'Ingreso de mercadería' },
   { id: 'dispatch', label: 'Despacho', icon: '🚚', color: '#3b82f6', desc: 'Envío a cliente' },
   { id: 'transfer', label: 'Transferencia', icon: '↔️', color: '#8b5cf6', desc: 'Entre ubicaciones' },
-  { id: 'production_in', label: 'Producción', icon: '🔄', color: '#f59e0b', desc: 'Ingreso de taller' },
-  { id: 'return', label: 'Devolución', icon: '🔄', color: '#f59e0b', desc: 'Cliente devuelve' },
+  { id: 'production_in', label: 'Producción', icon: '🔄', color: 'var(--primary-container)', desc: 'Ingreso de taller' },
+  { id: 'return', label: 'Devolución', icon: '🔄', color: 'var(--primary-container)', desc: 'Cliente devuelve' },
   { id: 'adjustment', label: 'Ajuste', icon: '⚠️', color: '#ef4444', desc: 'Corrección manual' },
 ];
 
@@ -247,7 +247,7 @@ export default function StockTransfer({
           <button style={{ padding: '10px 18px', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--surface)', color: 'var(--on-surface)', cursor: 'pointer', fontSize: '13px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Download size={14} /> Exportar
           </button>
-          <button onClick={() => { setActiveTab('create'); setShowProductPicker(false); resetForm(); }} style={{ padding: '10px 18px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)', color: '#fff', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button onClick={() => { setActiveTab('create'); setShowProductPicker(false); resetForm(); }} style={{ padding: '10px 18px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)', color: 'var(--on-surface)', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Plus size={14} /> Nueva Transferencia
           </button>
         </div>
@@ -258,7 +258,7 @@ export default function StockTransfer({
         <StatCard label="Pendientes" value={stats.pending} color='#8b5cf6' icon={<Package size={18} />} />
         <StatCard label="En Tránsito" value={stats.in_transit} color='#3b82f6' icon={<Truck size={18} />} />
         <StatCard label="Completadas" value={stats.completed} color='#10b981' icon={<CheckCircle size={18} />} />
-        <StatCard label="Total Items" value={stats.totalItems} color='#f59e0b' icon={<Package size={18} />} />
+        <StatCard label="Total Items" value={stats.totalItems} color='var(--primary-container)' icon={<Package size={18} />} />
       </div>
 
       {/* Tabs */}
@@ -474,7 +474,7 @@ function TransferForm({ form, locations, availableProducts, onFormChange, onAddI
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)' }}>
         <button type="button" onClick={onCancel} style={{ padding: '12px 24px', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'transparent', color: 'var(--on-surface)', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Cancelar</button>
-        <button type="submit" disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', height: '44px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: loading ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
+        <button type="submit" disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', height: '44px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)', color: 'var(--on-surface)', fontSize: '14px', fontWeight: '700', cursor: loading ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
           {loading ? <span style={{ width: '18px', height: '18px', border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /> : 'Guardar Transferencia'}
         </button>
       </div>
@@ -645,7 +645,7 @@ function ProductPickerModal({ products, fromLocation, onSelect, onClose }) {
 
 // ═══ Helpers ═══
 function getColorHex(name) {
-  const map = { negro: '#1a1a2e', black: '#1a1a2e', azul: '#3b82f6', blue: '#3b82f6', rojo: '#ef4444', red: '#ef4444', blanco: '#f1f5f9', white: '#f1f5f9', verde: '#10b981', green: '#10b981', amarillo: '#f59e0b', yellow: '#f59e0b', rosa: '#ec4899', pink: '#ec4899', morado: '#8b5cf6', purple: '#8b5cf6', gris: '#64748b', gray: '#64748b', grey: '#64748b', naranja: '#f97316', orange: '#f97316' };
+  const map = { negro: '#1a1a2e', black: '#1a1a2e', azul: '#3b82f6', blue: '#3b82f6', rojo: '#ef4444', red: '#ef4444', blanco: '#f1f5f9', white: '#f1f5f9', verde: '#10b981', green: '#10b981', amarillo: 'var(--primary-container)', yellow: 'var(--primary-container)', rosa: '#ec4899', pink: '#ec4899', morado: '#8b5cf6', purple: '#8b5cf6', gris: '#64748b', gray: '#64748b', grey: '#64748b', naranja: '#f97316', orange: '#f97316' };
   return map[name?.toLowerCase().trim()] || null;
 }
 

@@ -36,7 +36,7 @@ const styles = {
   },
   button: {
     background: 'var(--primary)',
-    color: '#fff',
+    color: 'var(--on-surface)',
     border: 'none',
     borderRadius: 'var(--radius-md)',
     padding: '8px 16px',

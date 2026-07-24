@@ -74,7 +74,7 @@ export default function AIInsightsWidget({ clients, storeId }) {
         {!data && !loading && (
           <button 
             onClick={handleGenerate}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#8b5cf6', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#8b5cf6', color: 'var(--on-surface)', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}
           >
             Generar Análisis
           </button>

@@ -61,11 +61,11 @@ export default function CohortRetentionChart({ clients }) {
 
   const getHeatColor = (pct) => {
     if (pct === 0) return { bg: 'var(--surface-container)', text: 'var(--on-surface-variant)' };
-    if (pct < 10) return { bg: 'rgba(16,185,129,0.08)', text: '#6ee7b7' };
-    if (pct < 25) return { bg: 'rgba(16,185,129,0.15)', text: '#6ee7b7' };
-    if (pct < 50) return { bg: 'rgba(16,185,129,0.25)', text: '#34d399' };
-    if (pct < 75) return { bg: 'rgba(16,185,129,0.4)', text: '#10b981' };
-    return { bg: 'rgba(16,185,129,0.55)', text: '#ffffff' };
+    if (pct < 10) return { bg: 'rgba(99,102,241,0.08)', text: 'var(--primary)' };
+    if (pct < 25) return { bg: 'rgba(99,102,241,0.15)', text: 'var(--primary)' };
+    if (pct < 50) return { bg: 'rgba(99,102,241,0.25)', text: 'var(--primary-glow)' };
+    if (pct < 75) return { bg: 'rgba(99,102,241,0.4)', text: 'var(--primary-container)' };
+    return { bg: 'rgba(99,102,241,0.55)', text: '#ffffff' };
   };
 
   const totalClients = cohorts.reduce((s, c) => s + c.size, 0);
@@ -78,7 +78,7 @@ export default function CohortRetentionChart({ clients }) {
       borderRadius: 16,
       overflow: 'hidden',
       transition: 'border-color 0.2s',
-      borderColor: open ? 'rgba(16,185,129,0.2)' : 'var(--glass-border)'
+      borderColor: open ? 'rgba(99,102,241,0.2)' : 'var(--glass-border)'
     }}>
       {/* Collapsible Header */}
       <button
@@ -100,13 +100,13 @@ export default function CohortRetentionChart({ clients }) {
       >
         <div style={{
           width: 36, height: 36, borderRadius: 10,
-          background: 'var(--gradient-success)',
+          background: 'rgba(99,102,241,0.15)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: open ? '0 2px 12px rgba(16,185,129,0.3)' : '0 2px 8px rgba(16,185,129,0.15)',
+          boxShadow: open ? '0 2px 12px rgba(99,102,241,0.3)' : '0 2px 8px rgba(99,102,241,0.15)',
           transition: 'box-shadow 0.2s',
           flexShrink: 0
         }}>
-          <BarChart3 size={17} color="#fff" />
+          <BarChart3 size={17} color="var(--primary)" />
         </div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -207,7 +207,7 @@ export default function CohortRetentionChart({ clients }) {
                       const val = c.retention[i] || 0;
                       const perc = c.size > 0 ? (val / c.size) * 100 : 0;
                       const isMonth0 = i === 0;
-                      const heat = isMonth0 ? { bg: 'rgba(59,130,246,0.1)', text: '#60a5fa' } : getHeatColor(perc);
+                      const heat = isMonth0 ? { bg: 'rgba(99,102,241,0.1)', text: 'var(--primary)' } : getHeatColor(perc);
 
                       return (
                         <div key={i} style={{ flex: 1, padding: 1.5 }}>
@@ -219,7 +219,7 @@ export default function CohortRetentionChart({ clients }) {
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                               fontSize: 9, fontWeight: isMonth0 ? 700 : 600,
                               color: heat.text,
-                              border: isMonth0 ? '1px solid rgba(59,130,246,0.15)' : '1px solid transparent',
+                              border: isMonth0 ? '1px solid rgba(99,102,241,0.15)' : '1px solid transparent',
                               fontFamily: "'JetBrains Mono', monospace",
                               cursor: 'default'
                             }}

@@ -8,7 +8,7 @@ import {
 
 // ─── Paleta de colores para gráficos ─────────────────────────────────
 const CHART_COLORS = [
-  '#4F46E5', '#0EA5E9', '#10B981', '#F59E0B', '#EF4444',
+  '#4F46E5', '#0EA5E9', '#10B981', 'var(--primary-container)', '#EF4444',
   '#8B5CF6', '#EC4899', '#14B8A6', '#6B7280'
 ];
 
@@ -66,7 +66,7 @@ function formatDuration(seconds) {
 
 function formatNumber(n) {
   if (n == null || isNaN(n)) return '0';
-  return Number(n).toLocaleString('es-AR');
+  return Number(n).toLocaleString('es-CO');
 }
 
 function formatPercent(n) {
@@ -274,7 +274,7 @@ const styles = {
   eventBarLabel: {
     fontSize: '11px',
     fontWeight: 600,
-    color: '#fff',
+    color: 'var(--on-surface)',
     whiteSpace: 'nowrap',
   },
   eventCount: {
@@ -504,7 +504,7 @@ export default function GA4Panel({ ga4Insights }) {
           background: 'rgba(245, 158, 11, 0.1)', display: 'flex',
           alignItems: 'center', justifyContent: 'center'
         }}>
-          <BarChart3 size={32} color="#F59E0B" />
+          <BarChart3 size={32} color="var(--primary-container)" />
         </div>
         <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--on-surface)', margin: 0 }}>Google Analytics 4</h2>
         <div style={{
@@ -519,15 +519,15 @@ export default function GA4Panel({ ga4Insights }) {
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, textAlign: 'left', fontSize: 13, color: 'var(--on-surface-variant)' }}>
             <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-              <span style={{ background: 'rgba(245,158,11,0.2)', color: '#F59E0B', borderRadius: 6, padding: '2px 8px', fontWeight: 700, flexShrink: 0 }}>1</span>
+              <span style={{ background: 'rgba(245,158,11,0.2)', color: 'var(--primary-container)', borderRadius: 6, padding: '2px 8px', fontWeight: 700, flexShrink: 0 }}>1</span>
               <span>Andá a <strong>Ajustes</strong> → sección <strong>Google Analytics 4</strong></span>
             </div>
             <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-              <span style={{ background: 'rgba(245,158,11,0.2)', color: '#F59E0B', borderRadius: 6, padding: '2px 8px', fontWeight: 700, flexShrink: 0 }}>2</span>
+              <span style={{ background: 'rgba(245,158,11,0.2)', color: 'var(--primary-container)', borderRadius: 6, padding: '2px 8px', fontWeight: 700, flexShrink: 0 }}>2</span>
               <span>Ingresá tu <strong>Property ID</strong> (GA4 → Administrador → Detalles del Stream)</span>
             </div>
             <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-              <span style={{ background: 'rgba(245,158,11,0.2)', color: '#F59E0B', borderRadius: 6, padding: '2px 8px', fontWeight: 700, flexShrink: 0 }}>3</span>
+              <span style={{ background: 'rgba(245,158,11,0.2)', color: 'var(--primary-container)', borderRadius: 6, padding: '2px 8px', fontWeight: 700, flexShrink: 0 }}>3</span>
               <span>Marcá "Reutilizar credenciales de Merchant Center" si usás el mismo Service Account</span>
             </div>
           </div>
@@ -621,7 +621,7 @@ export default function GA4Panel({ ga4Insights }) {
           value={formatDuration(global.averageSessionDuration)}
           hint="Cuánto tiempo se quedan en tu tienda"
           iconBg="rgba(245, 158, 11, 0.12)"
-          iconColor="#F59E0B"
+          iconColor="var(--primary-container)"
         />
       </div>
 
@@ -770,7 +770,7 @@ export default function GA4Panel({ ga4Insights }) {
       {ecommerce && ecommerce.totalRevenue > 0 && (
         <div className="glass-card" style={styles.sectionCard}>
           <h3 style={styles.sectionTitle}>
-            <ShoppingCart size={18} color="#F59E0B" />
+            <ShoppingCart size={18} color="var(--primary-container)" />
             Ventas y E-commerce
             <span style={styles.sectionSubtitle}>— Datos reales de GA4</span>
           </h3>
@@ -782,7 +782,7 @@ export default function GA4Panel({ ga4Insights }) {
               value={`$${formatNumber(Math.round(ecommerce.totalRevenue))}`}
               hint="Revenue bruto del período"
               iconBg="rgba(245, 158, 11, 0.12)"
-              iconColor="#F59E0B"
+              iconColor="var(--primary-container)"
             />
             <MetricCard
               icon={ShoppingCart}
@@ -806,7 +806,7 @@ export default function GA4Panel({ ga4Insights }) {
           {ecommerce.topProducts && ecommerce.topProducts.length > 0 && (
             <div style={{ marginTop: 20 }}>
               <h4 style={{ fontSize: 14, fontWeight: 600, color: 'var(--on-surface)', margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Package size={16} color="#F59E0B" />
+                <Package size={16} color="var(--primary-container)" />
                 Productos Más Vendidos
               </h4>
               {ecommerce.topProducts.slice(0, 8).map((prod, i) => {
@@ -822,7 +822,7 @@ export default function GA4Panel({ ga4Insights }) {
                         style={{
                           ...styles.eventBarFill,
                           width: `${Math.max(pct, 3)}%`,
-                          background: `linear-gradient(90deg, #F59E0B, #F59E0Bdd)`,
+                          background: `linear-gradient(90deg, var(--primary-container), var(--primary-container)dd)`,
                         }}
                       />
                     </div>
@@ -839,7 +839,7 @@ export default function GA4Panel({ ga4Insights }) {
       {advice.length > 0 && (
         <div className="glass-card" style={styles.sectionCard}>
           <h3 style={styles.sectionTitle}>
-            <Lightbulb size={18} color="#F59E0B" />
+            <Lightbulb size={18} color="var(--primary-container)" />
             Consejos para tu tienda
             <span style={styles.sectionSubtitle}>— Basados en tus datos reales</span>
           </h3>
@@ -847,7 +847,7 @@ export default function GA4Panel({ ga4Insights }) {
           {advice.map((item, i) => {
             let IconComp = Lightbulb;
             let bgColor = 'rgba(245, 158, 11, 0.12)';
-            let fgColor = '#F59E0B';
+            let fgColor = 'var(--primary-container)';
 
             if (item.type === 'warning') {
               IconComp = AlertTriangle;

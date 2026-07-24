@@ -29,7 +29,7 @@ const parseDate = (d) => {
 };
 
 const fmtMoney = (v) =>
-  new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 2 }).format(v);
+  new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 2 }).format(v);
 
 const fmtNum = (v) =>
   v >= 1000 ? `${(v / 1000).toFixed(2)}k` : String(v);

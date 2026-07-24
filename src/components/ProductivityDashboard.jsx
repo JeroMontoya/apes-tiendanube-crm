@@ -80,8 +80,8 @@ export default function ProductivityDashboard() {
 
       {/* Top Performers */}
       <div className="glass-card" style={{ padding: 0, marginBottom: 20 }}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Award size={16} color="#f59e0b" />
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Award size={16} color="var(--primary-container)" />
           <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--on-surface)' }}>Top Rendimiento</span>
         </div>
         <div style={{ padding: 0 }}>
@@ -95,7 +95,7 @@ export default function ProductivityDashboard() {
                 <div key={m.id} style={{ padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{
                     width: 28, height: 28, borderRadius: 8,
-                    background: i === 0 ? '#f59e0b' : i === 1 ? '#94a3b8' : i === 2 ? '#cd7f32' : 'rgba(255,255,255,0.08)',
+                    background: i === 0 ? 'var(--primary-container)' : i === 1 ? '#94a3b8' : i === 2 ? '#cd7f32' : 'var(--outline)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 12, fontWeight: 700, color: i < 3 ? '#fff' : 'var(--on-surface-variant)',
                   }}>
@@ -107,7 +107,7 @@ export default function ProductivityDashboard() {
                       <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--on-surface)' }}>{m.name}</span>
                       <span style={{ fontSize: 12, fontWeight: 600, color: ROLE_COLORS[m.role] }}>{m.totalActions} acciones</span>
                     </div>
-                    <div style={{ height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                    <div style={{ height: 4, borderRadius: 2, background: 'var(--glass-border)', overflow: 'hidden' }}>
                       <div style={{ height: '100%', width: `${barWidth}%`, borderRadius: 2, background: `linear-gradient(90deg, ${ROLE_COLORS[m.role]}, ${ROLE_COLORS[m.role]}80)`, transition: 'width 0.3s ease' }} />
                     </div>
                   </div>
@@ -120,13 +120,13 @@ export default function ProductivityDashboard() {
 
       {/* Detailed Member Table */}
       <div className="glass-card" style={{ padding: 0 }}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <Users size={16} color="#3b82f6" />
           <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--on-surface)' }}>Detalle por Miembro</span>
         </div>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
-            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <tr style={{ borderBottom: '1px solid var(--glass-border)' }}>
               {['Miembro', 'Rol', 'Acciones', 'Stock', 'PQR', 'Última Actividad'].map(h => (
                 <th key={h} style={{ padding: '12px 16px', textAlign: h === 'Miembro' ? 'left' : 'center', fontWeight: 600, color: 'var(--on-surface-variant)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
               ))}

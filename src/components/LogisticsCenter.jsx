@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 const C = {
-  primary: '#6366F1', success: '#10B981', warning: '#F59E0B',
+  primary: '#6366F1', success: '#10B981', warning: 'var(--primary-container)',
   danger: '#EF4444', info: '#0EA5E9', purple: '#8B5CF6',
   teal: '#14B8A6', pink: '#EC4899', orange: '#F97316',
 };
@@ -48,7 +48,7 @@ function StockBar({ current, min }) {
   const pct = min > 0 ? Math.min(100, (current / min) * 100) : (current > 0 ? 100 : 0);
   const color = current === 0 ? C.danger : current <= min ? C.warning : C.success;
   return (
-    <div style={{ width: '100%', height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+    <div style={{ width: '100%', height: 6, borderRadius: 3, background: 'var(--glass-border)', overflow: 'hidden' }}>
       <div style={{ width: `${Math.max(pct, 2)}%`, height: '100%', background: color, borderRadius: 3, transition: 'width 0.5s ease' }} />
     </div>
   );
@@ -169,7 +169,7 @@ function MovementModal({ item, locations, onClose, onConfirm }) {
 
           {/* Submit */}
           <button onClick={handleSubmit}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 44, borderRadius: 10, border: 'none', background: mt.color, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 44, borderRadius: 10, border: 'none', background: mt.color, color: 'var(--on-surface)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
             <mt.icon size={18} /> Confirmar {mt.label} ({qty} unidades)
           </button>
         </div>
@@ -249,7 +249,7 @@ function AddProductModal({ locations, onClose, onConfirm }) {
             </div>
           </div>
           <button onClick={() => { if (!form.name) return; onConfirm(form); onClose(); }}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 44, borderRadius: 10, border: 'none', background: C.primary, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', marginTop: 4 }}>
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 44, borderRadius: 10, border: 'none', background: C.primary, color: 'var(--on-surface)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', marginTop: 4 }}>
             <Plus size={18} /> Agregar al inventario
           </button>
         </div>
@@ -379,7 +379,7 @@ export default function LogisticsCenter({ session }) {
             {syncing ? 'Sincronizando...' : 'Sync TiendaNueve'}
           </button>
           <button onClick={() => setAddModal(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: C.primary, color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 600, cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: C.primary, color: 'var(--on-surface)', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 600, cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
             <Plus size={14} /> Agregar producto
           </button>
         </div>
@@ -509,7 +509,7 @@ export default function LogisticsCenter({ session }) {
                   <span style={{ textAlign: 'center' }}>Acción</span>
                 </div>
                 {filtered.map(item => (
-                  <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 100px 80px', padding: '10px 12px', borderRadius: 8, alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.03)' }}
+                  <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 100px 80px', padding: '10px 12px', borderRadius: 8, alignItems: 'center', borderBottom: '1px solid var(--surface-container-low)' }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-container)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                       {item.image_url ? <img src={item.image_url} alt="" style={{ width: 28, height: 28, borderRadius: 4, objectFit: 'cover' }} /> : <Package size={16} color="var(--on-surface-variant)" />}

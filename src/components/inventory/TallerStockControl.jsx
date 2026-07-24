@@ -216,7 +216,7 @@ export default function TallerStockControl({ session }) {
   const btnStyle = (color, disabled = false) => ({
     width: '32px', height: '32px', borderRadius: '6px',
     border: 'none', background: disabled ? 'var(--border-subtle)' : color,
-    color: '#fff', fontSize: '16px', fontWeight: '700',
+    color: 'var(--on-surface)', fontSize: '16px', fontWeight: '700',
     cursor: disabled ? 'default' : 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     opacity: disabled ? 0.5 : 1, transition: 'all 0.1s',
@@ -268,7 +268,7 @@ export default function TallerStockControl({ session }) {
           <button
             onClick={fetchProducts}
             disabled={loading}
-            style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: loading ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'inherit' }}
+            style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', background: '#3b82f6', color: 'var(--on-surface)', fontSize: '12px', fontWeight: '600', cursor: loading ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'inherit' }}
           >
             <RefreshCw size={14} style={{ animation: loading ? 'spin 1s linear infinite' : '' }} />
             Actualizar
@@ -282,7 +282,7 @@ export default function TallerStockControl({ session }) {
           position: 'fixed', top: '24px', right: '24px', zIndex: 1000,
           padding: '12px 20px', borderRadius: '10px',
           background: toast.type === 'success' ? 'rgba(16,185,129,0.95)' : 'rgba(239,68,68,0.95)',
-          color: '#fff', fontSize: '13px', fontWeight: '600', fontFamily: 'inherit',
+          color: 'var(--on-surface)', fontSize: '13px', fontWeight: '600', fontFamily: 'inherit',
           display: 'flex', alignItems: 'center', gap: '8px',
           boxShadow: '0 4px 20px rgba(0,0,0,0.3)', animation: 'slideIn 0.2s ease'
         }}>
@@ -343,7 +343,7 @@ export default function TallerStockControl({ session }) {
                           {product.image_url ? (
                             <img src={product.image_url} alt="" style={{ width: '36px', height: '36px', borderRadius: '6px', objectFit: 'cover' }} />
                           ) : (
-                            <div style={{ width: '36px', height: '36px', borderRadius: '6px', background: 'var(--surface-container, rgba(255,255,255,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ width: '36px', height: '36px', borderRadius: '6px', background: 'var(--surface-container, var(--border-subtle))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               <Package size={16} color="var(--on-surface-variant)" style={{ opacity: 0.4 }} />
                             </div>
                           )}
@@ -489,7 +489,7 @@ export default function TallerStockControl({ session }) {
                         )}
                         
                         {!product.tiendanube_product_id && (
-                          <div style={{ fontSize: '9px', color: '#f59e0b', marginTop: '2px' }}>
+                          <div style={{ fontSize: '9px', color: 'var(--primary-container)', marginTop: '2px' }}>
                             ⚠ Sin mapear TN
                           </div>
                         )}

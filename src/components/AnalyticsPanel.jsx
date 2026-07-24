@@ -112,7 +112,7 @@ export default function AnalyticsPanel({ clients }) {
           <p style={{ margin: 0, fontWeight: 600, color: 'var(--on-surface)', fontSize: 13, marginBottom: 4 }}>{label || payload[0].name}</p>
           <p style={{ margin: 0, color: 'var(--on-surface-variant)', fontSize: 13 }}>
             {payload[0].name === 'total' || payload[0].name === 'spent' || payload[0].name === 'totalSales'
-              ? `$${payload[0].value.toLocaleString('es-AR')}` 
+              ? `$${payload[0].value.toLocaleString('es-CO')}` 
               : `${payload[0].value} unidades`}
           </p>
         </div>
@@ -143,7 +143,7 @@ export default function AnalyticsPanel({ clients }) {
       <div style={s.grid}>
         <div style={s.card}>
           <div style={s.kpiIcon}>💰</div>
-          <div style={s.kpiValue}>${kpi.totalSales.toLocaleString('es-AR')}</div>
+          <div style={s.kpiValue}>${kpi.totalSales.toLocaleString('es-CO')}</div>
           <div style={s.kpiLabel}>Ventas Totales</div>
         </div>
         <div style={s.card}>
@@ -153,7 +153,7 @@ export default function AnalyticsPanel({ clients }) {
         </div>
         <div style={s.card}>
           <div style={s.kpiIcon}>📦</div>
-          <div style={s.kpiValue}>{kpi.totalVolume.toLocaleString('es-AR')}</div>
+          <div style={s.kpiValue}>{kpi.totalVolume.toLocaleString('es-CO')}</div>
           <div style={s.kpiLabel}>Volumen de Productos</div>
         </div>
         <div style={s.card}>
@@ -264,7 +264,7 @@ export default function AnalyticsPanel({ clients }) {
                     {act.product}
                   </td>
                   <td style={{...s.td, textAlign: 'center'}}>{act.vol}</td>
-                  <td style={{...s.td, fontWeight: 600}}>${(act.amount || 0).toLocaleString('es-AR')}</td>
+                  <td style={{...s.td, fontWeight: 600}}>${(act.amount || 0).toLocaleString('es-CO')}</td>
                   <td style={s.td}>
                     {act.coupon ? (
                       <span style={s.badge}>🏷️ {act.coupon}</span>

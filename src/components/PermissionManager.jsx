@@ -94,13 +94,13 @@ export default function PermissionManager() {
           borderRadius: 14, background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)',
           border: '1px solid var(--glass-border)', overflow: 'hidden',
         }}>
-          <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--glass-border)' }}>
             <div style={{ position: 'relative' }}>
               <Users size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--on-surface-variant)' }} />
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar miembro..."
                 style={{
                   width: '100%', padding: '8px 10px 8px 32px', borderRadius: 8,
-                  border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid var(--outline)', background: 'rgba(255,255,255,0.04)',
                   color: 'var(--on-surface)', fontSize: 12, boxSizing: 'border-box',
                 }} />
             </div>
@@ -152,7 +152,7 @@ export default function PermissionManager() {
             <>
               {/* Header */}
               <div style={{
-                padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)',
+                padding: '16px 20px', borderBottom: '1px solid var(--glass-border)',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               }}>
                 <div>
@@ -165,15 +165,15 @@ export default function PermissionManager() {
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={handleReset} style={{
                     padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(245,158,11,0.3)',
-                    background: 'rgba(245,158,11,0.08)', color: '#f59e0b', fontSize: 11, fontWeight: 600,
+                    background: 'rgba(245,158,11,0.08)', color: 'var(--primary-container)', fontSize: 11, fontWeight: 600,
                     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
                   }}>
                     <RotateCcw size={12} /> Restaurar Rol
                   </button>
                   <button onClick={handleSave} disabled={saving} style={{
                     padding: '7px 14px', borderRadius: 8, border: 'none',
-                    background: saving ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg, #8b5cf6, #6366f1)',
-                    color: '#fff', fontSize: 11, fontWeight: 600,
+                    background: saving ? 'var(--border-subtle)' : 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+                    color: 'var(--on-surface)', fontSize: 11, fontWeight: 600,
                     cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.5 : 1,
                     display: 'flex', alignItems: 'center', gap: 4,
                   }}>
@@ -197,7 +197,7 @@ export default function PermissionManager() {
                       <div onClick={() => setExpandedCats(prev => ({ ...prev, [cat]: !prev[cat] }))} style={{
                         padding: '10px 12px', borderRadius: 10, cursor: 'pointer',
                         background: allEnabled ? 'rgba(139,92,246,0.06)' : 'rgba(255,255,255,0.02)',
-                        border: `1px solid ${allEnabled ? 'rgba(139,92,246,0.15)' : 'rgba(255,255,255,0.06)'}`,
+                        border: `1px solid ${allEnabled ? 'rgba(139,92,246,0.15)' : 'var(--glass-border)'}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                         transition: 'all 0.15s',
                       }}>
@@ -207,7 +207,7 @@ export default function PermissionManager() {
                           <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--on-surface)' }}>{catDef.label}</span>
                           <span style={{
                             fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 4,
-                            background: allEnabled ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.06)',
+                            background: allEnabled ? 'rgba(16,185,129,0.1)' : 'var(--glass-border)',
                             color: allEnabled ? '#10b981' : 'var(--on-surface-variant)',
                           }}>
                             {enabledCount}/{permsInCat.length}
@@ -235,7 +235,7 @@ export default function PermissionManager() {
                                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                 transition: 'all 0.15s',
                               }}
-                              onMouseEnter={e => e.currentTarget.style.borderColor = enabled ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.1)'}
+                              onMouseEnter={e => e.currentTarget.style.borderColor = enabled ? 'rgba(16,185,129,0.3)' : 'var(--border-medium)'}
                               onMouseLeave={e => e.currentTarget.style.borderColor = enabled ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)'}
                               >
                                 <div>
@@ -244,8 +244,8 @@ export default function PermissionManager() {
                                 </div>
                                 <div style={{
                                   width: 20, height: 20, borderRadius: 6,
-                                  background: enabled ? '#10b981' : 'rgba(255,255,255,0.06)',
-                                  border: enabled ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                                  background: enabled ? '#10b981' : 'var(--glass-border)',
+                                  border: enabled ? 'none' : '1px solid var(--border-medium)',
                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                                   transition: 'all 0.15s', flexShrink: 0,
                                 }}>

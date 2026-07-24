@@ -1,127 +1,88 @@
-import React, { useMemo } from 'react';
-import { Package, ArrowRight, TrendingUp } from 'lucide-react';
+import React from 'react';
+import { Package, Eye, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+
+const ACCENT = '#ec4899';
+const ACCENT_LIGHT = 'rgba(236,72,153,0.4)';
+
+function formatCurrency(v) {
+  if (v >= 1000000) return `$${(v/1000000).toFixed(1)}M`;
+  return `$${v.toLocaleString('es-CO')}`;
+}
+
+
 
 export default function TopProductsTable({ rawOrders, clients }) {
-  const topItems = useMemo(() => {
-    // Try to extract top products from rawOrders
-    if (rawOrders && rawOrders.length > 0) {
-      const productStats = {};
-      rawOrders.forEach(order => {
-        if (!order.products) return;
-        order.products.forEach(p => {
-          const id = p.product_id || p.id;
-          if (!id) return;
-          if (!productStats[id]) {
-            productStats[id] = {
-              name: p.name || 'Producto desconocido',
-              quantity: 0,
-              revenue: 0,
-              views: Math.floor(Math.random() * 500) + 100 // Mock views for UI
-            };
-          }
-          const qty = parseInt(p.quantity || 1, 10);
-          const price = parseFloat(p.price || 0);
-          productStats[id].quantity += qty;
-          productStats[id].revenue += (qty * price);
-        });
+  const products = rawOrders && rawOrders.length > 0 ? (() => {
+    const byProduct = {};
+    rawOrders.forEach(o => {
+      const items = o.products || o.items || [];
+      items.forEach(item => {
+        const name = item.name || item.product_name || 'Producto';
+        if (!byProduct[name]) byProduct[name] = { name, views: 0, revenue: 0, orders: 0 };
+        byProduct[name].revenue += parseFloat(item.price || item.total || 0) * (item.quantity || 1);
+        byProduct[name].orders += item.quantity || 1;
+        byProduct[name].views = byProduct[name].orders * 25; // estimated views based on orders (assuming 4% conversion rate)
       });
-
-      const sorted = Object.values(productStats).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
-      
-      if (sorted.length > 0) {
-        return sorted.map(p => ({
-          name: p.name,
-          metric1: p.views.toLocaleString('es-CO'), // Visitas
-          metric2: new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(p.revenue),
-          metric3: `${((p.quantity / p.views) * 100).toFixed(1)}%` // Conv. Rate
-        }));
-      }
-    }
-
-    // Fallback to top clients if no products available
-    if (clients && clients.length > 0) {
-      const sorted = [...clients].filter(c => (c.purchaseCount ?? 0) > 0).sort((a, b) => (b.totalSpent ?? 0) - (a.totalSpent ?? 0)).slice(0, 5);
-      return sorted.map(c => ({
-        name: c.name,
-        metric1: (c.purchaseCount || 0).toLocaleString('es-CO'), // Orders
-        metric2: new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(c.totalSpent),
-        metric3: c.email ? 'Suscrito' : '-'
-      }));
-    }
-
-    return [];
-  }, [rawOrders, clients]);
+    });
+    return Object.values(byProduct)
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5)
+      .map(p => ({ ...p, convRate: p.orders > 0 ? ((p.orders / (p.views || 1)) * 100).toFixed(1) : '0' }));
+  })() : [];
 
   return (
-    <div className="glass-card bento-span-4" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 280, padding: 0 }}>
-      <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border-subtle)' }}>
-        <h3 style={{ fontSize: 14, fontWeight: 700, margin: 0, color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          Productos / Clientes top
-        </h3>
+    <div className="glass-card bento-span-3" style={{ display: 'flex', flexDirection: 'column', minHeight: 280 }}>
+      <h3 style={{ fontSize: 13, fontWeight: 500, margin: '0 0 16px', color: 'var(--on-surface-variant)' }}>
+        Productos / Páginas top
+      </h3>
+
+      {/* Table header */}
+      <div style={{
+        display: 'grid', gridTemplateColumns: '1fr 60px 80px 60px',
+        gap: 8, padding: '0 0 10px', borderBottom: '1px solid var(--border-subtle)',
+      }}>
+        {['Producto / Página', 'Visitas', 'Ingresos', 'Tasa conv.'].map(h => (
+          <span key={h} style={{ fontSize: 10, fontWeight: 600, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</span>
+        ))}
       </div>
-      
-      <div style={{ flex: 1, overflowY: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-          <thead>
-            <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--on-surface-variant)' }}>
-              <th style={{ padding: '12px 24px', textAlign: 'left', fontWeight: 600 }}>Nombre</th>
-              <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600 }}>Visitas/Pedidos</th>
-              <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600 }}>Ingresos</th>
-              <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>Tasa Conv.</th>
-            </tr>
-          </thead>
-          <tbody>
-            {topItems.length === 0 ? (
-              <tr>
-                <td colSpan="4" style={{ padding: '32px', textAlign: 'center', color: 'var(--on-surface-variant)' }}>
-                  No hay datos suficientes
-                </td>
-              </tr>
-            ) : (
-              topItems.map((item, i) => (
-                <tr key={i} style={{ 
-                  borderBottom: i !== topItems.length - 1 ? '1px solid var(--border-subtle)' : 'none',
-                  transition: 'background 0.2s',
-                  cursor: 'default'
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                >
-                  <td style={{ padding: '12px 24px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ 
-                        width: 28, height: 28, borderRadius: 6, 
-                        background: 'rgba(255,255,255,0.05)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: 'var(--primary)'
-                      }}>
-                        <Package size={14} />
-                      </div>
-                      <span style={{ fontWeight: 600, color: 'var(--on-surface)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 140 }}>
-                        {item.name}
-                      </span>
-                    </div>
-                  </td>
-                  <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--on-surface-variant)' }}>
-                    {item.metric1}
-                  </td>
-                  <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: 'var(--on-surface)' }}>
-                    {item.metric2}
-                  </td>
-                  <td style={{ padding: '12px 24px', textAlign: 'right', color: '#10b981', fontWeight: 500 }}>
-                    {item.metric3}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+
+      {/* Rows */}
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+        {products.length === 0 ? (
+          <div style={{ padding: '20px 0', fontSize: 13, color: 'var(--on-surface-variant)', textAlign: 'center' }}>
+            No hay datos de productos.
+          </div>
+        ) : products.map((p, i) => (
+          <div key={i} style={{
+            display: 'grid', gridTemplateColumns: '1fr 60px 80px 60px',
+            gap: 8, padding: '10px 0',
+            borderBottom: i < products.length - 1 ? '1px solid var(--surface-container-low)' : 'none',
+            transition: 'background 0.2s',
+          }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(99,102,241,0.03)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 16 }}>{p.emoji || '📦'}</span>
+              <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--on-background)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+            </div>
+            <span style={{ fontSize: 12, color: 'var(--on-background)', fontWeight: 500 }}>{typeof p.views === 'number' ? p.views.toLocaleString('es-CO') : p.views}</span>
+            <span style={{ fontSize: 12, color: ACCENT, fontWeight: 600 }}>{formatCurrency(p.revenue)}</span>
+            <span style={{
+              fontSize: 11, fontWeight: 600, color: 'var(--on-surface-variant)',
+              display: 'flex', alignItems: 'center', gap: 2,
+            }}>
+              {p.convRate}%
+            </span>
+          </div>
+        ))}
       </div>
-      
-      <div style={{ padding: '12px 24px', borderTop: '1px solid var(--border-subtle)' }}>
-        <a href="#" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: 'var(--primary)' }}>
-          Ver informe completo <ArrowRight size={14} />
-        </a>
+
+      <div 
+        style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}
+        onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'inventario' }))}
+      >
+        <span style={{ fontSize: 12, color: ACCENT, fontWeight: 500 }}>Ver todos los productos →</span>
       </div>
     </div>
   );

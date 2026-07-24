@@ -36,7 +36,7 @@ const MATERIALS_TYPES = [
 
 const STATUS_FLOW = [
   { key: 'pending', label: 'Pendiente', icon: ClipboardList, color: '#94a3b8', bg: 'rgba(148,163,184,0.1)' },
-  { key: 'cutting', label: 'Corte', icon: Scissors, color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+  { key: 'cutting', label: 'Corte', icon: Scissors, color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.1)' },
   { key: 'sewing', label: 'Costura', icon: Shirt, color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
   { key: 'printing', label: 'Estampado', icon: Printer, color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
   { key: 'quality', label: 'Control', icon: CheckCircle, color: '#06b6d4', bg: 'rgba(6,182,212,0.1)' },
@@ -46,7 +46,7 @@ const STATUS_FLOW = [
 
 const PRIORITY_MAP = {
   urgente: { label: 'Urgente', color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
-  alta: { label: 'Alta', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+  alta: { label: 'Alta', color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.1)' },
   normal: { label: 'Normal', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
   baja: { label: 'Baja', color: '#64748b', bg: 'rgba(100,116,139,0.1)' },
 };
@@ -370,7 +370,7 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
           <h1 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
               width: 42, height: 42, borderRadius: 12,
-              background: 'linear-gradient(135deg, #f59e0b, #f97316)',
+              background: 'linear-gradient(135deg, var(--primary-container), #f97316)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 4px 16px rgba(245,158,11,0.3)',
             }}>
@@ -384,8 +384,8 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={onRefresh} disabled={isRefreshing} style={{
-            padding: '10px 18px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)',
-            background: 'rgba(255,255,255,0.05)', color: 'var(--on-surface)',
+            padding: '10px 18px', borderRadius: 10, border: '1px solid var(--border-medium)',
+            background: 'var(--border-subtle)', color: 'var(--on-surface)',
             cursor: 'pointer', fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8,
           }}>
             <RefreshCw size={14} className={isRefreshing ? 'spin' : ''} />
@@ -394,8 +394,8 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
           {activeTab === 'production' && (
             <button onClick={() => setShowNewBatch(true)} style={{
               padding: '10px 20px', borderRadius: 10, border: 'none',
-              background: 'linear-gradient(135deg, #f59e0b, #f97316)',
-              color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+              background: 'linear-gradient(135deg, var(--primary-container), #f97316)',
+              color: 'var(--on-surface)', fontWeight: 700, fontSize: 13, cursor: 'pointer',
               display: 'flex', alignItems: 'center', gap: 8,
               boxShadow: '0 4px 16px rgba(245,158,11,0.3)',
             }}>
@@ -406,7 +406,7 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
             <button onClick={() => setShowNewMaterial(true)} style={{
               padding: '10px 20px', borderRadius: 10, border: 'none',
               background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-              color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+              color: 'var(--on-surface)', fontWeight: 700, fontSize: 13, cursor: 'pointer',
               display: 'flex', alignItems: 'center', gap: 8,
               boxShadow: '0 4px 16px rgba(59,130,246,0.3)',
             }}>
@@ -419,7 +419,7 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
       {/* ── Stats ── */}
       <div className="responsive-grid-xs" style={{ marginBottom: 20 }}>
         {[
-          { label: 'Lotes Activos', value: stats.active, color: '#f59e0b', icon: Hammer },
+          { label: 'Lotes Activos', value: stats.active, color: 'var(--primary-container)', icon: Hammer },
           { label: 'Completados', value: stats.completed, color: '#10b981', icon: CheckCircle },
           { label: 'Urgentes', value: stats.urgent, color: '#ef4444', icon: Flag },
           { label: 'Unidades Totales', value: stats.totalUnits, color: '#3b82f6', icon: Hash },
@@ -448,7 +448,7 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
           return (
             <button key={t.key} onClick={() => setActiveTab(t.key)} style={{
               flex: 1, padding: '10px 16px', borderRadius: 10, border: 'none',
-              background: isActive ? 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))' : 'transparent',
+              background: isActive ? 'linear-gradient(135deg, var(--border-medium), var(--border-subtle))' : 'transparent',
               color: isActive ? 'var(--on-surface)' : 'var(--on-surface-variant)',
               fontWeight: isActive ? 700 : 500, fontSize: 13, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -460,7 +460,7 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
               {t.count > 0 && (
                 <span style={{
                   fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 8,
-                  background: isActive ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)',
+                  background: isActive ? 'rgba(255,255,255,0.15)' : 'var(--glass-border)',
                   fontFamily: "'JetBrains Mono', monospace",
                 }}>
                   {t.count}
@@ -479,13 +479,13 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
             <div style={{ flex: 1, position: 'relative' }}>
               <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--on-surface-variant)' }} />
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar lote o producto..."
-                style={{ width: '100%', padding: '10px 14px 10px 36px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'var(--on-surface)', fontSize: 13, boxSizing: 'border-box' }} />
+                style={{ width: '100%', padding: '10px 14px 10px 36px', borderRadius: 10, border: '1px solid var(--border-medium)', background: 'var(--border-subtle)', color: 'var(--on-surface)', fontSize: 13, boxSizing: 'border-box' }} />
             </div>
-            <div style={{ display: 'flex', gap: 4, padding: 3, borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ display: 'flex', gap: 4, padding: 3, borderRadius: 10, background: 'var(--surface-container-low)', border: '1px solid var(--glass-border)' }}>
               {[{ key: 'all', label: 'Todos' }, ...STATUS_FLOW.map(s => ({ key: s.key, label: s.label }))].map(f => (
                 <button key={f.key} onClick={() => setFilterStatus(f.key)} style={{
                   padding: '6px 12px', borderRadius: 8, border: 'none',
-                  background: filterStatus === f.key ? 'rgba(255,255,255,0.1)' : 'transparent',
+                  background: filterStatus === f.key ? 'var(--border-medium)' : 'transparent',
                   color: filterStatus === f.key ? 'var(--on-surface)' : 'var(--on-surface-variant)',
                   fontSize: 11, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s',
                 }}>
@@ -594,7 +594,7 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
                         <div style={{ fontSize: 18, fontWeight: 800, color: statusInfo.color, fontFamily: "'JetBrains Mono', monospace" }}>
                           {progress}%
                         </div>
-                        <div style={{ width: 80, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden', marginLeft: 'auto', marginTop: 4 }}>
+                        <div style={{ width: 80, height: 4, borderRadius: 2, background: 'var(--glass-border)', overflow: 'hidden', marginLeft: 'auto', marginTop: 4 }}>
                           <div style={{ height: '100%', borderRadius: 2, width: `${progress}%`, background: `linear-gradient(90deg, ${statusInfo.color}, ${statusInfo.color}80)`, transition: 'width 0.3s ease' }} />
                         </div>
                       </div>
@@ -604,7 +604,7 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
 
                     {/* ── Expanded Detail ── */}
                     {isSelected && (
-                      <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '20px', animation: 'slideDown 0.25s ease' }}>
+                      <div style={{ borderTop: '1px solid var(--glass-border)', padding: '20px', animation: 'slideDown 0.25s ease' }}>
                         {/* Status Flow */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 20 }}>
                           {STATUS_FLOW.map((s, i) => {
@@ -618,20 +618,20 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
                                   style={{
                                     display: 'flex', alignItems: 'center', gap: 6,
                                     padding: '8px 12px', borderRadius: 10,
-                                    background: isCurrent ? s.bg : 'rgba(255,255,255,0.03)',
+                                    background: isCurrent ? s.bg : 'var(--surface-container-low)',
                                     border: isCurrent ? `1.5px solid ${s.color}` : '1.5px solid transparent',
                                     color: isCurrent ? s.color : isPast ? 'var(--on-surface-variant)' : 'var(--on-surface-variant)',
                                     fontSize: 11, fontWeight: isCurrent ? 700 : 500, cursor: 'pointer',
                                     opacity: isPast ? 0.5 : 1, transition: 'all 0.15s',
                                   }}
                                   onMouseEnter={e => { if (!isCurrent) e.currentTarget.style.background = s.bg; }}
-                                  onMouseLeave={e => { if (!isCurrent) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+                                  onMouseLeave={e => { if (!isCurrent) e.currentTarget.style.background = 'var(--surface-container-low)'; }}
                                 >
                                   <SIcon size={13} />
                                   {s.label}
                                 </button>
                                 {i < STATUS_FLOW.length - 1 && (
-                                  <div style={{ width: 16, height: 1, background: isPast ? s.color + '40' : 'rgba(255,255,255,0.06)' }} />
+                                  <div style={{ width: 16, height: 1, background: isPast ? s.color + '40' : 'var(--glass-border)' }} />
                                 )}
                               </React.Fragment>
                             );
@@ -663,7 +663,7 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
                                     return (
                                       <div key={vi} style={{
                                         padding: '6px 10px', borderRadius: 8,
-                                        background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)',
+                                        background: 'rgba(255,255,255,0.04)', border: '1px solid var(--glass-border)',
                                         fontSize: 11, display: 'flex', alignItems: 'center', gap: 6,
                                       }}>
                                         <span style={{ color: 'var(--on-surface)' }}>{v.color || '—'}</span>
@@ -685,14 +685,14 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
                               return (
                                 <div key={size.id} style={{
                                   padding: '14px', borderRadius: 10,
-                                  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+                                  background: 'var(--surface-container-low)', border: '1px solid var(--glass-border)',
                                   textAlign: 'center',
                                 }}>
                                   <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--on-surface)', marginBottom: 4 }}>{size.size}</div>
                                   <div style={{ fontSize: 20, fontWeight: 800, color: statusInfo.color, fontFamily: "'JetBrains Mono', monospace" }}>
                                     {size.produced || 0}<span style={{ fontSize: 12, fontWeight: 500, color: 'var(--on-surface-variant)' }}>/{size.quantity}</span>
                                   </div>
-                                  <div style={{ width: '100%', height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden', margin: '8px 0' }}>
+                                  <div style={{ width: '100%', height: 4, borderRadius: 2, background: 'var(--glass-border)', overflow: 'hidden', margin: '8px 0' }}>
                                     <div style={{ height: '100%', borderRadius: 2, width: `${sizeProgress}%`, background: hasDefect ? 'linear-gradient(90deg, #10b981, #ef4444)' : `linear-gradient(90deg, ${statusInfo.color}, ${statusInfo.color}80)`, transition: 'width 0.3s' }} />
                                   </div>
                                   {hasDefect && (
@@ -708,7 +708,7 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
                                       −
                                     </button>
                                     <button onClick={() => setDefectModal({ sizeId: size.id, sizeName: size.size, produced: size.produced || 0, defect: size.defect || 0 })}
-                                      style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.1)', color: '#f59e0b', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                      style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.1)', color: 'var(--primary-container)', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                       ⚠
                                     </button>
                                   </div>
@@ -767,7 +767,7 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
       {confirmDelete && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, backdropFilter: 'blur(12px)' }} onClick={() => setConfirmDelete(null)}>
           <div style={{ width: 400, borderRadius: 20, background: 'var(--surface)', border: '1px solid var(--glass-border)', boxShadow: '0 24px 80px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>
-            <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--on-surface)' }}>Eliminar Lote</h3>
               <button onClick={() => setConfirmDelete(null)} style={{ background: 'none', border: 'none', color: 'var(--on-surface-variant)', cursor: 'pointer' }}><X size={18} /></button>
             </div>
@@ -776,7 +776,7 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
                 ¿Eliminar el lote <strong style={{ color: 'var(--on-surface)' }}>{confirmDelete.name}</strong>? Esta acción no se puede deshacer.
               </p>
               <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-                <button onClick={() => setConfirmDelete(null)} style={{ flex: 1, padding: '10px 16px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'var(--on-surface)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                <button onClick={() => setConfirmDelete(null)} style={{ flex: 1, padding: '10px 16px', borderRadius: 10, border: '1px solid var(--border-medium)', background: 'var(--border-subtle)', color: 'var(--on-surface)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
                   Cancelar
                 </button>
                 <button onClick={() => deleteBatch(confirmDelete.id)} style={{ flex: 1, padding: '10px 16px', borderRadius: 10, border: 'none', background: 'rgba(239,68,68,0.15)', color: '#ef4444', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
@@ -899,9 +899,9 @@ function NewBatchModal({ onClose, onCreate, products }) {
         boxShadow: '0 24px 80px rgba(0,0,0,0.5)',
       }} onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, #f59e0b, #f97316)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, var(--primary-container), #f97316)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Plus size={18} color="#fff" />
             </div>
             <div>
@@ -922,7 +922,7 @@ function NewBatchModal({ onClose, onCreate, products }) {
                   value={search} onChange={e => setSearch(e.target.value)}
                   placeholder="Buscar por nombre del producto..."
                   autoFocus
-                  style={{ width: '100%', padding: '12px 14px 12px 36px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'var(--on-surface)', fontSize: 14, boxSizing: 'border-box', outline: 'none' }}
+                  style={{ width: '100%', padding: '12px 14px 12px 36px', borderRadius: 12, border: '1px solid var(--border-medium)', background: 'var(--border-subtle)', color: 'var(--on-surface)', fontSize: 14, boxSizing: 'border-box', outline: 'none' }}
                 />
               </div>
               {search.trim() && searchResults.length === 0 && (
@@ -938,16 +938,16 @@ function NewBatchModal({ onClose, onCreate, products }) {
                   return (
                     <div key={p.id} onClick={() => selectProduct(p)} style={{
                       padding: '12px 14px', borderRadius: 12, cursor: 'pointer',
-                      background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+                      background: 'var(--surface-container-low)', border: '1px solid var(--glass-border)',
                       display: 'flex', alignItems: 'center', gap: 12, transition: 'all 0.15s',
                     }}
                     onMouseEnter={e => { e.currentTarget.style.background = 'rgba(245,158,11,0.06)'; e.currentTarget.style.borderColor = 'rgba(245,158,11,0.2)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface-container-low)'; e.currentTarget.style.borderColor = 'var(--glass-border)'; }}
                     >
                       {img ? (
                         <img src={img} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
                       ) : (
-                        <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <div style={{ width: 40, height: 40, borderRadius: 8, background: 'var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                           <Package size={16} color="var(--on-surface-variant)" />
                         </div>
                       )}
@@ -979,7 +979,7 @@ function NewBatchModal({ onClose, onCreate, products }) {
                   <div style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>{selectedProduct.variants?.length || 0} variantes</div>
                 </div>
                 <button onClick={() => { setStep('search'); setSelectedProduct(null); setVariantQuantities({}); }}
-                  style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'var(--on-surface-variant)', fontSize: 11, cursor: 'pointer' }}>
+                  style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border-medium)', background: 'var(--border-subtle)', color: 'var(--on-surface-variant)', fontSize: 11, cursor: 'pointer' }}>
                   Cambiar
                 </button>
               </div>
@@ -987,7 +987,7 @@ function NewBatchModal({ onClose, onCreate, products }) {
               {/* Variant grid */}
               <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span><Ruler size={13} style={{ verticalAlign: 'middle', marginRight: 6 }} />Cantidades por Variante</span>
-                <span style={{ fontSize: 14, fontWeight: 800, color: '#f59e0b', fontFamily: "'JetBrains Mono', monospace" }}>
+                <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--primary-container)', fontFamily: "'JetBrains Mono', monospace" }}>
                   Total: {totalUnits} uds
                 </span>
               </label>
@@ -999,11 +999,11 @@ function NewBatchModal({ onClose, onCreate, products }) {
                   return (
                     <div key={v.id} style={{
                       padding: '10px 6px', borderRadius: 10, textAlign: 'center',
-                      background: qty > 0 ? 'rgba(245,158,11,0.08)' : 'rgba(255,255,255,0.03)',
-                      border: qty > 0 ? '1.5px solid rgba(245,158,11,0.2)' : '1.5px solid rgba(255,255,255,0.06)',
+                      background: qty > 0 ? 'rgba(245,158,11,0.08)' : 'var(--surface-container-low)',
+                      border: qty > 0 ? '1.5px solid rgba(245,158,11,0.2)' : '1.5px solid var(--glass-border)',
                       transition: 'all 0.15s',
                     }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: qty > 0 ? '#f59e0b' : 'var(--on-surface)', marginBottom: 2 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: qty > 0 ? 'var(--primary-container)' : 'var(--on-surface)', marginBottom: 2 }}>
                         {v.size}
                       </div>
                       <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', marginBottom: 4 }}>
@@ -1024,7 +1024,7 @@ function NewBatchModal({ onClose, onCreate, products }) {
                         }}
                         style={{
                           width: '100%', padding: '4px 2px', borderRadius: 6,
-                          border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)',
+                          border: '1px solid var(--border-medium)', background: 'var(--border-subtle)',
                           color: 'var(--on-surface)', fontSize: 15, fontWeight: 800,
                           textAlign: 'center', fontFamily: "'JetBrains Mono', monospace",
                           boxSizing: 'border-box',
@@ -1071,8 +1071,8 @@ function NewBatchModal({ onClose, onCreate, products }) {
               <button onClick={handleSubmit} disabled={totalUnits === 0} style={{
                 width: '100%', padding: '14px 24px', borderRadius: 12, border: 'none',
                 background: totalUnits > 0
-                  ? 'linear-gradient(135deg, #f59e0b, #f97316)' : 'rgba(255,255,255,0.05)',
-                color: '#fff', fontWeight: 700, fontSize: 14,
+                  ? 'linear-gradient(135deg, var(--primary-container), #f97316)' : 'var(--border-subtle)',
+                color: 'var(--on-surface)', fontWeight: 700, fontSize: 14,
                 cursor: totalUnits > 0 ? 'pointer' : 'not-allowed',
                 opacity: totalUnits > 0 ? 1 : 0.5,
                 marginTop: 20, boxShadow: totalUnits > 0 ? '0 4px 16px rgba(245,158,11,0.3)' : 'none',
@@ -1103,7 +1103,7 @@ function MaterialsPanel({ materials, onUpdateStock, loadData }) {
       <div style={{ position: 'relative', marginBottom: 16 }}>
         <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--on-surface-variant)' }} />
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar material..."
-          style={{ width: '100%', padding: '10px 14px 10px 36px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'var(--on-surface)', fontSize: 13, boxSizing: 'border-box' }} />
+          style={{ width: '100%', padding: '10px 14px 10px 36px', borderRadius: 10, border: '1px solid var(--border-medium)', background: 'var(--border-subtle)', color: 'var(--on-surface)', fontSize: 13, boxSizing: 'border-box' }} />
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10 }}>
         {filtered.map(mat => {
@@ -1131,7 +1131,7 @@ function MaterialsPanel({ materials, onUpdateStock, loadData }) {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                         <input type="number" value={editValue} onChange={e => setEditValue(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter') { onUpdateStock(mat.id, parseFloat(editValue) || 0); setEditingId(null); } }}
-                          autoFocus style={{ width: 70, padding: '2px 6px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)', color: 'var(--on-surface)', fontSize: 16, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace" }} />
+                          autoFocus style={{ width: 70, padding: '2px 6px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', background: 'var(--outline)', color: 'var(--on-surface)', fontSize: 16, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace" }} />
                         <button onClick={() => { onUpdateStock(mat.id, parseFloat(editValue) || 0); setEditingId(null); }} style={{ background: 'none', border: 'none', color: '#10b981', cursor: 'pointer' }}><CheckCircle size={14} /></button>
                       </div>
                     ) : (
@@ -1142,7 +1142,7 @@ function MaterialsPanel({ materials, onUpdateStock, loadData }) {
                   </div>
                   <div style={{ fontSize: 10, color: 'var(--on-surface-variant)' }}>Mín: {mat.min_stock} {mat.unit}</div>
                 </div>
-                <div style={{ width: 60, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                <div style={{ width: 60, height: 4, borderRadius: 2, background: 'var(--glass-border)', overflow: 'hidden' }}>
                   <div style={{ height: '100%', borderRadius: 2, width: `${Math.min((mat.stock_quantity / Math.max(mat.min_stock * 3, 1)) * 100, 100)}%`, background: isLow ? '#ef4444' : '#10b981', transition: 'width 0.3s' }} />
                 </div>
               </div>
@@ -1162,7 +1162,7 @@ function NewMaterialModal({ onClose, onCreate }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, backdropFilter: 'blur(12px)' }} onClick={onClose}>
       <div style={{ width: 440, borderRadius: 20, background: 'var(--surface)', border: '1px solid var(--glass-border)', boxShadow: '0 24px 80px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--on-surface)' }}>Nuevo Material</h3>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--on-surface-variant)', cursor: 'pointer' }}><X size={18} /></button>
         </div>
@@ -1202,7 +1202,7 @@ function NewMaterialModal({ onClose, onCreate }) {
           </div>
           <button onClick={() => { if (!form.name.trim()) return; onCreate(form); }}
             disabled={!form.name.trim()}
-            style={{ width: '100%', padding: '12px 20px', borderRadius: 12, border: 'none', background: form.name.trim() ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'rgba(255,255,255,0.05)', color: '#fff', fontWeight: 700, fontSize: 14, cursor: form.name.trim() ? 'pointer' : 'not-allowed', opacity: form.name.trim() ? 1 : 0.5, marginTop: 16 }}>
+            style={{ width: '100%', padding: '12px 20px', borderRadius: 12, border: 'none', background: form.name.trim() ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'var(--border-subtle)', color: 'var(--on-surface)', fontWeight: 700, fontSize: 14, cursor: form.name.trim() ? 'pointer' : 'not-allowed', opacity: form.name.trim() ? 1 : 0.5, marginTop: 16 }}>
             Crear Material
           </button>
         </div>
@@ -1220,7 +1220,7 @@ function DefectModal({ sizeName, currentDefect, onSave, onClose }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, backdropFilter: 'blur(12px)' }} onClick={onClose}>
       <div style={{ width: 360, borderRadius: 20, background: 'var(--surface)', border: '1px solid var(--glass-border)', boxShadow: '0 24px 80px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--on-surface)' }}>Defectos — Talla {sizeName}</h3>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--on-surface-variant)', cursor: 'pointer' }}><X size={18} /></button>
         </div>
@@ -1231,10 +1231,10 @@ function DefectModal({ sizeName, currentDefect, onSave, onClose }) {
             autoFocus
             style={{ ...inputStyle, fontSize: 20, fontWeight: 800, textAlign: 'center', fontFamily: "'JetBrains Mono', monospace" }} />
           <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-            <button onClick={onClose} style={{ flex: 1, padding: '10px 16px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'var(--on-surface)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+            <button onClick={onClose} style={{ flex: 1, padding: '10px 16px', borderRadius: 10, border: '1px solid var(--border-medium)', background: 'var(--border-subtle)', color: 'var(--on-surface)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
               Cancelar
             </button>
-            <button onClick={() => onSave(parseInt(value) || 0)} style={{ flex: 1, padding: '10px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #f59e0b, #f97316)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+            <button onClick={() => onSave(parseInt(value) || 0)} style={{ flex: 1, padding: '10px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, var(--primary-container), #f97316)', color: 'var(--on-surface)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
               Guardar
             </button>
           </div>
@@ -1245,4 +1245,4 @@ function DefectModal({ sizeName, currentDefect, onSave, onClose }) {
 }
 
 const labelStyle = { fontSize: 11, fontWeight: 600, color: 'var(--on-surface-variant)', display: 'block', marginBottom: 6, marginTop: 12 };
-const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'var(--on-surface)', fontSize: 13, boxSizing: 'border-box', marginBottom: 4 };
+const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border-medium)', background: 'var(--border-subtle)', color: 'var(--on-surface)', fontSize: 13, boxSizing: 'border-box', marginBottom: 4 };

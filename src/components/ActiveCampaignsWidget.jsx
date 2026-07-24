@@ -74,7 +74,7 @@ const ActiveCampaignsWidget = ({ workspace, onRefreshMeta }) => {
         <div style={{
           position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
           background: toast.type === 'error' ? '#BA1A1A' : '#1A7B45',
-          color: '#fff', padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+          color: 'var(--on-surface)', padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 600,
           zIndex: 99, animation: 'fadeIn 0.3s', boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
         }}>
           {toast.msg}
@@ -83,7 +83,7 @@ const ActiveCampaignsWidget = ({ workspace, onRefreshMeta }) => {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <h3 style={{ fontSize: 16, fontWeight: 800, margin: 0, color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Megaphone size={20} color="#1877F2" /> Control de Campañas
+          <Megaphone size={20} color="var(--primary)" /> Control de Campañas
         </h3>
         <button onClick={loadCampaigns} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, transition: 'transform 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onMouseEnter={e => e.currentTarget.style.transform = 'rotate(180deg)'} onMouseLeave={e => e.currentTarget.style.transform = 'rotate(0)'} title="Refrescar">
           <RefreshCw size={16} color="var(--on-surface-variant)" />
@@ -125,7 +125,7 @@ const ActiveCampaignsWidget = ({ workspace, onRefreshMeta }) => {
                   {camp.name}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 500 }}>
-                  <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: isActive(camp) ? '#10b981' : '#f59e0b', boxShadow: isActive(camp) ? '0 0 8px rgba(16,185,129,0.5)' : 'none' }} />
+                  <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: isActive(camp) ? '#10b981' : 'var(--primary-container)', boxShadow: isActive(camp) ? '0 0 8px rgba(16,185,129,0.5)' : 'none' }} />
                   {isActive(camp) ? 'Entregando' : 'Pausada'} • {camp.daily_budget ? formatter.format(parseInt(camp.daily_budget) / 100) + '/día' : 'CBO'}
                 </div>
               </div>

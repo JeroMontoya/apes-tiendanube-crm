@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 
 const PAYMENT_STATUS = {
-  pending: { label: 'Pendiente', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', icon: Clock, subLabel: 'Esperando pago' },
+  pending: { label: 'Pendiente', color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.12)', icon: Clock, subLabel: 'Esperando pago' },
   paid: { label: 'Pagado', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: CheckCircle2, subLabel: 'Confirmado' },
   cancelled: { label: 'Cancelado', color: '#ef4444', bg: 'rgba(239,68,68,0.12)', icon: XCircle, subLabel: 'Por el cliente' },
   refunded: { label: 'Reembolsado', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)', icon: RotateCcw, subLabel: 'Dinero devuelto' },
@@ -27,7 +27,7 @@ const ORDER_STATE = {
 };
 
 const FULFILLMENT_STATUS = {
-  pending: { label: 'Por preparar', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', icon: Package, action: 'Preparar', step: 1 },
+  pending: { label: 'Por preparar', color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.12)', icon: Package, action: 'Preparar', step: 1 },
   partial: { label: 'Despacho parcial', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)', icon: Package, action: 'Completar', step: 2 },
   fulfilled: { label: 'Despachado', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: Truck, action: 'Entregado', step: 3 },
   delivered: { label: 'Entregado', color: '#059669', bg: 'rgba(5,150,105,0.12)', icon: CheckCircle2, action: 'Completado', step: 4 },
@@ -37,7 +37,7 @@ const FULFILLMENT_STATUS = {
 const FUNNEL_STEPS = [
   { key: 'created', label: 'Creados', icon: ShoppingCart, color: '#3b82f6' },
   { key: 'paid', label: 'Pagados', icon: CreditCard, color: '#10b981' },
-  { key: 'preparing', label: 'En preparación', icon: Package, color: '#f59e0b' },
+  { key: 'preparing', label: 'En preparación', icon: Package, color: 'var(--primary-container)' },
   { key: 'shipped', label: 'Despachados', icon: Truck, color: '#8b5cf6' },
   { key: 'delivered', label: 'Entregados', icon: CheckCircle2, color: '#059669' },
 ];
@@ -172,7 +172,7 @@ function PaymentFunnel({ orders }) {
                 transition: 'height 0.5s cubic-bezier(0.4,0,0.2,1)',
               }}>
                 <span style={{ 
-                  color: '#fff', 
+                  color: 'var(--on-surface)', 
                   fontWeight: 800, 
                   fontSize: 14,
                   textShadow: '0 1px 2px rgba(0,0,0,0.3)',
@@ -215,7 +215,7 @@ function ShippingTimeline({ order }) {
   const steps = [
     { key: 'created', label: 'Pedido creado', time: order.created_at, icon: ShoppingCart, color: '#3b82f6', completed: true },
     { key: 'paid', label: 'Pago confirmado', time: order.paid_at || order.updated_at, icon: CreditCard, color: '#10b981', completed: order.payment_status === 'paid' },
-    { key: 'preparing', label: 'En preparación', time: order.preparing_at, icon: Package, color: '#f59e0b', completed: fs !== 'pending', current: fs === 'pending' },
+    { key: 'preparing', label: 'En preparación', time: order.preparing_at, icon: Package, color: 'var(--primary-container)', completed: fs !== 'pending', current: fs === 'pending' },
     { key: 'shipped', label: 'Despachado', time: order.shipped_at, icon: Truck, color: '#8b5cf6', completed: fs === 'fulfilled' || fs === 'partial' || fs === 'delivered', current: fs === 'partial' },
     { key: 'delivered', label: 'Entregado', time: order.delivered_at, icon: CheckCircle2, color: '#059669', completed: fs === 'delivered', current: fs === 'fulfilled' },
   ];
@@ -335,7 +335,7 @@ function OrderDetailModal({ order, onClose, rawOrders }) {
               <h4 style={{ margin: '0 0 16px', fontSize: 13, fontWeight: 700, color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: 8 }}><ShoppingCart size={16} color="#3b82f6" /> Resumen del Pedido</h4>
               <div className="responsive-grid-xs" style={{ gap: 12 }}>
                 <div><span style={{ fontSize: 10, color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Subtotal</span><div style={{ fontWeight: 700, color: 'var(--on-surface)' }}>{formatCurrency(order.subtotal)}</div></div>
-                <div><span style={{ fontSize: 10, color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Descuento</span><div style={{ fontWeight: 700, color: '#f59e0b' }}>-{formatCurrency(order.discount)}</div></div>
+                <div><span style={{ fontSize: 10, color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Descuento</span><div style={{ fontWeight: 700, color: 'var(--primary-container)' }}>-{formatCurrency(order.discount)}</div></div>
                 <div><span style={{ fontSize: 10, color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Envío</span><div style={{ fontWeight: 700, color: 'var(--on-surface)' }}>{formatCurrency(order.shipping_cost)}</div></div>
                 <div><span style={{ fontSize: 10, color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Impuestos</span><div style={{ fontWeight: 700, color: 'var(--on-surface)' }}>{formatCurrency(order.tax)}</div></div>
                 <div style={{ gridColumn: 'span 2', borderTop: '1px solid var(--border-subtle)', paddingTop: 12 }}>
@@ -439,9 +439,9 @@ function OrderDetailModal({ order, onClose, rawOrders }) {
 
 function KanbanBoard({ orders, onUpdateOrder, onSelectOrder }) {
   const columns = [
-    { key: 'pending', title: 'Por Pagar', icon: Clock, color: '#f59e0b', filter: o => o.payment_status === 'pending' },
+    { key: 'pending', title: 'Por Pagar', icon: Clock, color: 'var(--primary-container)', filter: o => o.payment_status === 'pending' },
     { key: 'paid', title: 'Pagados · Por Preparar', icon: CreditCard, color: '#3b82f6', filter: o => o.payment_status === 'paid' && o.fulfillment_status === 'pending' },
-    { key: 'preparing', title: 'En Preparación', icon: Package, color: '#f59e0b', filter: o => o.fulfillment_status === 'pending' && o.payment_status === 'paid' },
+    { key: 'preparing', title: 'En Preparación', icon: Package, color: 'var(--primary-container)', filter: o => o.fulfillment_status === 'pending' && o.payment_status === 'paid' },
     { key: 'partial', title: 'Despacho Parcial', icon: Package, color: '#8b5cf6', filter: o => o.fulfillment_status === 'partial' },
     { key: 'shipped', title: 'Despachados', icon: Truck, color: '#8b5cf6', filter: o => o.fulfillment_status === 'fulfilled' },
     { key: 'delivered', title: 'Entregados', icon: CheckCircle2, color: '#10b981', filter: o => o.fulfillment_status === 'delivered' },
@@ -458,7 +458,7 @@ function KanbanBoard({ orders, onUpdateOrder, onSelectOrder }) {
                 <col.icon size={16} color={col.color} />
                 <span style={{ fontWeight: 700, fontSize: 12, color: 'var(--on-surface)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{col.title}</span>
               </div>
-              <span style={{ padding: '2px 8px', borderRadius: 10, background: col.color, color: '#fff', fontSize: 11, fontWeight: 700 }}>{colOrders.length}</span>
+              <span style={{ padding: '2px 8px', borderRadius: 10, background: col.color, color: 'var(--on-surface)', fontSize: 11, fontWeight: 700 }}>{colOrders.length}</span>
             </div>
             <div style={{ flex: 1, background: 'var(--surface-container)', border: '1px solid var(--border-subtle)', borderTop: 'none', borderRadius: '0 0 10px 10px', overflowY: 'auto', maxHeight: 480, minHeight: 480 }}>
               {colOrders.length === 0 ? (
@@ -521,13 +521,13 @@ function AdvancedFilters({ orders, filters, onFiltersChange, savedViews, onSaveV
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Filter size={18} color="var(--primary)" />
           <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--on-surface)' }}>Filtros Avanzados</span>
-          <span style={{ padding: '2px 8px', borderRadius: 10, background: 'var(--primary)', color: '#fff', fontSize: 10, fontWeight: 700 }}>
+          <span style={{ padding: '2px 8px', borderRadius: 10, background: 'var(--primary)', color: 'var(--on-surface)', fontSize: 10, fontWeight: 700 }}>
             {Object.values(filters).flat().filter(Boolean).length}
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <ChevronDown size={16} color="var(--on-surface-variant)" style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0)' }} />
-          <button onClick={e => { e.stopPropagation(); setShowSaveDialog(true); }} style={{ padding: '6px 12px', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}><PlusSquare size={12} /> Guardar vista</button>
+          <button onClick={e => { e.stopPropagation(); setShowSaveDialog(true); }} style={{ padding: '6px 12px', background: 'var(--primary)', color: 'var(--on-surface)', border: 'none', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}><PlusSquare size={12} /> Guardar vista</button>
         </div>
       </div>
 
@@ -769,8 +769,8 @@ export default function OrdersTracking({ rawOrders, lastSync, refreshOrders, sto
           <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--on-surface-variant)', cursor: 'pointer' }}>
             <input type="checkbox" checked={autoRefresh} onChange={e => setAutoRefresh(e.target.checked)} style={{ accentColor: 'var(--primary)' }} /> Auto-sync 90s
           </label>
-          <button onClick={() => handleRefresh(false)} disabled={isRefreshing || !storeId} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid var(--glass-border)', background: isRefreshing ? 'rgba(59,130,246,0.1)' : 'rgba(255,255,255,0.05)', color: isRefreshing ? '#3b82f6' : 'var(--on-surface)', cursor: isRefreshing ? 'wait' : 'pointer', fontSize: 12, fontWeight: 600, transition: 'all 0.2s' }}><RefreshCw size={14} style={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }} />{isRefreshing ? 'Sincronizando...' : 'Actualizar'}</button>
-          <button onClick={() => setShowShortcuts(!showShortcuts)} style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid var(--glass-border)', background: showShortcuts ? 'var(--primary)' : 'rgba(255,255,255,0.05)', color: showShortcuts ? '#fff' : 'var(--on-surface-variant)', cursor: 'pointer', fontSize: 12, fontWeight: 600, transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6 }}><Keyboard size={14} /> Atajos</button>
+          <button onClick={() => handleRefresh(false)} disabled={isRefreshing || !storeId} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid var(--glass-border)', background: isRefreshing ? 'rgba(59,130,246,0.1)' : 'var(--border-subtle)', color: isRefreshing ? '#3b82f6' : 'var(--on-surface)', cursor: isRefreshing ? 'wait' : 'pointer', fontSize: 12, fontWeight: 600, transition: 'all 0.2s' }}><RefreshCw size={14} style={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }} />{isRefreshing ? 'Sincronizando...' : 'Actualizar'}</button>
+          <button onClick={() => setShowShortcuts(!showShortcuts)} style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid var(--glass-border)', background: showShortcuts ? 'var(--primary)' : 'var(--border-subtle)', color: showShortcuts ? '#fff' : 'var(--on-surface-variant)', cursor: 'pointer', fontSize: 12, fontWeight: 600, transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6 }}><Keyboard size={14} /> Atajos</button>
         </div>
       </div>
 
@@ -779,7 +779,7 @@ export default function OrdersTracking({ rawOrders, lastSync, refreshOrders, sto
         {[
           { label: 'Total', value: stats.total, icon: ShoppingCart, color: '#3b82f6', trend: '+5%' },
           { label: 'Pagados', value: stats.paid, icon: CreditCard, color: '#10b981', trend: '+3%' },
-          { label: 'Pendientes', value: stats.pending, icon: Clock, color: '#f59e0b', trend: '-2%' },
+          { label: 'Pendientes', value: stats.pending, icon: Clock, color: 'var(--primary-container)', trend: '-2%' },
           { label: 'Entregados', value: stats.fulfilled, icon: CheckCircle2, color: '#06b6d4', trend: '+8%' },
           { label: 'Parciales', value: stats.partial, icon: Package, color: '#8b5cf6', trend: '+1%' },
           { label: 'Retrasados', value: stats.late, icon: AlertCircle, color: '#ef4444', trend: '-3%' },
@@ -826,7 +826,7 @@ export default function OrdersTracking({ rawOrders, lastSync, refreshOrders, sto
               <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', fontWeight: 600, textTransform: 'uppercase' }}>Cumplimiento</div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 28, fontWeight: 800, color: '#f59e0b', lineHeight: 1 }}>{formatCurrency(stats.avgOrder)}</div>
+              <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--primary-container)', lineHeight: 1 }}>{formatCurrency(stats.avgOrder)}</div>
               <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', fontWeight: 600, textTransform: 'uppercase' }}>Ticket Promedio</div>
             </div>
           </div>
@@ -962,10 +962,10 @@ export default function OrdersTracking({ rawOrders, lastSync, refreshOrders, sto
             </table>
           </div>
           {totalPages > 1 && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderTop: '1px solid var(--glass-border)' }}>
               <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>Mostrando {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filteredOrders.length)} de {filteredOrders.length}</span>
               <div style={{ display: 'flex', gap: 6 }}>
-                <button disabled={page === 0} onClick={() => setPage(p => p - 1)} style={{ padding: '6px 12px', borderRadius: 6, border: '1px solid var(--glass-border)', background: page === 0 ? 'transparent' : 'rgba(255,255,255,0.05)', color: page === 0 ? 'var(--on-surface-variant)' : 'var(--on-surface)', cursor: page === 0 ? 'default' : 'pointer', fontSize: 11, fontWeight: 600, opacity: page === 0 ? 0.4 : 1 }}>Anterior</button>
+                <button disabled={page === 0} onClick={() => setPage(p => p - 1)} style={{ padding: '6px 12px', borderRadius: 6, border: '1px solid var(--glass-border)', background: page === 0 ? 'transparent' : 'var(--border-subtle)', color: page === 0 ? 'var(--on-surface-variant)' : 'var(--on-surface)', cursor: page === 0 ? 'default' : 'pointer', fontSize: 11, fontWeight: 600, opacity: page === 0 ? 0.4 : 1 }}>Anterior</button>
                 <button disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)} style={{ padding: '6px 12px', borderRadius: 6, border: '1px solid var(--glass-border)', background: page >= totalPages - 1 ? 'transparent' : 'var(--primary)', color: page >= totalPages - 1 ? 'var(--on-surface-variant)' : '#fff', cursor: page >= totalPages - 1 ? 'default' : 'pointer', fontSize: 11, fontWeight: 600, opacity: page >= totalPages - 1 ? 0.4 : 1 }}>Siguiente</button>
               </div>
             </div>

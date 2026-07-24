@@ -162,7 +162,7 @@ export default function SearchConsolePanel({ workspaceData, dateRange, filteredC
             <RefreshCw size={14} /> Actualizar
           </button>
           <a href={`https://search.google.com/search-console/performance/search-analytics?resource_id=${encodeURIComponent(siteUrl)}`} target="_blank" rel="noopener noreferrer"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.03)', color: 'var(--on-surface)', fontWeight: 600, fontSize: 13, textDecoration: 'none', transition: 'all 0.2s' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 12, border: '1px solid var(--border-medium)', background: 'var(--surface-container-low)', color: 'var(--on-surface)', fontWeight: 600, fontSize: 13, textDecoration: 'none', transition: 'all 0.2s' }}>
             <ExternalLink size={14} /> Consola GSC
           </a>
         </div>
@@ -174,10 +174,10 @@ export default function SearchConsolePanel({ workspaceData, dateRange, filteredC
         <div className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '18px 20px', background: 'linear-gradient(135deg, rgba(66, 133, 244, 0.08) 0%, transparent 100%)', borderLeft: '3px solid #4285f4' }}>
           <div style={{ position: 'relative', width: 50, height: 50, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="50" height="50" viewBox="0 0 100 100" style={{ position: 'absolute', transform: 'rotate(-90deg)' }}>
-              <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
-              <circle cx="50" cy="50" r="45" fill="none" stroke={seoScore >= 70 ? '#10b981' : seoScore >= 40 ? '#f59e0b' : '#ef4444'} strokeWidth="8" strokeDasharray="283" strokeDashoffset={283 - (283 * seoScore) / 100} style={{ transition: 'stroke-dashoffset 1s ease-out' }} />
+              <circle cx="50" cy="50" r="45" fill="none" stroke="var(--border-subtle)" strokeWidth="8" />
+              <circle cx="50" cy="50" r="45" fill="none" stroke={seoScore >= 70 ? '#10b981' : seoScore >= 40 ? 'var(--primary-container)' : '#ef4444'} strokeWidth="8" strokeDasharray="283" strokeDashoffset={283 - (283 * seoScore) / 100} style={{ transition: 'stroke-dashoffset 1s ease-out' }} />
             </svg>
-            <span style={{ fontSize: 15, fontWeight: 800, color: seoScore >= 70 ? '#10b981' : seoScore >= 40 ? '#f59e0b' : '#ef4444' }}>{seoScore}</span>
+            <span style={{ fontSize: 15, fontWeight: 800, color: seoScore >= 70 ? '#10b981' : seoScore >= 40 ? 'var(--primary-container)' : '#ef4444' }}>{seoScore}</span>
           </div>
           <div>
             <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2 }}>SEO Score</div>
@@ -209,7 +209,7 @@ export default function SearchConsolePanel({ workspaceData, dateRange, filteredC
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 6, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 12, overflowX: 'auto' }}>
+      <div style={{ display: 'flex', gap: 6, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 12, overflowX: 'auto' }}>
         {[
           { id: 'overview', icon: BarChart2, label: 'Resumen' },
           { id: 'queries', icon: Search, label: 'Queries' },
@@ -277,7 +277,7 @@ export default function SearchConsolePanel({ workspaceData, dateRange, filteredC
                           </div>
                         </div>
                       </div>
-                      <div style={{ height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 2, overflow: 'hidden' }}>
+                      <div style={{ height: 4, background: 'var(--border-subtle)', borderRadius: 2, overflow: 'hidden' }}>
                         <div style={{ height: '100%', width: `${barW}%`, background: colors[i], borderRadius: 2, transition: 'width 0.8s ease-out' }} />
                       </div>
                       <div style={{ display: 'flex', gap: 12, marginTop: 6 }}>
@@ -311,7 +311,7 @@ export default function SearchConsolePanel({ workspaceData, dateRange, filteredC
                           </div>
                         </div>
                       </div>
-                      <div style={{ height: 3, background: 'rgba(255,255,255,0.05)', borderRadius: 2, overflow: 'hidden' }}>
+                      <div style={{ height: 3, background: 'var(--border-subtle)', borderRadius: 2, overflow: 'hidden' }}>
                         <div style={{ height: '100%', width: `${barW}%`, background: '#4285f4', borderRadius: 2 }} />
                       </div>
                       <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
@@ -348,7 +348,7 @@ export default function SearchConsolePanel({ workspaceData, dateRange, filteredC
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                    <tr style={{ borderBottom: '1px solid var(--outline)' }}>
                       {['Query', 'Clics', 'Impr.', 'CTR', 'Pos.', 'Oportunidad'].map(h => (
                         <th key={h} style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 600, color: 'var(--on-surface-variant)', fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5, whiteSpace: 'nowrap' }}>{h}</th>
                       ))}
@@ -359,14 +359,14 @@ export default function SearchConsolePanel({ workspaceData, dateRange, filteredC
                       const isHighImprLowCtr = row.impressions > 1000 && row.ctr < 0.01;
                       const isHighPos = row.position > 10 && row.impressions > 500;
                       const isNearTop = row.position > 3 && row.position <= 10 && row.impressions > 200;
-                      const opportunity = isHighImprLowCtr ? { text: 'Optimizar CTR', color: '#ea4335' } : isHighPos ? { text: 'Subir posición', color: '#f59e0b' } : isNearTop ? { text: 'Casi top 3', color: '#4285f4' } : row.position <= 3 ? { text: 'Top 3', color: '#10b981' } : { text: 'Monitorear', color: 'var(--on-surface-variant)' };
+                      const opportunity = isHighImprLowCtr ? { text: 'Optimizar CTR', color: '#ea4335' } : isHighPos ? { text: 'Subir posición', color: 'var(--primary-container)' } : isNearTop ? { text: 'Casi top 3', color: '#4285f4' } : row.position <= 3 ? { text: 'Top 3', color: '#10b981' } : { text: 'Monitorear', color: 'var(--on-surface-variant)' };
                       return (
                         <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)' }}>
                           <td style={{ padding: '10px 14px', fontWeight: 600, fontSize: 12, color: 'var(--on-surface)', maxWidth: 350, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.query}</td>
                           <td style={{ padding: '10px 14px', fontWeight: 700, color: '#4285f4', fontSize: 12 }}>{row.clicks.toLocaleString()}</td>
                           <td style={{ padding: '10px 14px', color: 'var(--on-surface-variant)', fontSize: 12 }}>{row.impressions.toLocaleString()}</td>
-                          <td style={{ padding: '10px 14px', fontWeight: 600, color: row.ctr > 0.02 ? '#10b981' : row.ctr > 0.01 ? '#f59e0b' : '#ef4444', fontSize: 12 }}>{(row.ctr * 100).toFixed(2)}%</td>
-                          <td style={{ padding: '10px 14px', fontWeight: 700, color: row.position <= 3 ? '#10b981' : row.position <= 10 ? '#f59e0b' : '#ef4444', fontSize: 12 }}>{row.position.toFixed(1)}</td>
+                          <td style={{ padding: '10px 14px', fontWeight: 600, color: row.ctr > 0.02 ? '#10b981' : row.ctr > 0.01 ? 'var(--primary-container)' : '#ef4444', fontSize: 12 }}>{(row.ctr * 100).toFixed(2)}%</td>
+                          <td style={{ padding: '10px 14px', fontWeight: 700, color: row.position <= 3 ? '#10b981' : row.position <= 10 ? 'var(--primary-container)' : '#ef4444', fontSize: 12 }}>{row.position.toFixed(1)}</td>
                           <td style={{ padding: '10px 14px' }}>
                             <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 10, background: `${opportunity.color}15`, color: opportunity.color, fontWeight: 600 }}>{opportunity.text}</span>
                           </td>
@@ -398,7 +398,7 @@ export default function SearchConsolePanel({ workspaceData, dateRange, filteredC
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                    <tr style={{ borderBottom: '1px solid var(--outline)' }}>
                       {['Página', 'Clics', 'Impr.', 'CTR', 'Pos.'].map(h => (
                         <th key={h} style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 600, color: 'var(--on-surface-variant)', fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5, whiteSpace: 'nowrap' }}>{h}</th>
                       ))}
@@ -418,8 +418,8 @@ export default function SearchConsolePanel({ workspaceData, dateRange, filteredC
                           </td>
                           <td style={{ padding: '10px 14px', fontWeight: 700, color: '#4285f4', fontSize: 12 }}>{row.clicks.toLocaleString()}</td>
                           <td style={{ padding: '10px 14px', color: 'var(--on-surface-variant)', fontSize: 12 }}>{row.impressions.toLocaleString()}</td>
-                          <td style={{ padding: '10px 14px', fontWeight: 600, color: row.ctr > 0.02 ? '#10b981' : row.ctr > 0.01 ? '#f59e0b' : '#ef4444', fontSize: 12 }}>{(row.ctr * 100).toFixed(2)}%</td>
-                          <td style={{ padding: '10px 14px', fontWeight: 700, color: row.position <= 3 ? '#10b981' : row.position <= 10 ? '#f59e0b' : '#ef4444', fontSize: 12 }}>{row.position.toFixed(1)}</td>
+                          <td style={{ padding: '10px 14px', fontWeight: 600, color: row.ctr > 0.02 ? '#10b981' : row.ctr > 0.01 ? 'var(--primary-container)' : '#ef4444', fontSize: 12 }}>{(row.ctr * 100).toFixed(2)}%</td>
+                          <td style={{ padding: '10px 14px', fontWeight: 700, color: row.position <= 3 ? '#10b981' : row.position <= 10 ? 'var(--primary-container)' : '#ef4444', fontSize: 12 }}>{row.position.toFixed(1)}</td>
                         </tr>
                       );
                     })}
@@ -457,13 +457,13 @@ export default function SearchConsolePanel({ workspaceData, dateRange, filteredC
                           </div>
                         </div>
                       </div>
-                      <div style={{ height: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 3, overflow: 'hidden', marginBottom: 10 }}>
+                      <div style={{ height: 6, background: 'var(--border-subtle)', borderRadius: 3, overflow: 'hidden', marginBottom: 10 }}>
                         <div style={{ height: '100%', width: `${share * 100}%`, background: colors[i], borderRadius: 3, transition: 'width 0.8s ease-out' }} />
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
                         <div style={{ textAlign: 'center' }}><div style={{ fontSize: 10, color: 'var(--on-surface-variant)', marginBottom: 2 }}>Clics</div><div style={{ fontSize: 14, fontWeight: 700, color: 'var(--on-surface)' }}>{d.clicks.toLocaleString()}</div></div>
-                        <div style={{ textAlign: 'center' }}><div style={{ fontSize: 10, color: 'var(--on-surface-variant)', marginBottom: 2 }}>CTR</div><div style={{ fontSize: 14, fontWeight: 700, color: d.ctr > 0.02 ? '#10b981' : '#f59e0b' }}>{(d.ctr * 100).toFixed(2)}%</div></div>
-                        <div style={{ textAlign: 'center' }}><div style={{ fontSize: 10, color: 'var(--on-surface-variant)', marginBottom: 2 }}>Pos.</div><div style={{ fontSize: 14, fontWeight: 700, color: d.position <= 5 ? '#10b981' : '#f59e0b' }}>{d.position.toFixed(1)}</div></div>
+                        <div style={{ textAlign: 'center' }}><div style={{ fontSize: 10, color: 'var(--on-surface-variant)', marginBottom: 2 }}>CTR</div><div style={{ fontSize: 14, fontWeight: 700, color: d.ctr > 0.02 ? '#10b981' : 'var(--primary-container)' }}>{(d.ctr * 100).toFixed(2)}%</div></div>
+                        <div style={{ textAlign: 'center' }}><div style={{ fontSize: 10, color: 'var(--on-surface-variant)', marginBottom: 2 }}>Pos.</div><div style={{ fontSize: 14, fontWeight: 700, color: d.position <= 5 ? '#10b981' : 'var(--primary-container)' }}>{d.position.toFixed(1)}</div></div>
                       </div>
                     </div>
                   );
@@ -487,7 +487,7 @@ export default function SearchConsolePanel({ workspaceData, dateRange, filteredC
                           <span style={{ fontWeight: 600, fontSize: 12, color: 'var(--on-surface)' }}>{c.country}</span>
                           <span style={{ fontWeight: 700, fontSize: 12, color: '#4285f4' }}>{c.clicks.toLocaleString()}</span>
                         </div>
-                        <div style={{ height: 3, background: 'rgba(255,255,255,0.05)', borderRadius: 2, overflow: 'hidden' }}>
+                        <div style={{ height: 3, background: 'var(--border-subtle)', borderRadius: 2, overflow: 'hidden' }}>
                           <div style={{ height: '100%', width: `${barW}%`, background: '#4285f4', borderRadius: 2 }} />
                         </div>
                       </div>
@@ -510,7 +510,7 @@ export default function SearchConsolePanel({ workspaceData, dateRange, filteredC
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
                 <Lightbulb size={18} color="#4285f4" />
                 <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--on-surface)' }}>Oportunidades SEO Detectadas</span>
-                <span style={{ fontSize: 11, color: 'var(--on-surface-variant)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 8 }}>
+                <span style={{ fontSize: 11, color: 'var(--on-surface-variant)', background: 'var(--border-subtle)', padding: '2px 8px', borderRadius: 8 }}>
                   {highImpLowCtr.length + lowPosHighImpr.length + nearTop.length} hallazgos
                 </span>
               </div>
@@ -528,7 +528,7 @@ export default function SearchConsolePanel({ workspaceData, dateRange, filteredC
                         <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', marginBottom: 8 }}>{q.impressions.toLocaleString()} impr. · Pos. {q.position.toFixed(1)} · CTR {(q.ctr * 100).toFixed(2)}%</div>
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                           <span style={{ padding: '3px 8px', borderRadius: 8, background: 'rgba(234,67,53,0.15)', color: '#ea4335', fontSize: 9, fontWeight: 600 }}>Reescribir title/meta</span>
-                          <span style={{ padding: '3px 8px', borderRadius: 8, background: 'rgba(245,158,11,0.15)', color: '#f59e0b', fontSize: 9, fontWeight: 600 }}>Añadir schema</span>
+                          <span style={{ padding: '3px 8px', borderRadius: 8, background: 'rgba(245,158,11,0.15)', color: 'var(--primary-container)', fontSize: 9, fontWeight: 600 }}>Añadir schema</span>
                         </div>
                       </div>
                     ))}
@@ -539,7 +539,7 @@ export default function SearchConsolePanel({ workspaceData, dateRange, filteredC
               {/* Low Position, High Impressions */}
               {lowPosHighImpr.length > 0 && (
                 <div style={{ marginBottom: 20 }}>
-                  <h4 style={{ fontSize: 12, fontWeight: 700, color: '#f59e0b', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <h4 style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary-container)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <TrendingUp size={14} /> Posición baja, alta demanda ({lowPosHighImpr.length})
                   </h4>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 10 }}>

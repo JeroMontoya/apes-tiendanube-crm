@@ -117,7 +117,7 @@ export default function AIChatAgent({ clients, metaInsights, googleAdsData, tikt
   const COLORS = {
     bg: '#0a0a0f', surface: '#12121a', card: '#1a1a24', border: '#2a2a3a',
     text: '#e4e4e7', muted: '#71717a', primary: '#6366f1', accent: '#22d3ee',
-    success: '#10b981', warning: '#f59e0b', danger: '#ef4444',
+    success: '#10b981', warning: 'var(--primary-container)', danger: '#ef4444',
   };
 
   useEffect(() => {

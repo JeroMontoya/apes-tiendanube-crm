@@ -88,7 +88,7 @@ function TransferItem({ item, locations, stock, onQuantityChange, onRemove }) {
     <div style={{
       padding: '14px', borderRadius: '10px',
       border: '1px solid var(--border-subtle)',
-      background: 'var(--surface-container-low, rgba(255,255,255,0.03))',
+      background: 'var(--surface-container-low, var(--surface-container-low))',
       display: 'flex', flexDirection: 'column', gap: '10px',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -192,7 +192,7 @@ export default function StockTransfer({ products, locations, stock, onTransfer, 
             position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)',
             padding: '10px 20px', borderRadius: '10px',
             background: toast.type === 'success' ? 'rgba(16,185,129,0.95)' : toast.type === 'warning' ? 'rgba(245,158,11,0.95)' : 'rgba(239,68,68,0.95)',
-            color: '#fff', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px',
+            color: 'var(--on-surface)', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px',
             boxShadow: '0 4px 20px rgba(0,0,0,0.3)', zIndex: 10,
           }}>
             {toast.type === 'success' ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
@@ -315,7 +315,7 @@ export default function StockTransfer({ products, locations, stock, onTransfer, 
           {items.length > 0 && (
             <div style={{
               padding: '14px', borderRadius: '10px',
-              background: 'var(--surface-container-low, rgba(255,255,255,0.03))',
+              background: 'var(--surface-container-low, var(--surface-container-low))',
               border: '1px solid var(--border-subtle)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px',
             }}>
@@ -344,7 +344,7 @@ export default function StockTransfer({ products, locations, stock, onTransfer, 
               disabled={!valid || saving}
               style={{
                 padding: '12px 24px', borderRadius: '10px', border: 'none',
-                background: valid ? 'linear-gradient(135deg, #8b5cf6, #3b82f6)' : 'var(--surface-container, rgba(255,255,255,0.05))',
+                background: valid ? 'linear-gradient(135deg, #8b5cf6, #3b82f6)' : 'var(--surface-container, var(--border-subtle))',
                 color: valid ? '#fff' : 'var(--on-surface-variant)',
                 fontSize: '13px', fontWeight: '700',
                 cursor: valid && !saving ? 'pointer' : 'not-allowed',

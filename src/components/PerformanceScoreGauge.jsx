@@ -1,97 +1,75 @@
 import React, { useMemo } from 'react';
-import { Target, TrendingUp, TrendingDown } from 'lucide-react';
-import MetricTooltip from './MetricTooltip';
+
+const ACCENT = '#6366f1';
+const ACCENT_LIGHT = 'rgba(99,102,241,0.5)';
 
 export default function PerformanceScoreGauge({ clients, metaInsights, ga4Insights }) {
-  const { score, trend, label, color } = useMemo(() => {
-    // Basic calculation for the score
-    let calculatedScore = 50; // Base score
-    
-    // Retention contribution (up to +20)
-    const arr = clients || [];
-    const withPurchases = arr.filter(c => (c.purchaseCount ?? 0) >= 1).length;
-    const vipCount = arr.filter(c => (c.purchaseCount ?? 0) >= 2).length;
-    const retention = withPurchases > 0 ? (vipCount / withPurchases) : 0;
-    calculatedScore += Math.min(20, retention * 100);
-
-    // ROAS contribution (up to +20)
-    const revenue = arr.reduce((sum, c) => sum + (c.totalSpent ?? 0), 0);
-    const metaSpend = metaInsights?.global ? parseFloat(metaInsights.global.spend || 0) : 0;
-    const roas = metaSpend > 0 ? (revenue / metaSpend) : 0;
-    calculatedScore += Math.min(20, (roas / 4) * 20); // Assume 4x is perfect
-
-    // Engagement contribution from GA4 (up to +10)
-    const bounceRate = ga4Insights?.bounceRate || 0.5;
-    calculatedScore += Math.min(10, (1 - bounceRate) * 10);
-
-    const finalScore = Math.min(100, Math.max(0, Math.round(calculatedScore)));
-    
-    // Determine color and label
-    let color = '#3b82f6'; // Blue
-    let label = 'Rendimiento Bueno';
-    if (finalScore >= 80) {
-      color = '#10b981'; // Green
-      label = 'Rendimiento Excelente';
-    } else if (finalScore < 50) {
-      color = '#f43f5e'; // Red
-      label = 'Requiere Atención';
+  const score = useMemo(() => {
+    let s = 50;
+    const c = clients || [];
+    if (c.length > 0) {
+      const revenue = c.reduce((sum, cl) => sum + (cl.totalSpent ?? 0), 0);
+      const orders = c.reduce((sum, cl) => sum + (cl.purchaseCount ?? 0), 0);
+      if (revenue > 100000) s += 10;
+      if (revenue > 500000) s += 10;
+      if (orders > 20) s += 5;
+      if (orders > 100) s += 5;
+      const repeat = c.filter(cl => (cl.purchaseCount ?? 0) > 1).length;
+      if (repeat > c.length * 0.2) s += 5;
+      if (repeat > c.length * 0.4) s += 5;
     }
-
-    // Mock trend based on score
-    const trend = finalScore > 60 ? '+5 pts' : '-2 pts';
-
-    return { score: finalScore, trend, label, color };
+    if (ga4Insights?.conversionRate > 0.03) s += 4;
+    if (ga4Insights?.conversionRate > 0.05) s += 4;
+    return Math.min(100, Math.max(0, s));
   }, [clients, metaInsights, ga4Insights]);
 
-  const radius = 60;
+  const label = score >= 80 ? 'Rendimiento excelente' : score >= 60 ? 'Rendimiento bueno' : score >= 40 ? 'Rendimiento promedio' : 'Necesita mejoras';
+
+  // SVG circle gauge
+  const size = 140;
+  const strokeWidth = 10;
+  const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (score / 100) * circumference;
+  const offset = circumference - (score / 100) * circumference;
 
   return (
-    <div className="glass-card bento-span-4" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 280 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h3 style={{ fontSize: 14, fontWeight: 700, margin: 0, color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          Puntuación de rendimiento
-          <MetricTooltip text="Puntaje general de salud de tu tienda basado en retención, ROAS e interacción.">
-            <Target size={14} color="var(--on-surface-variant)" style={{ opacity: 0.7 }} />
-          </MetricTooltip>
-        </h3>
+    <div className="glass-card bento-span-2" style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      minHeight: 320, textAlign: 'center', gap: 16,
+    }}>
+      <h3 style={{ fontSize: 13, fontWeight: 500, margin: 0, color: 'var(--on-surface-variant)' }}>
+        ¿Qué tan bien va tu tienda?
+      </h3>
+
+      <div style={{ position: 'relative', width: size, height: size }}>
+        {/* Background ring */}
+        <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+          <circle cx={size/2} cy={size/2} r={radius}
+            fill="none" stroke={`${ACCENT}14`} strokeWidth={strokeWidth} />
+          <circle cx={size/2} cy={size/2} r={radius}
+            fill="none" stroke={ACCENT} strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            style={{
+              transition: 'stroke-dashoffset 1.5s cubic-bezier(0.16, 1, 0.3, 1)',
+              filter: `drop-shadow(0 0 8px ${ACCENT}66)`,
+            }}
+          />
+        </svg>
+        {/* Score text */}
+        <div style={{
+          position: 'absolute', top: '50%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+        }}>
+          <span style={{ fontSize: 36, fontWeight: 800, color: ACCENT, lineHeight: 1 }}>{score}</span>
+          <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--on-surface-variant)' }}>/{'\u200B'}100</span>
+        </div>
       </div>
-      
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-        <div style={{ position: 'relative', width: 160, height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg width="160" height="160" style={{ transform: 'rotate(-90deg)' }}>
-            <circle
-              cx="80" cy="80" r={radius}
-              fill="transparent"
-              stroke="rgba(255,255,255,0.05)"
-              strokeWidth="12"
-            />
-            <circle
-              cx="80" cy="80" r={radius}
-              fill="transparent"
-              stroke={color}
-              strokeWidth="12"
-              strokeDasharray={circumference}
-              strokeDashoffset={strokeDashoffset}
-              strokeLinecap="round"
-              style={{ transition: 'stroke-dashoffset 1s cubic-bezier(0.16, 1, 0.3, 1)' }}
-            />
-          </svg>
-          <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <span style={{ fontSize: 42, fontWeight: 800, color: 'var(--on-surface)', lineHeight: 1 }}>{score}</span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--on-surface-variant)' }}>/100</span>
-          </div>
-        </div>
-        
-        <div style={{ marginTop: 16, textAlign: 'center' }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color, marginBottom: 4 }}>{label}</div>
-          <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-            {trend.startsWith('+') ? <TrendingUp size={14} color="#10b981" /> : <TrendingDown size={14} color="#f43f5e" />}
-            <span style={{ color: trend.startsWith('+') ? '#10b981' : '#f43f5e', fontWeight: 500 }}>{trend}</span>
-            <span>vs período anterior</span>
-          </div>
-        </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--on-surface)' }}>{label}</span>
       </div>
     </div>
   );

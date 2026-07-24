@@ -6,7 +6,7 @@ const CATEGORY_COLORS = {
   CAMPAIGN: { bg: 'rgba(16,185,129,0.15)', border: '#10b981', text: '#10b981' },
   PROMO: { bg: 'rgba(139,92,246,0.15)', border: '#8b5cf6', text: '#8b5cf6' },
   ACTIVITY: { bg: 'rgba(59,130,246,0.15)', border: '#3b82f6', text: '#3b82f6' },
-  HOLIDAY: { bg: 'rgba(245,158,11,0.15)', border: '#f59e0b', text: '#f59e0b' },
+  HOLIDAY: { bg: 'rgba(245,158,11,0.15)', border: 'var(--primary-container)', text: 'var(--primary-container)' },
 };
 
 const getDaysInMonth = (year, month) => {
@@ -218,7 +218,7 @@ export default function EventCalendar() {
          </div>
          <button 
             onClick={() => { setSelectedDate(null); setEditingEvent(null); setDrawerOpen(true); }}
-            style={{ padding: '10px 16px', background: 'var(--primary)', border: 'none', borderRadius: 8, color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}
+            style={{ padding: '10px 16px', background: 'var(--primary)', border: 'none', borderRadius: 8, color: 'var(--on-surface)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}
          >
             <Plus size={18} /> Nuevo Evento
          </button>

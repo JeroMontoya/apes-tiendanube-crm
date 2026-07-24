@@ -54,7 +54,7 @@ const s = {
   searchInput: {
     width: '100%',
     padding: '12px 16px 12px 44px',
-    background: 'rgba(255, 255, 255, 0.03)',
+    background: 'var(--surface-container-low)',
     border: '1px solid var(--border-subtle)',
     borderRadius: 10,
     color: '#FAFAFA',
@@ -91,9 +91,9 @@ const s = {
     transition: 'all 0.2s',
   },
   filterBtnActive: {
-    background: 'rgba(255, 255, 255, 0.06)',
+    background: 'var(--glass-border)',
     color: '#FAFAFA',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
+    border: '1px solid var(--border-medium)',
   },
   tableWrap: {
     background: 'var(--surface)',

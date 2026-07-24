@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Brain, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Clock, DollarSign, Package, Zap, BarChart3, RefreshCw, ArrowUp, ArrowDown, Minus, Shield, Target } from 'lucide-react';
 
 const API_BASE = '/api/inventory/stock-governance';
@@ -53,7 +53,7 @@ export default function PredictiveIntelligence() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
           <h1 style={{ color: '#E8E6E3', fontSize: '20px', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0 }}>
-            Predictive Intelligence â€” ONYX v16
+            Predictive Intelligence — ONYX v16
           </h1>
           <p style={{ color: '#8A8F98', fontSize: '12px', margin: '4px 0 0', fontFamily: 'Inter, sans-serif' }}>
             Velocidad de stock + Gobernanza de presupuesto + Proyeccion de quiebre
@@ -73,8 +73,8 @@ export default function PredictiveIntelligence() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', marginBottom: '20px' }}>
         <KPICard icon={AlertTriangle} label="Alertas Activas" value={data.active_alerts.length} color={criticalAlerts.length > 0 ? '#CC3333' : '#A08240'} />
         <KPICard icon={Package} label="Stockout Inminente" value={velocityAlerts.length} color="#CC3333" />
-        <KPICard icon={DollarSign} label="Revenue 7d" value={'$' + totalRevenue7d.toLocaleString('es-AR')} color="#3B8A6E" />
-        <KPICard icon={TrendingUp} label="Revenue 30d" value={'$' + totalRevenue30d.toLocaleString('es-AR')} color="#3D5A99" />
+        <KPICard icon={DollarSign} label="Revenue 7d" value={'$' + totalRevenue7d.toLocaleString('es-CO')} color="#3B8A6E" />
+        <KPICard icon={TrendingUp} label="Revenue 30d" value={'$' + totalRevenue30d.toLocaleString('es-CO')} color="#3D5A99" />
         <KPICard icon={Shield} label="Governance Checks" value={data.pacing.length} color="#6B5BA0" />
       </div>
 
@@ -163,12 +163,12 @@ function VelocityTable({ items }) {
                     <span style={{ color: RISK_COLORS[risk], fontWeight: 700, fontSize: '13px' }}>
                       {v.days_to_stockout.toFixed(1)}d
                     </span>
-                  ) : <span style={{ color: '#555' }}>â€”</span>}
+                  ) : <span style={{ color: '#555' }}>—</span>}
                   {v.projected_stockout_date && (
-                    <div style={{ fontSize: '10px', color: '#555' }}>{new Date(v.projected_stockout_date).toLocaleDateString('es-AR')}</div>
+                    <div style={{ fontSize: '10px', color: '#555' }}>{new Date(v.projected_stockout_date).toLocaleDateString('es-CO')}</div>
                   )}
                 </td>
-                <td style={{ padding: '10px 12px', color: '#3B8A6E', fontWeight: 600 }}>${(v.revenue_7d || 0).toLocaleString('es-AR')}</td>
+                <td style={{ padding: '10px 12px', color: '#3B8A6E', fontWeight: 600 }}>${(v.revenue_7d || 0).toLocaleString('es-CO')}</td>
                 <td style={{ padding: '10px 12px' }}>
                   <span style={{ background: RISK_COLORS[risk] + '20', color: RISK_COLORS[risk], padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase' }}>
                     {risk}
@@ -199,8 +199,8 @@ function PacingTable({ items }) {
           {items.map((p, i) => (
             <tr key={p.id || i} style={{ borderBottom: '1px solid #1A1B1E' }}>
               <td style={{ padding: '10px 12px', color: '#E8E6E3', fontWeight: 600, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.adset_name || p.adset_id}</td>
-              <td style={{ padding: '10px 12px', color: '#8A8F98' }}>${(p.daily_budget || 0).toLocaleString('es-AR')}</td>
-              <td style={{ padding: '10px 12px', color: p.spend_rate > 1.1 ? '#CC3333' : '#8A8F98', fontWeight: p.spend_rate > 1.1 ? 700 : 400 }}>${(p.spent_today || 0).toLocaleString('es-AR')}</td>
+              <td style={{ padding: '10px 12px', color: '#8A8F98' }}>${(p.daily_budget || 0).toLocaleString('es-CO')}</td>
+              <td style={{ padding: '10px 12px', color: p.spend_rate > 1.1 ? '#CC3333' : '#8A8F98', fontWeight: p.spend_rate > 1.1 ? 700 : 400 }}>${(p.spent_today || 0).toLocaleString('es-CO')}</td>
               <td style={{ padding: '10px 12px' }}>
                 <span style={{ background: PACING_COLORS[p.pacing_status] + '20', color: PACING_COLORS[p.pacing_status], padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 600 }}>
                   {p.pacing_status?.replace('_', ' ')}
@@ -217,7 +217,7 @@ function PacingTable({ items }) {
               <td style={{ padding: '10px 12px' }}>
                 {p.action_taken && p.action_taken !== 'none' ? (
                   <span style={{ color: '#A08240', fontSize: '11px', fontWeight: 600 }}>{p.action_taken.replace('_', ' ')}</span>
-                ) : <span style={{ color: '#444' }}>â€”</span>}
+                ) : <span style={{ color: '#444' }}>—</span>}
               </td>
             </tr>
           ))}
@@ -237,10 +237,10 @@ function AlertsList({ alerts, onAck }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
               <span style={{ background: SEVERITY_COLORS[a.severity] + '20', color: SEVERITY_COLORS[a.severity], padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase' }}>{a.severity}</span>
               <span style={{ color: '#666', fontSize: '10px' }}>{a.alert_type?.replace(/_/g, ' ')}</span>
-              <span style={{ color: '#444', fontSize: '10px' }}>{new Date(a.created_at).toLocaleString('es-AR')}</span>
+              <span style={{ color: '#444', fontSize: '10px' }}>{new Date(a.created_at).toLocaleString('es-CO')}</span>
             </div>
             <p style={{ color: '#8A8F98', fontSize: '12px', margin: 0, fontFamily: 'Inter, sans-serif' }}>{a.message}</p>
-            {a.projected_days != null && <span style={{ color: '#555', fontSize: '10px' }}>Stock actual: {a.current_stock} â€” Proyectado: {a.projected_days?.toFixed(1)} dias</span>}
+            {a.projected_days != null && <span style={{ color: '#555', fontSize: '10px' }}>Stock actual: {a.current_stock} — Proyectado: {a.projected_days?.toFixed(1)} dias</span>}
           </div>
           <button onClick={() => onAck(a.id)} style={{ background: '#33333320', color: '#666', border: '1px solid #333', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontFamily: 'Inter, sans-serif', marginLeft: '12px' }}>OK</button>
         </div>

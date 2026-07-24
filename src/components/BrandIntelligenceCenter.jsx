@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 const COLORS = {
-  primary: '#6366F1', success: '#10B981', warning: '#F59E0B',
+  primary: '#6366F1', success: '#10B981', warning: 'var(--primary-container)',
   danger: '#EF4444', info: '#0EA5E9', purple: '#8B5CF6',
   pink: '#EC4899', teal: '#14B8A6',
 };
@@ -29,7 +29,7 @@ function ScoreGauge({ score, label, size = 160 }) {
     <div style={{ position: 'relative', width: size, height: size }}>
       <svg width={size} height={size} style={{ transform: 'rotate(135deg)' }}>
         <circle cx={size / 2} cy={size / 2} r={radius} fill="none"
-          stroke="rgba(255,255,255,0.08)" strokeWidth={10}
+          stroke="var(--outline)" strokeWidth={10}
           strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`} strokeLinecap="round" />
         <circle cx={size / 2} cy={size / 2} r={radius} fill="none"
           stroke={color} strokeWidth={10}
@@ -48,7 +48,7 @@ function ScoreGauge({ score, label, size = 160 }) {
 function MiniGauge({ label, score, color }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-      <div style={{ width: 48, height: 48, borderRadius: '50%', background: `conic-gradient(${color} ${score * 3.6}deg, rgba(255,255,255,0.08) 0deg)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: 48, height: 48, borderRadius: '50%', background: `conic-gradient(${color} ${score * 3.6}deg, var(--outline) 0deg)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <span style={{ fontSize: 13, fontWeight: 700, color }}>{score}</span>
         </div>
@@ -145,7 +145,7 @@ export default function BrandIntelligenceCenter({ session }) {
         <XCircle size={48} color={COLORS.danger} />
         <h3 style={{ color: 'var(--on-surface)', margin: 0 }}>Error al generar inteligencia</h3>
         <p style={{ color: 'var(--on-surface-variant)', margin: 0 }}>{error}</p>
-        <button onClick={fetchIntelligence} style={{ display: 'flex', alignItems: 'center', gap: 6, background: COLORS.primary, color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
+        <button onClick={fetchIntelligence} style={{ display: 'flex', alignItems: 'center', gap: 6, background: COLORS.primary, color: 'var(--on-surface)', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
           <RefreshCw size={16} /> Reintentar
         </button>
       </div>
@@ -237,7 +237,7 @@ export default function BrandIntelligenceCenter({ session }) {
                 <div key={i} style={{ padding: 16, borderRadius: 10, background: 'var(--surface-container)', borderLeft: `3px solid ${a.severity === 'critical' ? COLORS.danger : a.severity === 'warning' ? COLORS.warning : COLORS.info}` }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                     <SeverityBadge severity={a.severity} />
-                    <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: 'rgba(255,255,255,0.06)', color: 'var(--on-surface-variant)' }}>{a.category}</span>
+                    <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: 'var(--glass-border)', color: 'var(--on-surface-variant)' }}>{a.category}</span>
                     <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--on-surface)', marginLeft: 'auto' }}>{a.title}</span>
                   </div>
                   <p style={{ ...S.muted, margin: '0 0 6px' }}>{a.detail}</p>
@@ -339,7 +339,7 @@ export default function BrandIntelligenceCenter({ session }) {
                       </div>
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                         <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: `${phaseColors[a.phase] || COLORS.info}22`, color: phaseColors[a.phase] || COLORS.info, fontWeight: 600 }}>{phaseLabels[a.phase] || a.phase}</span>
-                        <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: 'rgba(255,255,255,0.06)', color: 'var(--on-surface-variant)' }}>{a.owner}</span>
+                        <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: 'var(--glass-border)', color: 'var(--on-surface-variant)' }}>{a.owner}</span>
                         <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: `${impactColors[a.impact] || COLORS.info}22`, color: impactColors[a.impact] || COLORS.info, fontWeight: 600 }}>Impacto: {a.impact}</span>
                         {a.kpi && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: 'rgba(99,102,241,0.1)', color: COLORS.primary, fontWeight: 600 }}>KPI: {a.kpi}</span>}
                       </div>

@@ -83,7 +83,7 @@ function getRealROAS(revenue, spend) {
 
 function getStatusBadge(roas) {
   if (roas > 4) return { label: 'Excelente', color: '#10b981' };
-  if (roas >= 2) return { label: 'Bueno', color: '#f59e0b' };
+  if (roas >= 2) return { label: 'Bueno', color: 'var(--primary-container)' };
   return { label: 'Necesita Optimización', color: '#ef4444' };
 }
 
@@ -225,7 +225,7 @@ const styles = {
     background: '#1a1d27',
     borderRadius: '12px',
     padding: '20px',
-    border: '1px solid rgba(255,255,255,0.06)',
+    border: '1px solid var(--glass-border)',
     transition: 'all 0.2s'
   },
   summaryCardIcon: {
@@ -256,7 +256,7 @@ const styles = {
     background: '#1a1d27',
     borderRadius: '12px',
     padding: '4px',
-    border: '1px solid rgba(255,255,255,0.06)',
+    border: '1px solid var(--glass-border)',
     flexWrap: 'wrap'
   },
   tab: {
@@ -274,7 +274,7 @@ const styles = {
   },
   tabActive: {
     background: '#6366f1',
-    color: '#ffffff'
+    color: 'var(--on-surface)'
   },
   tabInactive: {
     background: 'transparent',
@@ -283,7 +283,7 @@ const styles = {
   tableContainer: {
     background: '#1a1d27',
     borderRadius: '12px',
-    border: '1px solid rgba(255,255,255,0.06)',
+    border: '1px solid var(--glass-border)',
     overflow: 'hidden',
     marginBottom: '28px'
   },
@@ -299,7 +299,7 @@ const styles = {
     color: '#94a3b8',
     textTransform: 'uppercase',
     letterSpacing: '0.5px',
-    borderBottom: '1px solid rgba(255,255,255,0.06)',
+    borderBottom: '1px solid var(--glass-border)',
     cursor: 'pointer',
     userSelect: 'none',
     whiteSpace: 'nowrap'
@@ -307,7 +307,7 @@ const styles = {
   td: {
     padding: '14px 16px',
     fontSize: '13px',
-    borderBottom: '1px solid rgba(255,255,255,0.03)',
+    borderBottom: '1px solid var(--surface-container-low)',
     whiteSpace: 'nowrap'
   },
   badge: {
@@ -339,7 +339,7 @@ const styles = {
     padding: '24px 16px',
     background: '#1a1d27',
     borderRadius: '12px',
-    border: '1px solid rgba(255,255,255,0.06)',
+    border: '1px solid var(--glass-border)',
     overflowX: 'auto'
   },
   funnelStage: {
@@ -359,7 +359,7 @@ const styles = {
     justifyContent: 'center',
     fontSize: '13px',
     fontWeight: 600,
-    color: '#ffffff',
+    color: 'var(--on-surface)',
     transition: 'all 0.3s',
     position: 'relative'
   }),
@@ -401,19 +401,19 @@ const styles = {
   campaignsPanel: {
     background: '#1a1d27',
     borderRadius: '12px',
-    border: '1px solid rgba(255,255,255,0.06)',
+    border: '1px solid var(--glass-border)',
     overflow: 'hidden'
   },
   campaignsPanelHeader: {
     padding: '16px 20px',
-    borderBottom: '1px solid rgba(255,255,255,0.06)',
+    borderBottom: '1px solid var(--glass-border)',
     display: 'flex',
     alignItems: 'center',
     gap: '8px'
   },
   campaignItem: {
     padding: '14px 20px',
-    borderBottom: '1px solid rgba(255,255,255,0.03)',
+    borderBottom: '1px solid var(--surface-container-low)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -465,7 +465,7 @@ const styles = {
   },
   searchInput: {
     background: '#0f1117',
-    border: '1px solid rgba(255,255,255,0.1)',
+    border: '1px solid var(--border-medium)',
     borderRadius: '8px',
     padding: '8px 12px 8px 36px',
     color: '#e2e8f0',
@@ -494,7 +494,7 @@ const styles = {
   },
   tooltip: {
     background: '#1e293b',
-    border: '1px solid rgba(255,255,255,0.1)',
+    border: '1px solid var(--border-medium)',
     borderRadius: '8px',
     padding: '8px 12px',
     fontSize: '11px',
@@ -610,7 +610,7 @@ export default function AttributionPanel({ clients = [], metaInsights = { campai
     { label: 'Clicks', value: totalClicks, color: '#8b5cf6' },
     { label: 'Leads', value: totalLeads, color: '#a78bfa' },
     { label: 'Deals', value: totalDeals, color: '#10b981' },
-    { label: 'Revenue', value: totalRevenue, color: '#f59e0b', isCurrency: true }
+    { label: 'Revenue', value: totalRevenue, color: 'var(--primary-container)', isCurrency: true }
   ];
 
   const funnelMax = Math.max(...funnelData.map(f => f.value), 1);
@@ -683,11 +683,11 @@ export default function AttributionPanel({ clients = [], metaInsights = { campai
     { label: 'Revenue Atribuido', value: getCurrency(totalRevenue), icon: <TrendingUp size={18} />, color: '#10b981', bg: 'rgba(16,185,129,0.15)' },
     { label: 'ROAS Real', value: `${overallRoas.toFixed(2)}x`, icon: <Target size={18} />, color: overallStatus.color, bg: `${overallStatus.color}22` },
     { label: 'Total Leads', value: totalLeads.toLocaleString(), icon: <Users size={18} />, color: '#a78bfa', bg: 'rgba(167,139,250,0.15)' },
-    { label: 'Deals Cerrados', value: totalDeals.toLocaleString(), icon: <Award size={18} />, color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' },
+    { label: 'Deals Cerrados', value: totalDeals.toLocaleString(), icon: <Award size={18} />, color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.15)' },
     { label: 'CPA Real', value: getCurrency(overallCpa), icon: <AlertTriangle size={18} />, color: '#ef4444', bg: 'rgba(239,68,68,0.15)' }
   ];
 
-  const rankColors = ['#f59e0b', '#94a3b8', '#cd7f32', '#6366f1', '#10b981'];
+  const rankColors = ['var(--primary-container)', '#94a3b8', '#cd7f32', '#6366f1', '#10b981'];
   const rankLabels = ['Oro', 'Plata', 'Bronce', '4to', '5to'];
 
   return (
@@ -805,7 +805,7 @@ export default function AttributionPanel({ clients = [], metaInsights = { campai
               {tab.icon}
               {tab.label}
               <span style={{
-                background: activeTab === tab.key ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.06)',
+                background: activeTab === tab.key ? 'rgba(255,255,255,0.2)' : 'var(--glass-border)',
                 padding: '2px 6px',
                 borderRadius: '10px',
                 fontSize: '10px',
@@ -908,7 +908,7 @@ export default function AttributionPanel({ clients = [], metaInsights = { campai
       <div style={styles.campaignsGrid}>
         <div style={styles.campaignsPanel}>
           <div style={styles.campaignsPanelHeader}>
-            <Trophy size={18} color="#f59e0b" />
+            <Trophy size={18} color="var(--primary-container)" />
             <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600 }}>Top Campañas por ROAS</h3>
           </div>
           {topCampaigns.length === 0 ? (

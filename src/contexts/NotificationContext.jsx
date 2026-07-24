@@ -5,9 +5,54 @@ const NotificationContext = createContext(null);
 
 let _nextId = 1;
 
+// Sound configuration
+const NOTIFICATION_SOUNDS = {
+  urgent: '/sounds/urgent.mp3',
+  warning: '/sounds/warning.mp3',
+  info: '/sounds/info.mp3',
+};
+
+let audioContext = null;
+let soundEnabled = true;
+
+function playNotificationSound(urgency = 'info') {
+  if (!soundEnabled) return;
+  try {
+    if (!audioContext) {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    // Create a subtle notification sound using Web Audio API
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    // Different tones for different urgencies
+    const frequencies = {
+      urgent: [880, 660],
+      warning: [660, 550],
+      info: [523, 440],
+    };
+    
+    const freq = frequencies[urgency] || frequencies.info;
+    oscillator.frequency.setValueAtTime(freq[0], audioContext.currentTime);
+    oscillator.frequency.setValueAtTime(freq[1], audioContext.currentTime + 0.1);
+    
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.3);
+  } catch (e) {
+    // Silently fail if audio context is not available
+  }
+}
+
 export function NotificationProvider({ children }) {
   const [notifications, setNotifications] = useState([]);
   const [toasts, setToasts] = useState([]);
+  const [expandedId, setExpandedId] = useState(null);
   const timersRef = useRef({});
   const calendarLoadedRef = useRef(false);
 
@@ -34,6 +79,7 @@ export function NotificationProvider({ children }) {
             category: ev.category,
             read: false,
             timestamp: Date.now(),
+            details: ev.details || null,
           };
         });
       if (calendarNotifs.length > 0) {
@@ -53,10 +99,16 @@ export function NotificationProvider({ children }) {
     } catch {}
   }, []);
 
-  const addNotification = useCallback(({ type, title, message, icon, data, emoji, urgency, calendarId }) => {
+  const addNotification = useCallback(({ type, title, message, icon, data, emoji, urgency, calendarId, details }) => {
     const id = _nextId++;
-    const notif = { id, type, title, message, icon: icon || null, emoji: emoji || null, urgency: urgency || null, calendarId: calendarId || null, data: data || null, read: false, timestamp: Date.now() };
+    const notif = { id, type, title, message, icon: icon || null, emoji: emoji || null, urgency: urgency || null, calendarId: calendarId || null, data: data || null, read: false, timestamp: Date.now(), details: details || null };
     setNotifications(prev => [notif, ...prev].slice(0, 100));
+    
+    // Play sound for new notifications
+    if (urgency === 'urgent' || urgency === 'warning') {
+      playNotificationSound(urgency);
+    }
+    
     return id;
   }, []);
 
@@ -77,8 +129,8 @@ export function NotificationProvider({ children }) {
     return id;
   }, []);
 
-  const notify = useCallback(({ type, title, message, icon, data, toast = true, emoji, urgency, calendarId }) => {
-    const id = addNotification({ type, title, message, icon, data, emoji, urgency, calendarId });
+  const notify = useCallback(({ type, title, message, icon, data, toast = true, emoji, urgency, calendarId, details }) => {
+    const id = addNotification({ type, title, message, icon, data, emoji, urgency, calendarId, details });
     if (toast) {
       addToast({ type, title, message, icon });
     }
@@ -117,14 +169,35 @@ export function NotificationProvider({ children }) {
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 300);
   }, []);
 
+  const toggleExpand = useCallback((id) => {
+    setExpandedId(prev => prev === id ? null : id);
+  }, []);
+
+  const setSoundEnabled = useCallback((enabled) => {
+    soundEnabled = enabled;
+    localStorage.setItem('notification_sound_enabled', JSON.stringify(enabled));
+  }, []);
+
+  const isSoundEnabled = useCallback(() => {
+    return soundEnabled;
+  }, []);
+
+  // Load sound preference from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('notification_sound_enabled');
+    if (saved !== null) {
+      soundEnabled = JSON.parse(saved);
+    }
+  }, []);
+
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <NotificationContext.Provider value={{
-      notifications, toasts, unreadCount,
+      notifications, toasts, unreadCount, expandedId,
       addNotification, addToast, notify,
       markAsRead, markAllRead, dismissCalendar, clearNotification, clearAll,
-      dismissToast,
+      dismissToast, toggleExpand, setSoundEnabled, isSoundEnabled,
     }}>
       {children}
     </NotificationContext.Provider>

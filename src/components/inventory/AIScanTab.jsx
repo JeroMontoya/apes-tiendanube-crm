@@ -12,8 +12,8 @@ function OCRResultCard({ item, index }) {
   return (
     <div style={{
       padding: '12px', borderRadius: '10px',
-      border: `1px solid ${hasMatch ? '#10b98130' : '#f59e0b30'}`,
-      background: hasMatch ? '#10b98108' : '#f59e0b08',
+      border: `1px solid ${hasMatch ? '#10b98130' : 'var(--primary-container)30'}`,
+      background: hasMatch ? '#10b98108' : 'var(--primary-container)08',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
         <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--on-surface-variant)' }}>
@@ -25,7 +25,7 @@ function OCRResultCard({ item, index }) {
             Coincidencia
           </span>
         ) : (
-          <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', background: '#f59e0b18', color: '#f59e0b' }}>
+          <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', background: 'var(--primary-container)18', color: 'var(--primary-container)' }}>
             Sin match
           </span>
         )}
@@ -64,8 +64,8 @@ function VisionResultCard({ data, onApply }) {
         {v.confidence && (
           <span style={{
             fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px',
-            background: v.confidence > 0.7 ? '#10b98118' : '#f59e0b18',
-            color: v.confidence > 0.7 ? '#10b9811' : '#f59e0b',
+            background: v.confidence > 0.7 ? '#10b98118' : 'var(--primary-container)18',
+            color: v.confidence > 0.7 ? '#10b9811' : 'var(--primary-container)',
           }}>
             {Math.round(v.confidence * 100)}% confianza
           </span>
@@ -283,7 +283,7 @@ export default function AIScanTab({ onAdjust, products }) {
               position: 'absolute', top: '8px', right: '8px',
               width: '28px', height: '28px', borderRadius: '50%',
               background: 'rgba(0,0,0,0.6)', border: 'none',
-              color: '#fff', cursor: 'pointer',
+              color: 'var(--on-surface)', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
@@ -331,7 +331,7 @@ export default function AIScanTab({ onAdjust, products }) {
           style={{
             width: '100%', padding: '12px', borderRadius: '10px',
             border: 'none', background: loading ? '#3b82f680' : '#3b82f6',
-            color: '#fff', fontSize: '14px', fontWeight: 700,
+            color: 'var(--on-surface)', fontSize: '14px', fontWeight: 700,
             cursor: loading ? 'wait' : 'pointer', fontFamily: 'inherit',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
           }}

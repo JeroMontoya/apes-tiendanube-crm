@@ -91,7 +91,7 @@ const ROLE_LABELS = {
 
 const ROLE_COLORS = {
   admin: '#8b5cf6',
-  taller: '#f59e0b',
+  taller: 'var(--primary-container)',
   ventas: '#10b981',
   atencion_cliente: '#3b82f6',
 };

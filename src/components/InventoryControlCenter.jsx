@@ -177,7 +177,7 @@ function MobileTabBar({ activeTab, onTabChange, alerts }) {
               <span style={{
                 position: 'absolute', top: '2px', right: '6px',
                 width: '16px', height: '16px', borderRadius: '50%',
-                background: '#ef4444', color: '#fff', fontSize: '9px',
+                background: '#ef4444', color: 'var(--on-surface)', fontSize: '9px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontWeight: 700,
               }}>

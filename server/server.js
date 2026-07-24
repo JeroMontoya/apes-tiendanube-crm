@@ -357,7 +357,7 @@ function proxyToExternal(targetHost, pathRewrite) {
         'Content-Type': req.headers['content-type'] || 'application/json',
         'Authentication': auth,
         'Accept': 'application/json',
-        'User-Agent': req.headers['user-agent'] || 'Onyx Core (contact@onyxcore.com)',
+        'User-Agent': req.headers['user-agent'] || 'Apes Tiendanube CRM',
       },
     };
 
@@ -373,7 +373,9 @@ function proxyToExternal(targetHost, pathRewrite) {
 
     proxyReq.on('error', (err) => {
       console.error(`[Proxy Error] ${targetHost}${targetPath}:`, err.message);
-      res.status(502).json({ error: 'Proxy error', message: err.message });
+      if (!res.headersSent) {
+        res.status(502).json({ error: 'Proxy error', message: err.message });
+      }
     });
 
     if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
@@ -692,7 +694,7 @@ async function tnFetch(path, token) {
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
   tnLastReq = Date.now();
   const res = await fetch(`https://api.tiendanube.com/v1${path}`, {
-    headers: { 'Authentication': `bearer ${token}`, 'User-Agent': 'Onyx Core (contact@onyxcore.com)', 'Content-Type': 'application/json' },
+    headers: { 'Authentication': `bearer ${token}`, 'User-Agent': 'Apes Tiendanube CRM', 'Content-Type': 'application/json' },
   });
   if (!res.ok) throw new Error(`TN ${path}: ${res.status}`);
   const link = res.headers.get('link') || '';
@@ -989,9 +991,12 @@ app.get('/api/cron/sync', async (req, res) => {
   );
 
   try {
-    // 1. Load credentials from system_config
-    const { data: config, error: cfgErr } = await supabaseAdmin.from('system_config').select('*').eq('id', 'main').single();
-    if (cfgErr || !config) throw new Error('No system_config found');
+    // 1. Load credentials from system_config (fallback to env vars)
+    let { data: config, error: cfgErr } = await supabaseAdmin.from('system_config').select('*').eq('id', 'main').single();
+    if (cfgErr || !config) {
+      config = { id: 'main' }; // We'll rely on env vars below
+      console.warn('[Cron] No system_config found, falling back to process.env');
+    }
 
     // 1b. Seed missing JSON credentials from env vars (service_role bypasses RLS)
     const gaCreds = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
@@ -1004,17 +1009,20 @@ app.get('/api/cron/sync', async (req, res) => {
     if (!config.search_console_credentials_json && gaCredsJson) updates.search_console_credentials_json = gaCredsJson;
     if (!config.meta_ad_account_id && process.env.META_AD_ACCOUNT_ID) updates.meta_ad_account_id = process.env.META_AD_ACCOUNT_ID;
     if (!config.search_console_site_url && process.env.SEARCH_CONSOLE_SITE_URL) updates.search_console_site_url = process.env.SEARCH_CONSOLE_SITE_URL;
+    if (!config.tiendanube_store_id && process.env.VITE_TIENDANUBE_STORE_ID) updates.tiendanube_store_id = process.env.VITE_TIENDANUBE_STORE_ID;
+    if (!config.tiendanube_access_token && process.env.VITE_TIENDANUBE_TOKEN) updates.tiendanube_access_token = process.env.VITE_TIENDANUBE_TOKEN;
+
     if (Object.keys(updates).length > 0) {
       updates.updated_at = new Date().toISOString();
       await supabaseAdmin.from('system_config').upsert({ id: 'main', ...updates }, { onConflict: 'id' });
       console.log('[Cron] Seeded missing credentials:', Object.keys(updates).join(', '));
       // Reload config
       const { data: refreshed } = await supabaseAdmin.from('system_config').select('*').eq('id', 'main').single();
-      if (refreshed) Object.assign(config, refreshed);
+      if (refreshed) config = refreshed;
     }
 
-    const storeId = config.tiendanube_store_id;
-    const token = config.tiendanube_access_token;
+    const storeId = config.tiendanube_store_id || process.env.VITE_TIENDANUBE_STORE_ID;
+    const token = config.tiendanube_access_token || process.env.VITE_TIENDANUBE_TOKEN;
     if (!storeId || !token) throw new Error('No TN credentials');
 
     // 2. Fetch TiendaNueve data in parallel (respecting rate limit via tnFetch)

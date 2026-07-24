@@ -7,7 +7,7 @@ import {
 const ADJUSTMENT_TYPES = [
   { id: 'receive', label: 'Recepción', color: '#10b981', icon: Package, desc: 'Ingreso de mercadería' },
   { id: 'dispatch', label: 'Despacho', color: '#ef4444', icon: Truck, desc: 'Envío a cliente' },
-  { id: 'return', label: 'Devolución', color: '#f59e0b', icon: RotateCcw, desc: 'Devolución de cliente' },
+  { id: 'return', label: 'Devolución', color: 'var(--primary-container)', icon: RotateCcw, desc: 'Devolución de cliente' },
   { id: 'adjustment', label: 'Ajuste', color: '#3b82f6', icon: ArrowUpDown, desc: 'Corrección manual' },
   { id: 'production_in', label: 'Producción', color: '#06b6d4', icon: Factory, desc: 'Ingreso de taller' },
 ];
@@ -98,7 +98,7 @@ export default function StockAdjuster({ products, locations, onAdjust, onClose }
             position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)',
             padding: '10px 20px', borderRadius: '10px',
             background: toast.type === 'success' ? 'rgba(16,185,129,0.95)' : 'rgba(239,68,68,0.95)',
-            color: '#fff', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px',
+            color: 'var(--on-surface)', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px',
             boxShadow: '0 4px 20px rgba(0,0,0,0.3)', zIndex: 10, whiteSpace: 'nowrap',
           }}>
             {toast.type === 'success' ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
@@ -152,7 +152,7 @@ export default function StockAdjuster({ products, locations, onAdjust, onClose }
                       {p.image_url ? (
                         <img src={p.image_url} alt="" style={{ width: '32px', height: '32px', borderRadius: '6px', objectFit: 'cover' }} />
                       ) : (
-                        <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: 'var(--surface-container, rgba(255,255,255,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: 'var(--surface-container, var(--border-subtle))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                           <Package size={14} color="var(--on-surface-variant)" style={{ opacity: 0.3 }} />
                         </div>
                       )}
@@ -166,11 +166,11 @@ export default function StockAdjuster({ products, locations, onAdjust, onClose }
               )}
             </div>
           ) : (
-            <div style={{ padding: '12px', borderRadius: '10px', background: 'var(--surface-container-low, rgba(255,255,255,0.03))', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ padding: '12px', borderRadius: '10px', background: 'var(--surface-container-low, var(--surface-container-low))', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: '10px' }}>
               {selectedProduct.image_url ? (
                 <img src={selectedProduct.image_url} alt="" style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover' }} />
               ) : (
-                <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'var(--surface-container, rgba(255,255,255,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'var(--surface-container, var(--border-subtle))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Package size={18} color="var(--on-surface-variant)" style={{ opacity: 0.3 }} />
                 </div>
               )}
@@ -299,7 +299,7 @@ export default function StockAdjuster({ products, locations, onAdjust, onClose }
           {selectedProduct && (
             <div style={{
               padding: '16px', borderRadius: '12px',
-              background: 'var(--surface-container-low, rgba(255,255,255,0.03))',
+              background: 'var(--surface-container-low, var(--surface-container-low))',
               border: '1px solid var(--border-subtle)',
             }}>
               <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--on-surface)', marginBottom: '12px' }}>Vista Previa del Stock</div>
@@ -334,7 +334,7 @@ export default function StockAdjuster({ products, locations, onAdjust, onClose }
             {confirming ? (
               <button onClick={handleConfirm} disabled={saving} style={{
                 padding: '12px 24px', borderRadius: '10px', border: 'none',
-                background: '#10b981', color: '#fff', fontSize: '13px', fontWeight: '700',
+                background: '#10b981', color: 'var(--on-surface)', fontSize: '13px', fontWeight: '700',
                 cursor: saving ? 'wait' : 'pointer', fontFamily: 'inherit',
                 display: 'flex', alignItems: 'center', gap: '8px',
               }}>
@@ -347,7 +347,7 @@ export default function StockAdjuster({ products, locations, onAdjust, onClose }
                 disabled={!selectedProduct || quantity <= 0}
                 style={{
                   padding: '12px 24px', borderRadius: '10px', border: 'none',
-                  background: '#3b82f6', color: '#fff', fontSize: '13px', fontWeight: '700',
+                  background: '#3b82f6', color: 'var(--on-surface)', fontSize: '13px', fontWeight: '700',
                   cursor: !selectedProduct || quantity <= 0 ? 'default' : 'pointer',
                   fontFamily: 'inherit', opacity: !selectedProduct || quantity <= 0 ? 0.5 : 1,
                 }}
