@@ -97,7 +97,7 @@ const CARD_CONFIG = [
     tooltip: 'Porcentaje de clientes que regresaron a comprar.' },
 ];
 
-export default function StatsCards({ clients, rawOrders = [], dateRange, metaInsights, ga4Insights, metaInsightsLoading }) {
+export default function StatsCards({ clients, rawOrders = [], dateRange, metaInsights, metaInsightsLoading }) {
   const [hoveredCard, setHoveredCard] = useState(null);
 
   const stats = useMemo(() => {

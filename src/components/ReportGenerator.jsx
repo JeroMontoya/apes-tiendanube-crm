@@ -88,6 +88,13 @@ function formatPercent(v) {
   return Number(v).toFixed(2) + '%';
 }
 
+function formatDuration(seconds) {
+  if (!seconds) return '0s';
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+}
+
 function getTopCampaigns(campaigns, n = 5) {
   if (!campaigns || !Array.isArray(campaigns)) return [];
   return [...campaigns]
@@ -538,11 +545,12 @@ function TiktokSection({ data }) {
 }
 
 function GA4Section({ data }) {
-  const sessions = data?.sessions || data?.totalSessions || 0;
-  const users = data?.users || data?.totalUsers || 0;
-  const pageviews = data?.pageviews || data?.totalPageviews || 0;
-  const bounceRate = data?.bounceRate || 0;
-  const avgDuration = data?.avgSessionDuration || data?.averageSessionDuration || 0;
+  const sessions = data?.global?.sessions || 0;
+  const users = data?.global?.activeUsers || 0;
+  const bounceRate = data?.global?.bounceRate || 0;
+  const avgDuration = data?.global?.averageSessionDuration || 0;
+  const totalRevenue = data?.ecommerce?.totalRevenue || 0;
+  const totalPurchases = data?.ecommerce?.totalPurchases || 0;
 
   return (
     <div className="report-section">
@@ -550,19 +558,25 @@ function GA4Section({ data }) {
       <div style={{ padding: '24px' }}>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
           <KPICard label="Sesiones" value={formatNumber(sessions)} color="#3b82f6" />
-          <KPICard label="Usuarios" value={formatNumber(users)} color="#22c55e" />
-          <KPICard label="Páginas Vistas" value={formatNumber(pageviews)} color="var(--primary-container)" />
+          <KPICard label="Usuarios Activos" value={formatNumber(users)} color="#22c55e" />
           <KPICard label="Tasa de Rebote" value={formatPercent(bounceRate)} color="#ef4444" />
+          <KPICard label="Tiempo Promedio" value={formatDuration(avgDuration)} color="var(--primary-container)" />
         </div>
-        {data?.topPages && data.topPages.length > 0 && (
+        {totalRevenue > 0 && (
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
+            <KPICard label="Ingresos E-commerce" value={formatCurrency(totalRevenue)} color="#10b981" />
+            <KPICard label="Compras" value={formatNumber(totalPurchases)} color="#8b5cf6" />
+          </div>
+        )}
+        {data?.acquisition && data.acquisition.length > 0 && (
           <>
-            <h3 style={{ margin: '0 0 12px', fontSize: '14px', color: '#374151', fontWeight: 700 }}>Páginas Principales</h3>
+            <h3 style={{ margin: '0 0 12px', fontSize: '14px', color: '#374151', fontWeight: 700 }}>Canales de Adquisición</h3>
             <DataTable
-              headers={['Página', 'Vistas', 'Sesiones Promedio']}
-              rows={data.topPages.slice(0, 5).map((p) => [
-                p.page || p.path || p.pagePath || '-',
-                formatNumber(p.views || p.pageViews || p.screenViews),
-                formatNumber(p.avgSessionDuration || p.sessions || 0),
+              headers={['Canal', 'Sesiones', 'Usuarios']}
+              rows={data.acquisition.slice(0, 5).map((ch) => [
+                ch.channel || '-',
+                formatNumber(ch.sessions || 0),
+                formatNumber(ch.activeUsers || 0),
               ])}
             />
           </>
@@ -669,8 +683,8 @@ function AIAnalysisSection({ allData }) {
       }
     }
     const ga4 = allData?.ga4Insights;
-    if (ga4?.sessions > 0) {
-      points.push(`Google Analytics reporta ${formatNumber(ga4.sessions)} sesiones con una tasa de rebote de ${formatPercent(ga4.bounceRate)}.`);
+    if (ga4?.global?.sessions > 0) {
+      points.push(`Google Analytics reporta ${formatNumber(ga4.global.sessions)} sesiones con una tasa de rebote de ${formatPercent(ga4.global.bounceRate)}.`);
     }
     const gsc = allData?.gscPerformance;
     if (gsc?.avgCtr > 0) {

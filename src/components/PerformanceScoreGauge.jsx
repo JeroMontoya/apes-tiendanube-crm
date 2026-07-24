@@ -18,8 +18,11 @@ export default function PerformanceScoreGauge({ clients, metaInsights, ga4Insigh
       if (repeat > c.length * 0.2) s += 5;
       if (repeat > c.length * 0.4) s += 5;
     }
-    if (ga4Insights?.conversionRate > 0.03) s += 4;
-    if (ga4Insights?.conversionRate > 0.05) s += 4;
+    if (ga4Insights?.ecommerce?.totalPurchases > 0 && ga4Insights?.global?.sessions > 0) {
+      const conversionRate = ga4Insights.ecommerce.totalPurchases / ga4Insights.global.sessions;
+      if (conversionRate > 0.02) s += 4;
+      if (conversionRate > 0.04) s += 4;
+    }
     return Math.min(100, Math.max(0, s));
   }, [clients, metaInsights, ga4Insights]);
 

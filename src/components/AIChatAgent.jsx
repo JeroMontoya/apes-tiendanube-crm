@@ -69,11 +69,15 @@ function buildContextPrompt(data) {
   }
   
   // GA4
-  if (safeGA4.length > 0) {
-    const totalSessions = safeGA4.reduce((s, p) => s + (p.sessions || 0), 0);
-    const totalUsers = safeGA4.reduce((s, p) => s + (p.users || 0), 0);
-    context += `GA4: ${totalSessions} sesiones, ${totalUsers} usuarios\n`;
-    safeGA4.slice(0, 5).forEach(p => { context += `  - ${p.page || 'N/A'}: ${p.sessions || 0} sesiones\n`; });
+  if (safeGA4?.global) {
+    const { sessions = 0, activeUsers = 0, bounceRate = 0 } = safeGA4.global;
+    context += `GA4: ${sessions} sesiones, ${activeUsers} usuarios activos, rebote: ${(bounceRate * 100).toFixed(1)}%\n`;
+    if (safeGA4.acquisition?.length) {
+      context += `  Canales: ${safeGA4.acquisition.slice(0, 5).map(ch => `${ch.channel} (${ch.sessions})`).join(', ')}\n`;
+    }
+    if (safeGA4.ecommerce?.totalRevenue > 0) {
+      context += `  E-commerce: $${safeGA4.ecommerce.totalRevenue.toLocaleString()} ingresos, ${safeGA4.ecommerce.totalPurchases} compras\n`;
+    }
     context += '\n';
   }
   
@@ -103,7 +107,7 @@ export default function AIChatAgent({ clients, metaInsights, googleAdsData, tikt
   const safeMeta = metaInsights || [];
   const safeGoogle = googleAdsData || [];
   const safeTiktok = tiktokData || [];
-  const safeGA4 = ga4Insights || [];
+  const safeGA4 = ga4Insights || null;
   const safeGSC = gscPerformance || [];
   const safeMC = mcProducts || [];
 
@@ -121,9 +125,9 @@ export default function AIChatAgent({ clients, metaInsights, googleAdsData, tikt
   };
 
   useEffect(() => {
-    const hasData = safeClients.length || safeMeta.length || safeGA4.length;
+    const hasData = safeClients.length || safeMeta.length || safeGA4?.global;
     const greeting = hasData
-      ? '¡Hola! Soy tu asistente IA con acceso a tus datos en tiempo real.\n\nTengo disponible:\n• ' + safeClients.length + ' clientes\n• ' + (safeMeta.length + safeGoogle.length + safeTiktok.length) + ' campañas activas\n• ' + safeGA4.length + ' páginas de Analytics\n• ' + safeGSC.length + ' queries de SEO\n• ' + safeMC.length + ' productos\n\nPregúntame lo que quieras sobre tu negocio.'
+      ? '¡Hola! Soy tu asistente IA con acceso a tus datos en tiempo real.\n\nTengo disponible:\n• ' + safeClients.length + ' clientes\n• ' + (safeMeta.length + safeGoogle.length + safeTiktok.length) + ' campañas activas\n• ' + (safeGA4?.global?.sessions || 0) + ' sesiones de Analytics\n• ' + safeGSC.length + ' queries de SEO\n• ' + safeMC.length + ' productos\n\nPregúntame lo que quieras sobre tu negocio.'
       : '¡Hola! Soy tu asistente IA. Los datos aún se están cargando. Cuando estén disponibles podré analizar tu negocio en profundidad.\n\nMientras tanto, puedo ayudarte con estrategias generales de marketing y e-commerce.';
     
     setMessages([{ id: 1, role: 'assistant', content: greeting, timestamp: new Date() }]);
