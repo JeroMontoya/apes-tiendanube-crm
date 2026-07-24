@@ -13,7 +13,21 @@
       }
     }
   ],
+  "crons": [
+    {
+      "path": "/api/whatsapp/process-queue",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/inventory/sync-queue",
+      "schedule": "*/2 * * * *"
+    }
+  ],
   "rewrites": [
+    {
+      "source": "/api/onyx/(.*)",
+      "destination": "/api/onyx/$1"
+    },
     {
       "source": "/api/inventory/(.*)",
       "destination": "/server/server.js"

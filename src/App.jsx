@@ -8,11 +8,9 @@ import StatsCards from './components/StatsCards';
 import MasterTable from './components/MasterTable';
 import ClassificationTree from './components/ClassificationTree';
 import AnalyticsPanel from './components/AnalyticsPanel';
-import BrandIntelligenceCenter from './components/BrandIntelligenceCenter';
 import ExportPanel from './components/ExportPanel';
 import SettingsPanel from './components/SettingsPanel';
 import ClientDetailModal from './components/ClientDetailModal';
-import MarketingReport from './components/MarketingReport';
 import FrequencyFunnel from './components/FrequencyFunnel';
 import GeoFunnel from './components/GeoFunnel';
 import AuthScreen from './components/AuthScreen';
@@ -22,6 +20,7 @@ import GA4Panel from './components/GA4Panel';
 import PQRPanel from './components/PQRPanel';
 import InventoryPage from './components/InventoryPage';
 import InventoryControlCenter from './components/InventoryControlCenter';
+import TallerStockControl from './components/inventory/TallerStockControl';
 import GoalTrackerBanner from './components/GoalTrackerBanner';
 import ActiveCampaignsWidget from './components/ActiveCampaignsWidget';
 import EventCalendar from './components/EventCalendar';
@@ -34,7 +33,17 @@ import RecentActivityFeed from './components/RecentActivityFeed';
 import OrdersTracking from './components/OrdersTracking';
 import MerchantCenterPanel from './components/MerchantCenterPanel';
 import SearchConsolePanel from './components/SearchConsolePanel';
-import LogisticsCenter from './components/LogisticsCenter';
+import CRODashboard from './components/CRODashboard';
+import HotLeads from './components/HotLeads';
+import PredictiveIntelligence from './components/PredictiveIntelligence';
+import PerformanceScoreGauge from './components/PerformanceScoreGauge';
+import TrafficSourcesDonut from './components/TrafficSourcesDonut';
+import QuickStatsPanel from './components/QuickStatsPanel';
+import TopProductsTable from './components/TopProductsTable';
+import SalesChartWidget from './components/SalesChartWidget';
+import UsersChartWidget from './components/UsersChartWidget';
+import ConversionsChartWidget from './components/ConversionsChartWidget';
+// LogisticsCenter removed — merged into unified InventoryControlCenter
 
 // Real-time Notification System
 import { NotificationProvider, useNotifications } from './contexts/NotificationContext';
@@ -67,6 +76,7 @@ import { MetaAdLibraryAPI } from './api/MetaAdLibraryAPI';
 import SyncProgressOverlay from './components/SyncProgressOverlay';
 import CompetitiveIntelligencePanel from './components/CompetitiveIntelligencePanel';
 import MarketingCommandCenter from './components/MarketingCommandCenter';
+
 import GoogleAdsPanel from './components/GoogleAdsPanel';
 import TikTokAdsPanel from './components/TikTokAdsPanel';
 import ReportGenerator from './components/ReportGenerator';
@@ -121,6 +131,40 @@ export default function App() {
   const [gscPerformance, setGscPerformance] = useState(null);
   const [googleAdsData, setGoogleAdsData] = useState(null);
   const [tiktokData, setTiktokData] = useState(null);
+  
+  // Predictive Intelligence states
+  const [stockVelocity, setStockVelocity] = useState([]);
+  const [budgetGovernanceAlerts, setBudgetGovernanceAlerts] = useState([]);
+  
+  useEffect(() => {
+    if (!session) return;
+    
+    // Fetch initial data
+    const fetchPredictiveData = async () => {
+      const [{ data: velData }, { data: govData }] = await Promise.all([
+        supabase.from('stock_velocity').select('*').order('updated_at', { ascending: false }),
+        supabase.from('ad_budget_governance').select('*').order('created_at', { ascending: false })
+      ]);
+      if (velData) setStockVelocity(velData);
+      if (govData) setBudgetGovernanceAlerts(govData);
+    };
+    
+    fetchPredictiveData();
+    
+    // Realtime subscriptions
+    const velSub = supabase.channel('stock_velocity_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'stock_velocity' }, fetchPredictiveData)
+      .subscribe();
+      
+    const govSub = supabase.channel('ad_budget_governance_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ad_budget_governance' }, fetchPredictiveData)
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(velSub);
+      supabase.removeChannel(govSub);
+    };
+  }, [session]);
   const [aiInsights, setAiInsights] = useState(null);
   const [isFetchingAI, setIsFetchingAI] = useState(false);
   const [workspaceData, setWorkspaceData] = useState(null);
@@ -210,7 +254,7 @@ export default function App() {
     };
   }, []);
 
-  // ── 0. Inicialización de Nexo ────────────────
+  // ── 0. Inicialización de Nexo & Event Listeners ────────────────
   useEffect(() => {
     try {
       if (window.top !== window.self) {
@@ -221,6 +265,16 @@ export default function App() {
     } catch (e) {
       console.warn('No se pudo inicializar Nexo', e);
     }
+    
+    const handleNavigation = (e) => {
+      if (e.detail) {
+        setActiveView(e.detail);
+      }
+    };
+    window.addEventListener('navigate-sidebar', handleNavigation);
+    return () => {
+      window.removeEventListener('navigate-sidebar', handleNavigation);
+    };
   }, []);
 
   // ── 1. Carga de Caché y Sincronización ────────────────
@@ -1275,27 +1329,28 @@ function AppContent({
   );
 }
 
-function AppViewRenderer({
-  activeView, filteredClients, tiendanubeProducts, rawOrders, session, storeId,
-  workspaceData, isRefreshingStock, refreshStock, metaInsights, ga4Insights,
-  metaInsightsLoading, googleAdsData, tiktokData, gscPerformance, mcProducts,
-  connectionStatus, lastSync, handleConnect, dateRange, historicClients,
-  unifiedClients, setSelectedClient, fetchRealData,
-  competitors, landscape, insights, aiInsights, ciLoading,
-  onRefreshCompetitive, onAddCompetitor, onAnalyzeCompetitor, onRemoveCompetitor,
-  fetchMetaInsights, setWorkspaceData, handleManualSync,
-}) {
+function AppViewRenderer(props) {
+  const {
+    activeView, filteredClients, tiendanubeProducts, rawOrders, session, storeId,
+    workspaceData, isRefreshingStock, refreshStock, metaInsights, ga4Insights,
+    metaInsightsLoading, googleAdsData, tiktokData, gscPerformance, mcProducts,
+    connectionStatus, lastSync, handleConnect, dateRange, historicClients,
+    unifiedClients, setSelectedClient, fetchRealData,
+    competitors, landscape, insights, aiInsights, ciLoading,
+    onRefreshCompetitive, onAddCompetitor, onAnalyzeCompetitor, onRemoveCompetitor,
+    fetchMetaInsights, setWorkspaceData, handleManualSync,
+  } = props;
   switch(activeView) {
     case 'dashboard':
       return (
-        <>
-          <div className="section-header">
+        <div className="dashboard-grid-bg" style={{ minHeight: '100vh', margin: '-var(--space-xl)', padding: 'var(--space-xl)', borderRadius: 'var(--radius-lg)' }}>
+          <div className="section-header" style={{ marginBottom: 24 }}>
             <div>
               <h1 style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                Centro de Comando
+                Dashboard
                 <span className="live-dot" />
               </h1>
-              <p>Panel de control operativo en tiempo real</p>
+              <p>Hola de nuevo, aquí está el resumen de tu negocio de hoy.</p>
             </div>
             {lastSync && (
               <div style={{ 
@@ -1322,11 +1377,27 @@ function AppViewRenderer({
               </div>
             )}
           </div>
-          <GoalTrackerBanner clients={filteredClients} dateRange={dateRange} />
+          
           <StatsCards clients={filteredClients} metaInsights={metaInsights} ga4Insights={ga4Insights} metaInsightsLoading={metaInsightsLoading} />
+          
+          <div className="bento-grid" style={{ marginTop: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
+            <SalesChartWidget rawOrders={rawOrders} />
+            <UsersChartWidget ga4Insights={ga4Insights} />
+            <PerformanceScoreGauge clients={filteredClients} metaInsights={metaInsights} ga4Insights={ga4Insights} />
+          </div>
+
+          <div className="bento-grid" style={{ marginBottom: 'var(--space-md)' }}>
+            <TrafficSourcesDonut ga4Insights={ga4Insights} />
+            <ConversionsChartWidget rawOrders={rawOrders} />
+            <TopProductsTable rawOrders={rawOrders} clients={filteredClients} />
+            <QuickStatsPanel clients={filteredClients} ga4Insights={ga4Insights} />
+          </div>
+
+          <GoalTrackerBanner clients={filteredClients} dateRange={dateRange} />
+
           <div className="bento-grid mt-md">
             <div className="bento-span-8" style={{ display: 'flex', flexDirection: 'column' }}>
-              <CohortRetentionChart clients={filteredClients} />
+              <AIInsightsWidget clients={filteredClients} storeId={storeId} />
             </div>
             <div className="bento-span-4" style={{ display: 'flex', flexDirection: 'column' }}>
               <StockAlertWidget
@@ -1339,65 +1410,34 @@ function AppViewRenderer({
               />
             </div>
           </div>
+
           <div className="bento-grid mt-md">
             <div className="bento-span-8" style={{ display: 'flex', flexDirection: 'column' }}>
-              <AIInsightsWidget clients={filteredClients} storeId={storeId} />
+              <CohortRetentionChart clients={filteredClients} />
             </div>
             <div className="bento-span-4" style={{ display: 'flex', flexDirection: 'column' }}>
               <ChurnRadar clients={filteredClients} />
             </div>
           </div>
+          
+          <div className="bento-grid mt-md">
+            <div className="bento-span-8" style={{ display: 'flex', flexDirection: 'column' }}>
+              <RecentActivityFeed clients={filteredClients} rawOrders={rawOrders} dateRange={dateRange} />
+            </div>
+            <div className="glass-card bento-span-4" style={{ padding: 0, overflow: 'hidden' }}>
+              <ActiveCampaignsWidget workspace={workspaceData} onRefreshMeta={fetchMetaInsights} />
+            </div>
+          </div>
+
           <div className="bento-grid mt-md">
             <div className="glass-card bento-span-7" style={{ padding: 0, overflow: 'hidden' }}>
               <FrequencyFunnel clients={filteredClients} onSelectClient={setSelectedClient} />
             </div>
             <div className="glass-card bento-span-5" style={{ padding: 0, overflow: 'hidden' }}>
-              <ActiveCampaignsWidget workspace={workspaceData} onRefreshMeta={fetchMetaInsights} />
+               <GeoFunnel clients={filteredClients} onSelectClient={setSelectedClient} dateRange={dateRange} />
             </div>
           </div>
-          <div className="bento-grid mt-md">
-            <div className="bento-span-7">
-              <RecentActivityFeed clients={filteredClients} rawOrders={rawOrders} dateRange={dateRange} />
-            </div>
-            <div className="glass-card bento-span-5" style={{ padding: 0, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <h3 style={{ fontSize: 15, fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--on-surface)' }}>
-                  <Award size={18} color="#f59e0b" /> Top Clientes
-                </h3>
-              </div>
-              <div style={{ flex: 1, overflowY: 'auto' }}>
-                {[...filteredClients]
-                  .filter(c => (c.purchaseCount ?? 0) > 0)
-                  .sort((a, b) => (b.totalSpent ?? 0) - (a.totalSpent ?? 0))
-                  .slice(0, 8)
-                  .map((client, i) => (
-                  <div 
-                    key={client.id} 
-                    className="top-client-item"
-                    onClick={() => setSelectedClient(client)}
-                    style={{ padding: '14px 24px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', transition: 'all 0.2s ease', display: 'flex', alignItems: 'center', gap: 12 }}
-                  >
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: `hsl(${(i * 47) % 360}, 60%, 25%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-                      {client.name?.charAt(0)?.toUpperCase()}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--on-surface)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{client.name}</div>
-                      <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
-                        <span>{client.ordersCount || client.purchaseCount} compras</span>
-                        <span style={{ color: '#10b981', fontWeight: 600 }}>
-                          {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(client.totalSpent)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="glass-card bento-span-12 mt-md" style={{ padding: 0, overflow: 'hidden' }}>
-            <GeoFunnel clients={filteredClients} onSelectClient={setSelectedClient} dateRange={dateRange} />
-          </div>
-        </>
+        </div>
       );
     case 'calendario':
       return (
@@ -1439,8 +1479,7 @@ function AppViewRenderer({
           <ClassificationTree clients={filteredClients} />
         </>
       );
-    case 'inteligencia':
-      return <BrandIntelligenceCenter session={session} />;
+
     case 'analitica':
       return (
         <>
@@ -1451,16 +1490,17 @@ function AppViewRenderer({
           <AnalyticsPanel clients={filteredClients} />
         </>
       );
-    case 'marketing':
-      return <MarketingReport rawClients={unifiedClients} dateRange={dateRange} />;
+
     case 'marketing_center':
       return <MarketingCommandCenter
         ga4Insights={ga4Insights} gscPerformance={gscPerformance} mcProducts={mcProducts}
         metaInsights={metaInsights} googleAdsData={googleAdsData} tiktokData={tiktokData}
         unifiedClients={unifiedClients} rawOrders={rawOrders} tiendanubeProducts={tiendanubeProducts}
         competitors={competitors} landscape={landscape} aiInsights={aiInsights}
-        workspaceData={workspaceData} dateRange={dateRange}
+        workspaceData={workspaceData} dateRange={dateRange} session={session}
+        renderExternalPanel={(panelId) => <AppViewRenderer {...props} activeView={panelId} />}
       />;
+
     case 'meta_ads':
       return <MetaAdsPanel workspace={workspaceData} onRefreshMeta={fetchMetaInsights} clients={unifiedClients} metaInsights={metaInsights} allGoogleAdsData={googleAdsData} allTiktokData={tiktokData} />;
     case 'google_ads':
@@ -1479,6 +1519,72 @@ function AppViewRenderer({
       return <GA4Panel ga4Insights={ga4Insights} />;
     case 'pipeline':
       return <CampaignPipeline session={session} unifiedClients={filteredClients} />;
+    case 'predictive':
+      return <PredictiveIntelligence stockVelocity={stockVelocity} budgetGovernanceAlerts={budgetGovernanceAlerts} />;
+    case 'pqr':
+      return <PQRPanel session={session} rawOrders={rawOrders} n8nWebhookUrl={workspaceData?.n8n_webhook_url} />;
+    case 'logistics':
+      return (
+        <InventoryControlCenter
+          initialProducts={tiendanubeProducts}
+          tiendanubeProducts={tiendanubeProducts}
+          connectionStatus={connectionStatus}
+          isRefreshingStock={isRefreshingStock}
+          lastSync={lastSync}
+          refreshStock={refreshStock}
+          session={session}
+          supabase={supabase}
+          workspaceData={workspaceData}
+          onMovement={async (type, product, variant, quantity, fromLocation, toLocation, notes) => {
+            const { error } = await supabase.from('stock_movements').insert({
+              type,
+              details: {
+                productId: product.productId,
+                productName: product.name,
+                variantId: variant?.id,
+                variantSku: variant?.sku,
+                quantity,
+                fromLocation,
+                toLocation,
+                notes,
+              },
+              location: fromLocation,
+              performed_by: session?.user?.id,
+              performed_by_name: session?.user?.email || 'Usuario',
+              created_at: new Date().toISOString(),
+            });
+            if (error) console.error('[App] Error logging movement:', error);
+          }}
+          onStockUpdate={async (productId, variantId, newStock) => {
+            if (!storeId) return;
+            const { data: sysCfg } = await supabase.from('system_config').select('tiendanube_access_token').eq('id', 'main').single();
+            const token = sysCfg?.tiendanube_access_token || workspaceData?.tiendanube_access_token;
+            if (!token) return;
+            const api = new TiendanubeAPI(storeId, token);
+            await api.updateVariantStock(productId, variantId, newStock);
+          }}
+          onTransfer={async (product, fromLocation, toLocation, quantity) => {
+            const { error } = await supabase.from('stock_movements').insert({
+              type: 'transfer',
+              details: {
+                productId: product.productId,
+                productName: product.name,
+                fromLocation,
+                toLocation,
+                quantity,
+                notes: 'Transferencia manual',
+              },
+              location: fromLocation,
+              performed_by: session?.user?.id,
+              performed_by_name: session?.user?.email || 'Usuario',
+              created_at: new Date().toISOString(),
+            });
+            if (error) console.error('[App] Error logging transfer:', error);
+          }}
+          lowStockThreshold={5}
+          showPredictive={true}
+        />
+      );
     case 'inventario':
       return (
         <InventoryControlCenter
@@ -1541,12 +1647,14 @@ function AppViewRenderer({
           showPredictive={true}
         />
       );
-    case 'pqr':
-      return <PQRPanel session={session} rawOrders={rawOrders} n8nWebhookUrl={workspaceData?.n8n_webhook_url} />;
-    case 'logistics':
+    case 'taller_stock':
       return (
-        <LogisticsCenter session={session} />
+        <TallerStockControl session={session} />
       );
+    case 'cro_analyzer':
+      return <CRODashboard session={session} />;
+    case 'hot_leads':
+      return <HotLeads session={session} />;
     case 'equipo':
       return <TeamPanel />;
     case 'actividad':

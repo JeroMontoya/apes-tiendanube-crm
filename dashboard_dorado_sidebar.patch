@@ -1,0 +1,257 @@
+diff --git a/src/components/Sidebar.jsx b/src/components/Sidebar.jsx
+index 4069087..e8e15ab 100644
+--- a/src/components/Sidebar.jsx
++++ b/src/components/Sidebar.jsx
+@@ -4,7 +4,7 @@ import {
+   LayoutDashboard, Users, Target, Brain, TrendingUp,
+   Megaphone, Globe, KanbanSquare, PackageSearch, ShoppingCart,
+   Settings, Download, Menu, X, Zap, Calendar, Sun, Moon, Warehouse,
+-  Hammer, BarChart3, Clock, ChevronDown, ChevronRight, MoreHorizontal,
++  Hammer, BarChart3, Clock, ChevronDown, ChevronRight, ChevronLeft, MoreHorizontal,
+   BarChart2, MessageSquare, Repeat, FileText, Sparkles,
+   Compass, Music, Video, Link, LogOut, Eye, Truck
+ } from 'lucide-react';
+@@ -84,6 +84,14 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
+   const [mobileOpen, setMobileOpen] = useState(false);
+   const [moreOpen, setMoreOpen] = useState(false);
+   const [collapsed, setCollapsed] = useState({});
++  const [railCollapsed, setRailCollapsed] = useState(() => {
++    try { return localStorage.getItem('apes_sidebar_rail') === 'true'; } catch { return false; }
++  });
++
++  useEffect(() => {
++    document.documentElement.setAttribute('data-sidebar', railCollapsed ? 'collapsed' : 'expanded');
++    try { localStorage.setItem('apes_sidebar_rail', String(railCollapsed)); } catch {}
++  }, [railCollapsed]);
+   const teamCtx = useTeam();
+   const hasPermission = teamCtx?.hasPermission || (() => true);
+   const { logout } = teamCtx || {};
+@@ -150,7 +158,15 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
+             />
+           )}
+ 
+-          <aside className={`sidebar ${mobileOpen ? 'open' : ''}`}>
++          <aside className={`sidebar ${mobileOpen ? 'open' : ''} ${railCollapsed ? 'rail-collapsed' : ''}`}>
++            <button
++              className="sidebar-rail-toggle"
++              onClick={() => setRailCollapsed(v => !v)}
++              title={railCollapsed ? 'Expandir menú' : 'Minimizar menú'}
++            >
++              {railCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
++            </button>
++
+             {/* ── Logo ── */}
+             <div className="sidebar-logo">
+               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+@@ -211,6 +227,7 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
+                               key={item.id}
+                               className={`sidebar-nav-item ${active ? 'active' : ''}`}
+                               onClick={() => handleNavigate(item.id)}
++                              title={railCollapsed ? item.label : undefined}
+                             >
+                               <span className="nav-icon">
+                                 <Icon size={16} strokeWidth={active ? 2.2 : 1.8} />
+diff --git a/src/components/StatsCards.jsx b/src/components/StatsCards.jsx
+index 7bc5427..dde8307 100644
+--- a/src/components/StatsCards.jsx
++++ b/src/components/StatsCards.jsx
+@@ -1,7 +1,7 @@
+ import React, { useMemo, useState, useEffect, useRef } from 'react';
+ import { 
+   DollarSign, Users, ShoppingCart, Repeat, 
+-  Star, Package, TrendingUp, Rocket, Globe, ArrowUpRight, Target,
++  Star, Package, TrendingUp, Rocket, Globe, ArrowUpRight, ArrowDownRight, Target,
+   RefreshCw, Info
+ } from 'lucide-react';
+ import MetricTooltip from './MetricTooltip';
+@@ -65,6 +65,21 @@ function Sparkline({ data, color, width = 80, height = 32 }) {
+   );
+ }
+ 
++// Calcula variación % comparando el inicio y el final de la serie mostrada
++// (no es "vs período anterior" real, sino la tendencia dentro del rango
++// visible en el sparkline; se etiqueta como "en el período" para ser honestos
++// sobre qué se está comparando).
++function calcDelta(sparkData) {
++  if (!sparkData || sparkData.length < 2) return { percent: 0, isPositive: true };
++  const first = sparkData[0];
++  const last = sparkData[sparkData.length - 1];
++  if (!first || first === 0) {
++    return { percent: last > 0 ? 100 : 0, isPositive: last >= 0 };
++  }
++  const pct = ((last - first) / Math.abs(first)) * 100;
++  return { percent: Math.abs(pct).toFixed(1), isPositive: pct >= 0 };
++}
++
+ const CARD_CONFIG = [
+   { key: 'revenue', icon: DollarSign, label: 'Ingresos Totales', color: '#10b981', span: 'bento-span-3',
+     tooltip: 'Suma total de lo que todos tus clientes han gastado en tu tienda. Incluye todas las compras, con y sin descuento.' },
+@@ -196,9 +211,25 @@ export default function StatsCards({ clients, metaInsights, ga4Insights, metaIns
+                   </MetricTooltip>
+                 )}
+               </div>
+-              <div style={{ opacity: isHovered ? 1 : 0, transition: 'opacity 0.3s' }}>
+-                <ArrowUpRight size={16} color="#10b981" />
+-              </div>
++              {!isMetaLoading && (() => {
++                const delta = calcDelta(data.sparkData);
++                const deltaColor = delta.isPositive ? '#10b981' : '#f43f5e';
++                return (
++                  <div
++                    title="Variación dentro del período mostrado en el filtro de fechas"
++                    style={{
++                      display: 'flex', alignItems: 'center', gap: 2,
++                      fontSize: 11, fontWeight: 700, color: deltaColor,
++                      background: `${deltaColor}1f`,
++                      padding: '3px 7px', borderRadius: 20,
++                      whiteSpace: 'nowrap', cursor: 'help',
++                    }}
++                  >
++                    {delta.isPositive ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
++                    {delta.percent}%
++                  </div>
++                );
++              })()}
+               {isMetaLoading && (
+                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: 'var(--on-surface-variant)' }}>
+                   <RefreshCw size={12} style={{ animation: 'spin 1s linear infinite' }} />
+diff --git a/src/index.css b/src/index.css
+index bd35b51..6aa92a8 100644
+--- a/src/index.css
++++ b/src/index.css
+@@ -104,29 +104,30 @@
+   to { opacity: 1; transform: translateY(0) scale(1); }
+ }
+ 
+-/* --- CSS Custom Properties (Design Tokens v5.1 - Elegant Flat & Cold Tones) --- */
++/* --- CSS Custom Properties (Design Tokens v6.0 - Warm Dark & Gold) --- */
+ :root {
+-  /* Brand Colors - Primary (Electric Blue) */
+-  --primary: #2563eb; /* Blue 600 */
+-  --on-primary: #ffffff;
+-  --primary-container: rgba(37, 99, 235, 0.1);
+-  --primary-fixed: #1d4ed8;
+-  
+-  /* Surfaces & Backgrounds (Elegant Cold Dark - Slate) */
+-  --background: #0f172a; /* Slate 900 */
+-  --on-background: #f8fafc; /* Slate 50 */
+-  
+-  --surface: #1e293b; /* Slate 800 */
+-  --surface-dim: #0f172a;
+-  --surface-bright: #334155; /* Slate 700 */
++  /* Brand Colors - Primary (Gold) */
++  --primary: #d4a017; /* Warm Gold */
++  --on-primary: #1a1500;
++  --primary-container: rgba(212, 160, 23, 0.12);
++  --primary-fixed: #b8860b;
++  --primary-glow: rgba(212, 160, 23, 0.3);
++
++  /* Surfaces & Backgrounds (Warm Near-Black) */
++  --background: #0d0c08; /* Warm near-black */
++  --on-background: #f5f1e6;
++
++  --surface: #17150d; /* Warm charcoal */
++  --surface-dim: #0d0c08;
++  --surface-bright: #2a2618; /* Warm dark bronze */
+   --surface-container-lowest: transparent;
+-  --surface-container-low: rgba(255, 255, 255, 0.02);
+-  --surface-container: #1e293b;
+-  --surface-container-high: #334155;
+-  --surface-container-highest: #475569;
+-  
+-  --on-surface: #f8fafc;
+-  --on-surface-variant: #94a3b8; /* Slate 400 */
++  --surface-container-low: rgba(212, 160, 23, 0.03);
++  --surface-container: #17150d;
++  --surface-container-high: #2a2618;
++  --surface-container-highest: #3d3722;
++
++  --on-surface: #f5f1e6;
++  --on-surface-variant: #a89f88; /* Warm gray */
+ 
+   /* Borders & Outlines - Crisp and Flat */
+   --outline: rgba(255,255,255,0.1);
+@@ -256,7 +257,7 @@ body::before {
+   content: '';
+   position: fixed;
+   top: 0; left: 0; width: 100vw; height: 100vh;
+-  background: radial-gradient(circle at 50% -20%, rgba(59, 130, 246, 0.15), transparent 60%);
++  background: radial-gradient(circle at 50% -20%, rgba(212, 160, 23, 0.12), transparent 60%);
+   pointer-events: none;
+   z-index: 0;
+ }
+@@ -381,7 +382,7 @@ a:hover {
+   align-items: center;
+   justify-content: center;
+   flex-shrink: 0;
+-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
++  box-shadow: 0 4px 12px var(--primary-glow);
+ }
+ 
+ .sidebar-logo .logo-subtitle {
+@@ -744,6 +745,65 @@ a:hover {
+   letter-spacing: 0.5px;
+ }
+ 
++/* ── Rail Collapse Toggle ── */
++.sidebar-rail-toggle {
++  position: absolute;
++  top: 22px;
++  right: -12px;
++  width: 24px;
++  height: 24px;
++  border-radius: 50%;
++  background: var(--surface-container-high);
++  border: 1px solid var(--border-medium);
++  color: var(--on-surface-variant);
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  cursor: pointer;
++  z-index: 10;
++  transition: all var(--transition-fast);
++}
++
++.sidebar-rail-toggle:hover {
++  background: var(--primary);
++  color: var(--on-primary);
++  border-color: var(--primary);
++}
++
++/* ── Collapsed Rail Mode ── */
++[data-sidebar="collapsed"] .main-content {
++  margin-left: var(--sidebar-collapsed);
++  max-width: calc(100vw - var(--sidebar-collapsed));
++}
++
++.sidebar.rail-collapsed {
++  width: calc(var(--sidebar-collapsed) - 12px);
++}
++
++.sidebar.rail-collapsed .brand-text,
++.sidebar.rail-collapsed .logo-subtitle,
++.sidebar.rail-collapsed .sidebar-nav-item span:not(.nav-icon),
++.sidebar.rail-collapsed .nav-group-label span,
++.sidebar.rail-collapsed .nav-group-count,
++.sidebar.rail-collapsed .theme-toggle-label,
++.sidebar.rail-collapsed .sidebar-footer p,
++.sidebar.rail-collapsed .sidebar-footer-label,
++.sidebar.rail-collapsed .member-badge-wrapper .brand-text {
++  display: none;
++}
++
++.sidebar.rail-collapsed .sidebar-logo > div,
++.sidebar.rail-collapsed .sidebar-nav-item,
++.sidebar.rail-collapsed .theme-toggle-btn,
++.sidebar.rail-collapsed .nav-group-toggle {
++  justify-content: center;
++}
++
++.sidebar.rail-collapsed .sidebar-nav-item {
++  padding-left: 0;
++  padding-right: 0;
++}
++
+ .sidebar-toggle {
+   display: none;
+   position: fixed;

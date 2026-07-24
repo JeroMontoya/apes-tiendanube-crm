@@ -1,5 +1,5 @@
 /* ============================================
-   APES CRM — Design System v5.0 (Ultra-Modern)
+   Onyx — Design System v5.0 (Ultra-Modern)
    Brand: Premium Dark, Organic Shapes, Glassmorphism
    Typography: Inter (Variable)
    Philosophy: No sharp corners, fluid & alive
@@ -104,60 +104,60 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* --- CSS Custom Properties (Design Tokens v5.1 - Elegant Flat & Cold Tones) --- */
+/* --- CSS Custom Properties (Onyx Design System v6.0 - Cool & Elegant Flat) --- */
 :root {
-  /* Brand Colors - Primary (Electric Blue) */
-  --primary: #2563eb; /* Blue 600 */
-  --on-primary: #ffffff;
-  --primary-container: rgba(37, 99, 235, 0.1);
-  --primary-fixed: #1d4ed8;
+  /* Elegant Cool Dark Mode */
+  --background: #0B0E14; /* Deep cool slate */
+  --on-background: #F1F5F9;
   
-  /* Surfaces & Backgrounds (Elegant Cold Dark - Slate) */
-  --background: #0f172a; /* Slate 900 */
-  --on-background: #f8fafc; /* Slate 50 */
-  
-  --surface: #1e293b; /* Slate 800 */
-  --surface-dim: #0f172a;
-  --surface-bright: #334155; /* Slate 700 */
+  --surface: #11151C; /* Dark cool gray */
+  --surface-dim: #0B0E14;
+  --surface-bright: #1A1F2B;
   --surface-container-lowest: transparent;
-  --surface-container-low: rgba(255, 255, 255, 0.02);
-  --surface-container: #1e293b;
-  --surface-container-high: #334155;
-  --surface-container-highest: #475569;
+  --surface-container-low: rgba(255, 255, 255, 0.01);
+  --surface-container: #11151C;
+  --surface-container-high: #1A1F2B;
+  --surface-container-highest: #232A3B;
   
-  --on-surface: #f8fafc;
-  --on-surface-variant: #94a3b8; /* Slate 400 */
+  --on-surface: #F1F5F9;
+  --on-surface-variant: #94A3B8; /* Slate 400 */
 
-  /* Borders & Outlines - Crisp and Flat */
-  --outline: rgba(255,255,255,0.1);
-  --outline-variant: rgba(255,255,255,0.05);
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-medium: rgba(255, 255, 255, 0.15);
+  /* Metallic Accents (Cool Blue/Steel) */
+  --primary: #475569; /* Slate 600 */
+  --on-primary: #ffffff;
+  --primary-container: rgba(71, 85, 105, 0.15);
+  --primary-fixed: #94A3B8; /* Slate 400 glow */
 
-  /* Glassmorphism Dark - Reduced to flat transparency */
-  --glass-bg: rgba(15, 23, 42, 0.85);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-blur: blur(20px);
+  /* Flat Minimal Borders */
+  --outline: rgba(255, 255, 255, 0.08);
+  --outline-variant: rgba(255, 255, 255, 0.03);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-medium: rgba(255, 255, 255, 0.10);
 
-  /* Shadows Dark - Flattened completely */
+  /* Flat Glass */
+  --glass-bg: rgba(17, 21, 28, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --glass-blur: blur(24px);
+
+  /* REMOVED 3D SHADOWS: Using Flat Design */
   --shadow-sm: none;
   --shadow-md: none;
   --shadow-lg: none;
 
-  /* Spacing */
-  --space-xs: 4px;
-  --space-sm: 8px;
-  --space-md: 16px;
-  --space-lg: 24px;
-  --space-xl: 32px;
-  --space-2xl: 48px;
+  /* Extreme Minimalism: Generous Spacing */
+  --space-xs: 6px;
+  --space-sm: 12px;
+  --space-md: 24px;
+  --space-lg: 32px;
+  --space-xl: 48px;
+  --space-2xl: 72px;
 
-  /* Sharp/Professional Radii (Less bubbly) */
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  /* Sharp/Tactical Radii */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
   --radius-full: 9999px;
 
   /* Transitions */
@@ -165,10 +165,10 @@
   --transition-base: 250ms ease;
 
   /* Layout */
-  --sidebar-width: 240px;
-  --sidebar-collapsed: 68px;
-  --topbar-height: 56px;
-  --content-max-width: 1400px;
+  --sidebar-width: 260px;
+  --sidebar-collapsed: 72px;
+  --topbar-height: 64px;
+  --content-max-width: 1440px;
   
   /* Fluid Typography */
   --fs-xs: clamp(0.65rem, 0.6rem + 0.2vw, 0.75rem);
@@ -181,19 +181,19 @@
 
 [data-theme="light"] {
   /* Elegant High-Contrast Light Mode */
-  --background: #f8fafc; /* Slate 50 */
-  --on-background: #0f172a; /* Slate 900 */
-  --surface: #ffffff;
-  --surface-dim: #f1f5f9; /* Slate 100 */
-  --surface-bright: #ffffff;
+  --background: #F8FAFC; /* Slate 50 */
+  --on-background: #0F172A; /* Slate 900 */
+  --surface: #FFFFFF;
+  --surface-dim: #F1F5F9; /* Slate 100 */
+  --surface-bright: #FFFFFF;
   --surface-container-lowest: transparent;
   --surface-container-low: rgba(0, 0, 0, 0.02);
-  --surface-container: #ffffff;
-  --surface-container-high: #f1f5f9;
-  --surface-container-highest: #e2e8f0; /* Slate 200 */
+  --surface-container: #FFFFFF;
+  --surface-container-high: #F1F5F9;
+  --surface-container-highest: #E2E8F0; /* Slate 200 */
   
-  --on-surface: #0f172a; /* High contrast text */
-  --on-surface-variant: #475569; /* Slate 600 - much more readable */
+  --on-surface: #0F172A; /* High contrast text */
+  --on-surface-variant: #475569; /* Slate 600 - very readable */
   --border-subtle: rgba(15, 23, 42, 0.1);
   --border-medium: rgba(15, 23, 42, 0.2);
   --glass-bg: rgba(255, 255, 255, 0.9);
@@ -252,11 +252,18 @@ body {
   font-feature-settings: 'cv11', 'ss01', 'ss03';
 }
 
+h1, h2, h3, h4, h5, h6 {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 500;
+  margin: 0;
+}
+
 body::before {
   content: '';
   position: fixed;
   top: 0; left: 0; width: 100vw; height: 100vh;
-  background: radial-gradient(circle at 50% -20%, rgba(59, 130, 246, 0.15), transparent 60%);
+  background: radial-gradient(circle at 50% -20%, rgba(82, 90, 107, 0.12), transparent 60%);
   pointer-events: none;
   z-index: 0;
 }
@@ -773,7 +780,7 @@ a:hover {
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  padding: var(--space-lg);
+  padding: 16px; /* Reduced from space-lg for tighter UI */
   box-shadow: var(--shadow-sm);
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
               box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
@@ -813,15 +820,31 @@ a:hover {
 .bento-grid > *:nth-child(9) { animation-delay: 0.36s; }
 .bento-grid > *:nth-child(10) { animation-delay: 0.4s; }
 
+.bento-span-1 { grid-column: span 1; }
+.bento-span-2 { grid-column: span 2; }
 .bento-span-3 { grid-column: span 3; }
 .bento-span-4 { grid-column: span 4; }
 .bento-span-5 { grid-column: span 5; }
 .bento-span-6 { grid-column: span 6; }
 .bento-span-7 { grid-column: span 7; }
 .bento-span-8 { grid-column: span 8; }
+.bento-span-9 { grid-column: span 9; }
+.bento-span-10 { grid-column: span 10; }
+.bento-span-11 { grid-column: span 11; }
 .bento-span-12 { grid-column: span 12; }
 .bento-row-2 { grid-row: span 2; }
 .bento-row-3 { grid-row: span 3; }
+
+/* ============================================
+   GRID BACKGROUND — Technical Look
+   ============================================ */
+.dashboard-grid-bg {
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 30px 30px;
+  background-position: center top;
+}
 
 /* ============================================
    RESPONSIVE UTILITIES

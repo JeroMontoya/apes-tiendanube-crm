@@ -53,7 +53,7 @@ export default async function handler(req, res) {
       const listRes = await fetch(`https://api.tiendanube.com/v1/${storeId}/webhooks`, {
         headers: {
           'Authentication': `bearer ${accessToken}`,
-          'User-Agent': 'APES CRM (contact@apesdigital.com)',
+          'User-Agent': 'Onyx Core (contact@onyxcore.com)',
           'Content-Type': 'application/json',
         },
       });
@@ -97,7 +97,7 @@ export default async function handler(req, res) {
           method: 'POST',
           headers: {
             'Authentication': `bearer ${accessToken}`,
-            'User-Agent': 'APES CRM (contact@apesdigital.com)',
+            'User-Agent': 'Onyx Core (contact@onyxcore.com)',
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
@@ -133,7 +133,7 @@ export default async function handler(req, res) {
         method: 'DELETE',
         headers: {
           'Authentication': `bearer ${accessToken}`,
-          'User-Agent': 'APES CRM (contact@apesdigital.com)',
+          'User-Agent': 'Onyx Core (contact@onyxcore.com)',
         },
       });
       return res.status(200).json({ success: delRes.ok, status: delRes.status });

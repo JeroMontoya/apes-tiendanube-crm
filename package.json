@@ -1,5 +1,5 @@
 {
-  "name": "app-tiendanueve",
+  "name": "onyx-core",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -29,6 +29,7 @@
     "jose": "^6.2.3",
     "localforage": "^1.10.0",
     "lucide-react": "^1.21.0",
+    "openai": "^6.48.0",
     "papaparse": "^5.5.4",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",

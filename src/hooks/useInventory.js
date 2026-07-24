@@ -1,12 +1,12 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 
 export default function useInventory() {
   const [products, setProducts] = useState([]);
-  const [locations] = useState([
-    { id: 'r5', name: 'R5', type: 'physical', color: '#3b82f6' },
-    { id: 'apes', name: 'APES', type: 'physical', color: '#8b5cf6' },
-    { id: 'web', name: 'WEB', type: 'online', color: '#10b981' },
+  const [locations, setLocations] = useState([
+    { id: 'r5', code: 'r5', name: 'R5', type: 'physical', color: '#3b82f6' },
+    { id: 'apes', code: 'apes', name: 'APES', type: 'physical', color: '#8b5cf6' },
+    { id: 'web', code: 'web', name: 'WEB', type: 'online', color: '#10b981' },
   ]);
   const [stock, setStock] = useState([]);
   const [movements, setMovements] = useState([]);
@@ -195,6 +195,24 @@ export default function useInventory() {
     });
   }, [apiCall, handleRequest, fetchRoles]);
 
+  const fetchLocations = useCallback(async () => {
+    try {
+      const res = await apiCall('/locations');
+      if (res.success && res.data) {
+        safeSet(setLocations)(res.data);
+      }
+    } catch {
+      // Keep default locations
+    }
+  }, [apiCall]);
+
+  const syncFromTiendaNueve = useCallback(async () => {
+    return handleRequest(async () => {
+      const res = await apiCall('/sync-from-tiendanube', { method: 'POST' });
+      return res;
+    });
+  }, [apiCall, handleRequest]);
+
   const init = useCallback(async () => {
     safeSet(setLoading)(true);
     try {
@@ -204,19 +222,57 @@ export default function useInventory() {
         fetchSummary(),
         fetchRoles(),
         fetchMovements({ limit: 10 }),
+        fetchLocations(),
       ]);
     } catch (err) {
       safeSet(setError)(err.message);
     } finally {
       safeSet(setLoading)(false);
     }
-  }, [fetchProducts, fetchAlerts, fetchSummary, fetchMovements]);
+  }, [fetchProducts, fetchAlerts, fetchSummary, fetchMovements, fetchLocations]);
 
   useEffect(() => {
     init();
   }, []);
 
-  return {
+  const aiScan = useCallback(async (image, locationId) => {
+    return handleRequest(async () => {
+      const res = await apiCall('/ai-scan', {
+        method: 'POST',
+        body: JSON.stringify({ image, locationId }),
+      });
+      return res;
+    });
+  }, [apiCall, handleRequest]);
+
+  const aiSearch = useCallback(async (query) => {
+    return handleRequest(async () => {
+      const res = await apiCall('/ai-search', {
+        method: 'POST',
+        body: JSON.stringify({ query }),
+      });
+      return res;
+    });
+  }, [apiCall, handleRequest]);
+
+  const aiVision = useCallback(async (image, prompt) => {
+    return handleRequest(async () => {
+      const res = await apiCall('/ai-vision', {
+        method: 'POST',
+        body: JSON.stringify({ image, prompt }),
+      });
+      return res;
+    });
+  }, [apiCall, handleRequest]);
+
+  const indexEmbeddings = useCallback(async () => {
+    return handleRequest(async () => {
+      const res = await apiCall('/ai-search', { method: 'GET' });
+      return res;
+    });
+  }, [apiCall, handleRequest]);
+
+  const api = useMemo(() => ({
     products,
     locations,
     stock,
@@ -239,6 +295,44 @@ export default function useInventory() {
     createProduct,
     updateProduct,
     deleteProduct,
+    aiScan,
+    aiSearch,
+    aiVision,
+    indexEmbeddings,
+    fetchLocations,
+    syncFromTiendaNueve,
     init,
-  };
+  }), [
+    products,
+    locations,
+    stock,
+    movements,
+    alerts,
+    summary,
+    roles,
+    loading,
+    error,
+    fetchProducts,
+    adjustStock,
+    transferStock,
+    fetchMovements,
+    fetchAlerts,
+    acknowledgeAlert,
+    checkAlerts,
+    fetchSummary,
+    fetchRoles,
+    setUserRole,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    aiScan,
+    aiSearch,
+    aiVision,
+    indexEmbeddings,
+    fetchLocations,
+    syncFromTiendaNueve,
+    init,
+  ]);
+
+  return api;
 }

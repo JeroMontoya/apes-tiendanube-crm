@@ -6,7 +6,7 @@ import {
   Settings, Download, Menu, X, Zap, Calendar, Sun, Moon, Warehouse,
   Hammer, BarChart3, Clock, ChevronDown, ChevronRight, MoreHorizontal,
   BarChart2, MessageSquare, Repeat, FileText, Sparkles,
-  Compass, Music, Video, Link, LogOut, Eye, Truck
+  Music, Video, Link, LogOut, Eye, Factory, Activity
 } from 'lucide-react';
 
 const NAV_GROUPS = [
@@ -16,34 +16,16 @@ const NAV_GROUPS = [
     items: [
       { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['admin', 'taller', 'ventas', 'atencion_cliente'] },
       { id: 'marketing_center', icon: Brain, label: 'Centro de Marketing', roles: ['admin'] },
-      { id: 'inteligencia', icon: Eye, label: 'Inteligencia de Marca', roles: ['admin'] },
       { id: 'calendario', icon: Calendar, label: 'Calendario', roles: ['admin'] },
     ],
   },
   {
-    id: 'marketing',
-    label: 'Marketing & Analytics',
-    items: [
-      { id: 'marketing', icon: TrendingUp, label: 'Marketing', roles: ['admin'] },
-      { id: 'meta_ads', icon: Megaphone, label: 'Meta Ads', roles: ['admin'] },
-      { id: 'google_ads', icon: Megaphone, label: 'Google Ads', roles: ['admin'] },
-      { id: 'tiktok_ads', icon: Music, label: 'TikTok Ads', roles: ['admin'] },
-      { id: 'ga4', icon: Globe, label: 'Google Analytics', roles: ['admin'] },
-      { id: 'analitica', icon: Brain, label: 'Analítica', roles: ['admin'] },
-      { id: 'segmentos', icon: Target, label: 'Segmentos', roles: ['admin'] },
-      { id: 'inteligencia_competitiva', icon: Compass, label: 'Inteligencia Competitiva', roles: ['admin'] },
-      { id: 'merchant_center', icon: ShoppingCart, label: 'Merchant Center', roles: ['admin'] },
-      { id: 'search_console', icon: Globe, label: 'Search Console', roles: ['admin'] },
-      { id: 'ia_chat', icon: Sparkles, label: 'Asistente IA', roles: ['admin'] },
-      { id: 'utm_builder', icon: Link, label: 'UTM Builder', roles: ['admin'] },
-    ],
-  },
-  {
     id: 'taller',
-    label: 'Taller & Producción',
+    label: 'Taller & Inventario',
     items: [
-      { id: 'logistics', icon: Truck, label: 'Logística del Taller', roles: ['admin', 'taller'] },
       { id: 'inventario', icon: Warehouse, label: 'Inventario', roles: ['admin', 'taller', 'ventas', 'atencion_cliente'] },
+      { id: 'taller_stock', icon: Factory, label: 'Control Stock Taller', roles: ['admin', 'taller'] },
+      { id: 'predictive', icon: Activity, label: 'Inteligencia Predictiva', roles: ['admin', 'taller'] },
     ],
   },
   {
@@ -51,6 +33,9 @@ const NAV_GROUPS = [
     label: 'Gestión de Clientes',
     items: [
       { id: 'clientes', icon: Users, label: 'Clientes', roles: ['admin', 'ventas', 'atencion_cliente'] },
+      { id: 'hot_leads', icon: Zap, label: 'Leads Calientes', roles: ['admin', 'ventas'] },
+      { id: 'predictive_intelligence', icon: Brain, label: 'Predictive Engine', roles: ['admin'] },
+      { id: 'segmentos', icon: Target, label: 'Segmentos (Árbol)', roles: ['admin'] },
       { id: 'ventas_view', icon: ShoppingCart, label: 'Seguimiento Ventas', roles: ['admin', 'ventas', 'atencion_cliente'] },
       { id: 'pipeline', icon: KanbanSquare, label: 'Pipeline CRM', roles: ['admin', 'ventas'] },
       { id: 'pqr', icon: PackageSearch, label: 'PQR & Soporte', roles: ['admin', 'taller', 'ventas', 'atencion_cliente'] },
@@ -154,12 +139,12 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
             {/* ── Logo ── */}
             <div className="sidebar-logo">
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div className="sidebar-logo-icon">
-                  <Zap size={18} color="#fff" strokeWidth={2.5} />
+                <div className="sidebar-logo-icon" style={{ background: 'transparent' }}>
+                  <img src="/favicon.svg" alt="Onyx Logo" style={{ width: 24, height: 24 }} />
                 </div>
                 <div className="brand-text">
-                  <h1>APES</h1>
-                  <div className="logo-subtitle">CRM & Analytics</div>
+                  <h1>Onyx</h1>
+                  <div className="logo-subtitle">Core</div>
                 </div>
               </div>
             </div>
@@ -242,7 +227,7 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
                 <span className="live-dot" />
                 <span className="sidebar-footer-label">Sistema Activo</span>
               </div>
-              <p>APES DIGITAL v4.0</p>
+              <p>Onyx Core v4.0</p>
             </div>
           </aside>
         </>
@@ -254,11 +239,11 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
       {isMobile && (
         <>
           <div className="mobile-topbar">
-            <div className="mobile-topbar-logo">
-              <Zap size={18} color="#fff" />
+            <div className="mobile-topbar-logo" style={{ background: 'transparent' }}>
+              <img src="/favicon.svg" alt="Onyx Logo" style={{ width: 24, height: 24 }} />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--on-surface)', letterSpacing: '-0.02em' }}>APES</div>
+              <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--on-surface)', letterSpacing: '-0.02em' }}>Onyx</div>
             </div>
             <SidebarProfile
               currentMember={currentMember}
@@ -392,10 +377,9 @@ function FloatingOrbNav({ activeView, onNavigate, moreOpen, setMoreOpen, theme, 
   const quickNav = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Inicio', color: '#3b82f6' },
     { id: 'clientes', icon: Users, label: 'Clientes', color: '#10b981' },
-    { id: 'logistics', icon: Truck, label: 'Taller', color: '#f59e0b' },
-    { id: 'marketing', icon: TrendingUp, label: 'Marketing', color: '#ec4899' },
+    { id: 'taller_stock', icon: Factory, label: 'Control Taller', color: '#f59e0b' },
+    { id: 'marketing_center', icon: TrendingUp, label: 'Marketing', color: '#ec4899' },
     { id: 'ventas_view', icon: BarChart2, label: 'Ventas', color: '#06b6d4' },
-    { id: 'inteligencia_competitiva', icon: Compass, label: 'Int. Competitiva', color: '#8b5cf6' },
   ];
 
   const handleNav = (id) => {

@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
 /* ── AuthScreen ──────────────────────────────────────────────
-   Full-screen Login / Register gate for APES CRM.
+   Full-screen Login / Register gate for Onyx.
    Props:
      onAuth(session) – called after successful sign-in/sign-up.
    ────────────────────────────────────────────────────────── */
@@ -280,21 +280,21 @@ export default function AuthScreen({ onAuth }) {
 
   /* Spinner keyframes injected once via a style tag */
   const spinnerCSS = `
-    @keyframes apes-spin {
+    @keyframes onyx-spin {
       to { transform: rotate(360deg); }
     }
-    .apes-auth-input:focus {
+    .onyx-auth-input:focus {
       border-color: var(--primary) !important;
       box-shadow: var(--shadow-glow-primary) !important;
     }
-    .apes-auth-submit:hover:not(:disabled) {
+    .onyx-auth-submit:hover:not(:disabled) {
       opacity: 0.92;
       transform: translateY(-1px);
     }
-    .apes-auth-submit:active:not(:disabled) {
+    .onyx-auth-submit:active:not(:disabled) {
       transform: translateY(0);
     }
-    .apes-auth-toggle-btn:hover {
+    .onyx-auth-toggle-btn:hover {
       color: var(--primary-container) !important;
     }
   `;
@@ -313,7 +313,7 @@ export default function AuthScreen({ onAuth }) {
       <div className="glass-card" style={styles.card}>
         {/* Brand */}
         <div style={styles.brand}>
-          <div style={styles.brandTitle}>🦍 APES CRM</div>
+          <div style={styles.brandTitle}>Onyx</div>
         </div>
         <p style={styles.tagline}>Tu centro de comando de marketing omnicanal</p>
 
@@ -339,12 +339,12 @@ export default function AuthScreen({ onAuth }) {
         <form onSubmit={handleSubmit} noValidate>
           {/* Email */}
           <div style={styles.fieldGroup}>
-            <label style={styles.label} htmlFor="apes-email">
+            <label style={styles.label} htmlFor="onyx-email">
               Correo electrónico
             </label>
             <input
-              id="apes-email"
-              className="apes-auth-input"
+              id="onyx-email"
+              className="onyx-auth-input"
               type="email"
               autoComplete="email"
               placeholder="tu@empresa.com"
@@ -357,13 +357,13 @@ export default function AuthScreen({ onAuth }) {
 
           {/* Password */}
           <div style={styles.fieldGroup}>
-            <label style={styles.label} htmlFor="apes-password">
+            <label style={styles.label} htmlFor="onyx-password">
               Contraseña
             </label>
             <div style={styles.inputWrap}>
               <input
-                id="apes-password"
-                className="apes-auth-input"
+                id="onyx-password"
+                className="onyx-auth-input"
                 type={showPassword ? 'text' : 'password'}
                 autoComplete={isLogin ? 'current-password' : 'new-password'}
                 placeholder={isLogin ? '••••••••' : 'Mínimo 6 caracteres'}
@@ -387,7 +387,7 @@ export default function AuthScreen({ onAuth }) {
           {/* Submit */}
           <button
             type="submit"
-            className="apes-auth-submit"
+            className="onyx-auth-submit"
             disabled={loading}
             style={{
               ...styles.submit,
@@ -401,7 +401,7 @@ export default function AuthScreen({ onAuth }) {
                   height="18"
                   viewBox="0 0 24 24"
                   fill="none"
-                  style={{ animation: 'apes-spin 0.8s linear infinite' }}
+                  style={{ animation: 'onyx-spin 0.8s linear infinite' }}
                 >
                   <circle
                     cx="12"
@@ -428,7 +428,7 @@ export default function AuthScreen({ onAuth }) {
           {isLogin ? '¿No tienes cuenta? ' : '¿Ya tienes cuenta? '}
           <button
             type="button"
-            className="apes-auth-toggle-btn"
+            className="onyx-auth-toggle-btn"
             style={styles.toggleBtn}
             onClick={toggleMode}
           >
@@ -436,7 +436,7 @@ export default function AuthScreen({ onAuth }) {
           </button>
         </div>
 
-        <p style={styles.footer}>© {new Date().getFullYear()} APES Digital · Todos los derechos reservados</p>
+        <p style={styles.footer}>© {new Date().getFullYear()} Onyx Core · Todos los derechos reservados</p>
       </div>
     </div>
   );

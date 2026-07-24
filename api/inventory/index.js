@@ -637,6 +637,17 @@ export default async function handler(req, res) {
       return await triggerSnapshot(req, res);
     }
 
+    if (segment === 'locations' && req.method === 'GET') {
+      if (!hasPermission(role, 'read')) return err(res, 'Forbidden', 403);
+      const { data, error: locErr } = await supabase
+        .from('inventory_locations')
+        .select('id, code, name, description, type, is_active, config')
+        .eq('is_active', true)
+        .order('name');
+      if (locErr) return err(res, 'Failed to fetch locations', 500, locErr.message);
+      return ok(res, data || []);
+    }
+
     if (segment === 'roles') {
       if (!hasPermission(role, 'manage_roles')) return err(res, 'Forbidden', 403);
 

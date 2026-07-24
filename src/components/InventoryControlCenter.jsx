@@ -13,26 +13,32 @@ import AlertsPanel from './inventory/AlertsPanel';
 import InventoryReports from './inventory/InventoryReports';
 import UserRoles from './inventory/UserRoles';
 import SyncStatus from './inventory/SyncStatus';
+import AIScanTab from './inventory/AIScanTab';
+import TallerStockControl from './inventory/TallerStockControl';
 
 import {
-  LayoutDashboard, Package, ArrowLeftRight, History, Bell,
-  BarChart3, Users, RefreshCw, Menu, X, Wifi, WifiOff,
-  ChevronRight
+  Home, Package, ArrowUpDown, History, Bell,
+  RefreshCw, Menu, X, Wifi, WifiOff, Plus,
+  ArrowLeftRight, Settings, Factory
 } from 'lucide-react';
 
 const TABS = [
-  { id: 'dashboard', label: 'Panel', icon: LayoutDashboard },
+  { id: 'dashboard', label: 'Inicio', icon: Home },
   { id: 'products', label: 'Productos', icon: Package },
-  { id: 'adjust', label: 'Ajustar Stock', icon: ChevronRight },
-  { id: 'transfer', label: 'Transferir', icon: ArrowLeftRight },
-  { id: 'movements', label: 'Movimientos', icon: History },
+  { id: 'stock', label: 'Stock', icon: ArrowUpDown },
+  { id: 'history', label: 'Historial', icon: History },
   { id: 'alerts', label: 'Alertas', icon: Bell },
-  { id: 'reports', label: 'Reportes', icon: BarChart3 },
-  { id: 'roles', label: 'Usuarios', icon: Users },
+];
+
+const MORE_TABS = [
+  { id: 'reports', label: 'Reportes', icon: RefreshCw },
+  { id: 'roles', label: 'Equipo', icon: Settings },
 ];
 
 function SidebarNav({ activeTab, onTabChange, alerts, connected, sidebarOpen, onClose }) {
   const unreadAlerts = alerts?.filter(a => !a.acknowledged)?.length || 0;
+  const [showMore, setShowMore] = useState(false);
+
   return (
     <>
       {sidebarOpen && (
@@ -46,8 +52,8 @@ function SidebarNav({ activeTab, onTabChange, alerts, connected, sidebarOpen, on
         />
       )}
       <nav style={{
-        width: sidebarOpen ? '240px' : '64px',
-        minWidth: sidebarOpen ? '240px' : '64px',
+        width: sidebarOpen ? '220px' : '56px',
+        minWidth: sidebarOpen ? '220px' : '56px',
         background: 'var(--surface)',
         borderRight: '1px solid var(--border-subtle)',
         display: 'flex', flexDirection: 'column',
@@ -56,23 +62,24 @@ function SidebarNav({ activeTab, onTabChange, alerts, connected, sidebarOpen, on
         height: '100%',
       }}>
         <div style={{
-          padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          borderBottom: '1px solid var(--border-subtle)', minHeight: '56px',
+          padding: sidebarOpen ? '16px 14px' : '16px 0',
+          display: 'flex', alignItems: 'center', justifyContent: sidebarOpen ? 'space-between' : 'center',
+          borderBottom: '1px solid var(--border-subtle)', minHeight: '52px',
         }}>
           {sidebarOpen && (
-            <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--on-surface)', whiteSpace: 'nowrap' }}>
+            <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--on-surface)', whiteSpace: 'nowrap' }}>
               Inventario
             </span>
           )}
           <div style={{
-            width: '28px', height: '28px', borderRadius: '6px',
+            width: '24px', height: '24px', borderRadius: '6px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             background: connected ? '#10b98118' : '#ef444418',
           }}>
-            {connected ? <Wifi size={14} color="#10b981" /> : <WifiOff size={14} color="#ef4444" />}
+            {connected ? <Wifi size={12} color="#10b981" /> : <WifiOff size={12} color="#ef4444" />}
           </div>
         </div>
-        <div style={{ flex: 1, padding: '8px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <div style={{ flex: 1, padding: '6px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
           {TABS.map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -85,11 +92,11 @@ function SidebarNav({ activeTab, onTabChange, alerts, connected, sidebarOpen, on
                   display: 'flex', alignItems: 'center', gap: '10px',
                   padding: sidebarOpen ? '10px 12px' : '10px',
                   justifyContent: sidebarOpen ? 'flex-start' : 'center',
-                  borderRadius: '8px', border: 'none', cursor: 'pointer',
+                  borderRadius: '10px', border: 'none', cursor: 'pointer',
                   background: isActive ? '#3b82f618' : 'transparent',
                   color: isActive ? '#3b82f6' : 'var(--on-surface-variant)',
                   fontSize: '13px', fontWeight: isActive ? 600 : 400,
-                  position: 'relative', transition: 'background 0.15s',
+                  position: 'relative', transition: 'all 0.15s',
                   whiteSpace: 'nowrap', overflow: 'hidden',
                 }}
               >
@@ -105,6 +112,33 @@ function SidebarNav({ activeTab, onTabChange, alerts, connected, sidebarOpen, on
               </button>
             );
           })}
+
+          {sidebarOpen && (
+            <>
+              <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '6px 8px' }} />
+              {MORE_TABS.map(tab => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => { onTabChange(tab.id); if (window.innerWidth < 768) onClose(); }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '10px',
+                      padding: '10px 12px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+                      background: isActive ? '#3b82f618' : 'transparent',
+                      color: isActive ? '#3b82f6' : 'var(--on-surface-variant)',
+                      fontSize: '13px', fontWeight: isActive ? 600 : 400,
+                      transition: 'all 0.15s', whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <Icon size={18} />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </>
+          )}
         </div>
       </nav>
     </>
@@ -113,13 +147,13 @@ function SidebarNav({ activeTab, onTabChange, alerts, connected, sidebarOpen, on
 
 function MobileTabBar({ activeTab, onTabChange, alerts }) {
   const unreadAlerts = alerts?.filter(a => !a.acknowledged)?.length || 0;
-  const visibleTabs = TABS.filter(t => ['dashboard', 'products', 'adjust', 'transfer', 'alerts'].includes(t.id));
+  const visibleTabs = TABS;
   return (
     <div style={{
       position: 'fixed', bottom: 0, left: 0, right: 0,
       background: 'var(--surface)', borderTop: '1px solid var(--border-subtle)',
-      display: 'flex', justifyContent: 'space-around', padding: '8px 0',
-      zIndex: 50, paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
+      display: 'flex', justifyContent: 'space-around', padding: '6px 0',
+      zIndex: 50, paddingBottom: 'max(6px, env(safe-area-inset-bottom))',
     }}>
       {visibleTabs.map(tab => {
         const Icon = tab.icon;
@@ -130,18 +164,18 @@ function MobileTabBar({ activeTab, onTabChange, alerts }) {
             onClick={() => onTabChange(tab.id)}
             style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
-              padding: '4px 12px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+              padding: '6px 14px', borderRadius: '10px', border: 'none', cursor: 'pointer',
               background: isActive ? '#3b82f618' : 'transparent',
               color: isActive ? '#3b82f6' : 'var(--on-surface-variant)',
               fontSize: '10px', fontWeight: isActive ? 600 : 400,
               position: 'relative',
             }}
           >
-            <Icon size={18} />
+            <Icon size={20} />
             <span>{tab.label}</span>
             {tab.id === 'alerts' && unreadAlerts > 0 && (
               <span style={{
-                position: 'absolute', top: '0', right: '4px',
+                position: 'absolute', top: '2px', right: '6px',
                 width: '16px', height: '16px', borderRadius: '50%',
                 background: '#ef4444', color: '#fff', fontSize: '9px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -169,33 +203,55 @@ export default function InventoryControlCenter({
   onStockUpdate,
 }) {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [stockSubTab, setStockSubTab] = useState('adjust');
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
-  const [modalStack, setModalStack] = useState(null);
 
   const { addToast } = useNotifications();
   const { currentMember } = useTeam();
 
-  const inventory = useInventory();
+  const {
+    products,
+    locations,
+    stock,
+    movements,
+    alerts,
+    summary,
+    roles,
+    loading,
+    fetchProducts,
+    fetchAlerts,
+    fetchMovements,
+    adjustStock,
+    transferStock,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    acknowledgeAlert,
+    checkAlerts,
+    init,
+    aiSearch,
+    setUserRole,
+  } = useInventory();
 
   const handleStockChange = useCallback(() => {
-    inventory.fetchProducts();
-    inventory.fetchAlerts();
-  }, [inventory]);
+    fetchProducts();
+    fetchAlerts();
+  }, [fetchProducts, fetchAlerts]);
 
   const handleMovementChange = useCallback(() => {
-    inventory.fetchMovements({ limit: 50 });
-  }, [inventory]);
+    fetchMovements({ limit: 50 });
+  }, [fetchMovements]);
 
   const handleAlertChange = useCallback(() => {
-    inventory.fetchAlerts();
-  }, [inventory]);
+    fetchAlerts();
+  }, [fetchAlerts]);
 
   const handleSyncEvent = useCallback((event) => {
     if (event?.type === 'sync-complete') {
-      inventory.fetchProducts();
-      addToast({ type: 'success', title: 'Sincronización TN', message: 'Stock actualizado desde TiendaNube' });
+      fetchProducts();
+      addToast({ type: 'success', title: 'Sincronización', message: 'Stock actualizado desde TiendaNube' });
     }
-  }, [inventory, addToast]);
+  }, [fetchProducts, addToast]);
 
   const { connected: realtimeConnected, lastEvent } = useInventoryRealtime({
     onStockChange: handleStockChange,
@@ -205,72 +261,72 @@ export default function InventoryControlCenter({
   });
 
   useEffect(() => {
-    inventory.init();
-  }, []);
+    init();
+  }, [init]);
 
-  const handleAdjust = useCallback(async (data) => {
-    const result = await inventory.adjustStock(data.productId, data.locationId, data.quantity, data.type, data.notes);
+const handleAdjust = useCallback(async (data) => {
+    const result = await adjustStock(data.productId, data.locationId, data.quantity, data.type, data.notes);
     if (result?.success !== false) {
-      addToast({ type: 'success', title: 'Stock ajustado', message: 'El ajuste se registró correctamente' });
-      inventory.fetchProducts();
-      inventory.fetchAlerts();
+      addToast({ type: 'success', title: 'Stock actualizado', message: 'El cambio se registró correctamente' });
+      fetchProducts();
+      fetchAlerts();
     } else {
-      addToast({ type: 'error', title: 'Error', message: result?.error || 'No se pudo ajustar el stock' });
+      addToast({ type: 'error', title: 'Error', message: result?.error || 'No se pudo actualizar el stock' });
     }
     return result;
-  }, [inventory, addToast]);
+  }, [adjustStock, addToast, fetchProducts, fetchAlerts]);
 
   const handleTransfer = useCallback(async (data) => {
-    const result = await inventory.transferStock(data.productId, data.fromLocationId, data.toLocationId, data.quantity, data.notes);
+    const result = await transferStock(data.productId, data.fromLocationId, data.toLocationId, data.quantity, data.notes);
     if (result?.success !== false) {
-      addToast({ type: 'success', title: 'Transferencia completada', message: 'El stock se transfirió correctamente' });
-      inventory.fetchProducts();
-      inventory.fetchAlerts();
+      addToast({ type: 'success', title: 'Transferencia lista', message: 'El stock se movió correctamente' });
+      fetchProducts();
+      fetchAlerts();
     } else {
-      addToast({ type: 'error', title: 'Error', message: result?.error || 'No se pudo transferir el stock' });
+      addToast({ type: 'error', title: 'Error', message: result?.error || 'No se pudo transferir' });
     }
     return result;
-  }, [inventory, addToast]);
+  }, [transferStock, addToast, fetchProducts, fetchAlerts]);
 
   const handleCreateProduct = useCallback(async (data) => {
-    const result = await inventory.createProduct(data);
+    const result = await createProduct(data);
     if (result?.success !== false) {
-      addToast({ type: 'success', title: 'Producto creado', message: `${data.name} agregado al inventario` });
-      inventory.fetchProducts();
+      addToast({ type: 'success', title: 'Producto creado', message: `${data.name} se agregó al inventario` });
+      fetchProducts();
     }
     return result;
-  }, [inventory, addToast]);
+  }, [createProduct, addToast, fetchProducts]);
 
   const handleUpdateProduct = useCallback(async (id, data) => {
-    const result = await inventory.updateProduct(id, data);
+    const result = await updateProduct(id, data);
     if (result?.success !== false) {
-      addToast({ type: 'success', title: 'Producto actualizado', message: 'Los cambios se guardaron' });
-      inventory.fetchProducts();
+      addToast({ type: 'success', title: 'Guardado', message: 'Los cambios se actualizaron' });
+      fetchProducts();
     }
     return result;
-  }, [inventory, addToast]);
+  }, [updateProduct, addToast, fetchProducts]);
 
   const handleDeleteProduct = useCallback(async (id) => {
-    const result = await inventory.deleteProduct(id);
+    const result = await deleteProduct(id);
     if (result?.success !== false) {
-      addToast({ type: 'success', title: 'Producto eliminado', message: 'Se eliminó del inventario' });
-      inventory.fetchProducts();
+      addToast({ type: 'success', title: 'Eliminado', message: 'Se quitó del inventario' });
+      fetchProducts();
     }
     return result;
-  }, [inventory, addToast]);
+  }, [deleteProduct, addToast, fetchProducts]);
 
   const handleAcknowledgeAlert = useCallback(async (alertId) => {
-    await inventory.acknowledgeAlert(alertId);
-    inventory.fetchAlerts();
-  }, [inventory]);
+    await acknowledgeAlert(alertId);
+    fetchAlerts();
+  }, [acknowledgeAlert, fetchAlerts]);
 
   const handleCheckAlerts = useCallback(async () => {
-    await inventory.checkAlerts();
-    inventory.fetchAlerts();
-    addToast({ type: 'info', title: 'Verificación completa', message: 'Se revisaron los niveles de stock' });
-  }, [inventory, addToast]);
+    await checkAlerts();
+    fetchAlerts();
+    addToast({ type: 'info', title: 'Listo', message: 'Se revisaron los niveles de stock' });
+  }, [checkAlerts, fetchAlerts, addToast]);
 
-  const unreadAlerts = inventory.alerts?.filter(a => !a.acknowledged)?.length || 0;
+  const unreadAlerts = alerts?.filter(a => !a.acknowledged)?.length || 0;
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   const renderTab = () => {
@@ -278,14 +334,14 @@ export default function InventoryControlCenter({
       case 'dashboard':
         return (
           <InventoryDashboard
-            summary={inventory.summary}
-            alerts={inventory.alerts}
-            movements={inventory.movements}
-            locations={inventory.locations}
+            summary={summary}
+            alerts={alerts}
+            movements={movements}
+            locations={locations}
             onAction={(action) => {
-              if (action === 'new-product') setModalStack('add-product');
-              else if (action === 'adjust') setActiveTab('adjust');
-              else if (action === 'transfer') setActiveTab('transfer');
+              if (action === 'new-product') setActiveTab('products');
+              else if (action === 'adjust') { setActiveTab('stock'); setStockSubTab('adjust'); }
+              else if (action === 'transfer') { setActiveTab('stock'); setStockSubTab('transfer'); }
               else if (action === 'alerts') setActiveTab('alerts');
               else if (action === 'sync') refreshStock();
             }}
@@ -294,78 +350,149 @@ export default function InventoryControlCenter({
       case 'products':
         return (
           <ProductList
-            products={inventory.products}
-            locations={inventory.locations}
-            stock={inventory.stock}
+            products={products}
+            locations={locations}
+            stock={stock}
             onAdjust={handleAdjust}
             onTransfer={handleTransfer}
             onCreate={handleCreateProduct}
             onUpdate={handleUpdateProduct}
             onDelete={handleDeleteProduct}
-            onRefresh={() => inventory.fetchProducts()}
-            loading={inventory.loading}
+            onRefresh={fetchProducts}
+            loading={loading}
+            aiSearch={aiSearch}
+            onOpenAIScan={() => setActiveTab('aiscan')}
           />
         );
-      case 'adjust':
+      case 'aiscan':
         return (
-          <StockAdjuster
-            products={inventory.products}
-            locations={inventory.locations}
-            onAdjust={handleAdjust}
-            onClose={() => setActiveTab('products')}
-          />
+          <div>
+            <button
+              onClick={() => setActiveTab('products')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '16px',
+                padding: '8px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)',
+                background: 'var(--surface)', color: 'var(--on-surface)',
+                fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              ← Volver a Productos
+            </button>
+            <AIScanTab
+              products={products}
+              onAdjust={handleAdjust}
+            />
+          </div>
         );
-      case 'transfer':
+      case 'stock':
         return (
-          <StockTransfer
-            products={inventory.products}
-            locations={inventory.locations}
-            stock={inventory.stock}
-            onTransfer={handleTransfer}
-            onClose={() => setActiveTab('products')}
-          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => setStockSubTab('adjust')}
+                style={{
+                  padding: '10px 20px', borderRadius: '10px', border: 'none',
+                  background: stockSubTab === 'adjust' ? '#3b82f6' : 'var(--surface)',
+                  color: stockSubTab === 'adjust' ? '#fff' : 'var(--on-surface)',
+                  fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  boxShadow: stockSubTab === 'adjust' ? '0 2px 8px rgba(59,130,246,0.3)' : 'none',
+                }}
+              >
+                <ArrowUpDown size={16} /> Sumar / Restar
+              </button>
+              <button
+                onClick={() => setStockSubTab('transfer')}
+                style={{
+                  padding: '10px 20px', borderRadius: '10px', border: 'none',
+                  background: stockSubTab === 'transfer' ? '#8b5cf6' : 'var(--surface)',
+                  color: stockSubTab === 'transfer' ? '#fff' : 'var(--on-surface)',
+                  fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  boxShadow: stockSubTab === 'transfer' ? '0 2px 8px rgba(139,92,246,0.3)' : 'none',
+                }}
+              >
+                <ArrowLeftRight size={16} /> Mover entre locales
+              </button>
+              <button
+                onClick={() => setStockSubTab('taller')}
+                style={{
+                  padding: '10px 20px', borderRadius: '10px', border: 'none',
+                  background: stockSubTab === 'taller' ? '#10b981' : 'var(--surface)',
+                  color: stockSubTab === 'taller' ? '#fff' : 'var(--on-surface)',
+                  fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  boxShadow: stockSubTab === 'taller' ? '0 2px 8px rgba(16,185,129,0.3)' : 'none',
+                }}
+              >
+                <Factory size={16} /> Control Taller
+              </button>
+            </div>
+            {stockSubTab === 'adjust' ? (
+              <StockAdjuster
+                products={products}
+                locations={locations}
+                onAdjust={handleAdjust}
+                onClose={() => setActiveTab('products')}
+              />
+            ) : stockSubTab === 'transfer' ? (
+              <StockTransfer
+                products={products}
+                locations={locations}
+                stock={stock}
+                onTransfer={handleTransfer}
+                onClose={() => setActiveTab('products')}
+              />
+            ) : (
+              <TallerStockControl />
+            )}
+          </div>
         );
-      case 'movements':
+      case 'history':
         return (
           <MovementHistory
-            movements={inventory.movements}
-            locations={inventory.locations}
-            products={inventory.products}
-            onRefresh={() => inventory.fetchMovements({ limit: 200 })}
-            loading={inventory.loading}
+            movements={movements}
+            locations={locations}
+            products={products}
+            onRefresh={() => fetchMovements({ limit: 200 })}
+            loading={loading}
           />
         );
       case 'alerts':
         return (
           <AlertsPanel
-            alerts={inventory.alerts}
+            alerts={alerts}
             onAcknowledge={handleAcknowledgeAlert}
             onCheck={handleCheckAlerts}
-            loading={inventory.loading}
+            loading={loading}
           />
         );
       case 'reports':
         return (
           <InventoryReports
-            summary={inventory.summary}
-            movements={inventory.movements}
-            locations={inventory.locations}
-            products={inventory.products}
+            summary={summary}
+            movements={movements}
+            locations={locations}
+            products={products}
           />
         );
       case 'roles':
         return (
           <UserRoles
-            roles={inventory.roles || []}
-            locations={inventory.locations}
-            onUpdateRole={(userId, role, locations) => inventory.setUserRole(userId, role, locations)}
-            loading={inventory.loading}
+            roles={roles || []}
+            locations={locations}
+            onUpdateRole={setUserRole}
+            loading={loading}
           />
         );
       default:
         return null;
     }
   };
+
+  const currentTabLabel = TABS.find(t => t.id === activeTab)?.label
+    || MORE_TABS.find(t => t.id === activeTab)?.label
+    || 'Inventario';
 
   return (
     <div style={{
@@ -377,7 +504,7 @@ export default function InventoryControlCenter({
         <SidebarNav
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          alerts={inventory.alerts}
+          alerts={alerts}
           connected={realtimeConnected}
           sidebarOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
@@ -389,7 +516,7 @@ export default function InventoryControlCenter({
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: isMobile ? '12px 16px' : '12px 20px',
           borderBottom: '1px solid var(--border-subtle)',
-          background: 'var(--surface)', minHeight: '52px',
+          background: 'var(--surface)', minHeight: '50px',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {isMobile ? (
@@ -407,11 +534,9 @@ export default function InventoryControlCenter({
                 <Menu size={18} />
               </button>
             )}
-            <div>
-              <h1 style={{ margin: 0, fontSize: isMobile ? '16px' : '18px', fontWeight: 700 }}>
-                {TABS.find(t => t.id === activeTab)?.label || 'Inventario'}
-              </h1>
-            </div>
+            <h1 style={{ margin: 0, fontSize: isMobile ? '16px' : '18px', fontWeight: 700 }}>
+              {currentTabLabel}
+            </h1>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <SyncStatus
@@ -448,7 +573,7 @@ export default function InventoryControlCenter({
       </div>
 
       {isMobile && (
-        <MobileTabBar activeTab={activeTab} onTabChange={setActiveTab} alerts={inventory.alerts} />
+        <MobileTabBar activeTab={activeTab} onTabChange={setActiveTab} alerts={alerts} />
       )}
     </div>
   );

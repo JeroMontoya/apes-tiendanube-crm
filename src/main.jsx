@@ -28,20 +28,22 @@ class ErrorBoundary extends React.Component {
           justifyContent: 'center',
           minHeight: '100vh',
           padding: '20px',
-          background: '#0f172a',
-          color: '#f8fafc',
+          background: '#0A0A0A',
+          color: '#e2e4e8',
           fontFamily: 'Inter, sans-serif'
         }}>
-          <h1 style={{ marginBottom: '16px' }}>⚠️ Something went wrong</h1>
+          <h1 style={{ marginBottom: '16px', letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: '18px', fontWeight: 600 }}>Something went wrong</h1>
           <pre style={{ 
             textAlign: 'left', 
             maxWidth: '800px', 
             overflow: 'auto',
-            background: '#1e293b',
+            background: '#111214',
             padding: '16px',
-            borderRadius: '8px',
+            borderRadius: '6px',
             fontSize: '12px',
-            whiteSpace: 'pre-wrap'
+            whiteSpace: 'pre-wrap',
+            border: '1px solid rgba(255,255,255,0.05)',
+            color: '#6b7280'
           }}>
             {this.state.error?.toString()}
             {'\n\n'}
@@ -52,13 +54,14 @@ class ErrorBoundary extends React.Component {
             style={{
               marginTop: '24px',
               padding: '12px 24px',
-              background: '#3b82f6',
+              background: '#3d5a99',
               color: 'white',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: '6px',
               cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: 600
+              fontSize: '13px',
+              fontWeight: 600,
+              letterSpacing: '0.04em'
             }}
           >
             Reload App

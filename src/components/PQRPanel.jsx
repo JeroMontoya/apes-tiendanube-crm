@@ -7,7 +7,7 @@ import {
   Trash2, Edit3, Search, CheckCircle2, Clock,
   MessageSquare, Zap, User, ShoppingBag,
   AlertCircle, Sparkles, Inbox, LayoutGrid,
-  Mail, RefreshCw, ChevronRight
+  Mail, RefreshCw, ChevronRight, RotateCcw
 } from 'lucide-react';
 
 const RETURN_REASONS = [
@@ -134,6 +134,9 @@ export default function PQRPanel({ session, rawOrders = [] }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [viewMode, setViewMode] = useState('inbox');
   const [refreshing, setRefreshing] = useState(false);
+  const [showTrash, setShowTrash] = useState(false);
+  const [trashCases, setTrashCases] = useState([]);
+  const [loadingTrash, setLoadingTrash] = useState(false);
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
   const dropdownMenuRef = useRef(null);
@@ -239,7 +242,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
   const fetchCases = async (showLoading = true) => {
     try {
       if (showLoading) setLoading(true);
-      const { data, error } = await supabase.from('pqr_cases').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('pqr_cases').select('*').is('deleted_at', null).order('created_at', { ascending: false });
       if (error) throw error;
       if (mountedRef.current) {
         const seen = new Set();
@@ -249,6 +252,44 @@ export default function PQRPanel({ session, rawOrders = [] }) {
     } catch (e) {
       console.error('Error fetching PQR cases:', e);
     } finally { if (showLoading) setLoading(false); }
+  };
+
+  const fetchTrash = async () => {
+    setLoadingTrash(true);
+    try {
+      const { data, error } = await supabase.from('pqr_cases').select('*').not('deleted_at', 'is', null).order('deleted_at', { ascending: false });
+      if (error) throw error;
+      setTrashCases(data || []);
+    } catch (e) {
+      console.error('Error fetching trash:', e);
+      addToast({ type: 'error', title: 'Error', message: 'No se pudo cargar la papelera' });
+    } finally { setLoadingTrash(false); }
+  };
+
+  const handleRestore = async (id) => {
+    try {
+      const { error } = await supabase.rpc('fn_pqr_restore', { p_case_id: id });
+      if (error) throw error;
+      setTrashCases(prev => prev.filter(c => c.id !== id));
+      addToast({ type: 'pqr', title: 'Caso restaurado', message: 'El caso ha sido restaurado a la bandeja activa' });
+      fetchCases(false);
+    } catch (e) {
+      console.error('Error restoring case:', e);
+      addToast({ type: 'error', title: 'Error al restaurar', message: e.message || 'No se pudo restaurar el caso' });
+    }
+  };
+
+  const handlePermanentDelete = async (id) => {
+    if (!window.confirm('¿Eliminar permanentemente este caso? Esta acción no se puede deshacer.')) return;
+    try {
+      const { error } = await supabase.from('pqr_cases').delete().eq('id', id);
+      if (error) throw error;
+      setTrashCases(prev => prev.filter(c => c.id !== id));
+      addToast({ type: 'pqr', title: 'Eliminado permanentemente', message: 'El caso ha sido eliminado para siempre' });
+    } catch (e) {
+      console.error('Error permanently deleting:', e);
+      addToast({ type: 'error', title: 'Error', message: 'No se pudo eliminar el caso' });
+    }
   };
 
   const matchedOrders = useMemo(() => {
@@ -351,20 +392,20 @@ export default function PQRPanel({ session, rawOrders = [] }) {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('¿Eliminar este caso permanentemente?')) return;
+    if (!window.confirm('¿Mover este caso a la papelera? Podés restaurarlo después.')) return;
     const removed = cases.find(c => c.id === id);
     setCases(prev => prev.filter(c => c.id !== id));
     if (selectedCase?.id === id) setSelectedCase(null);
     try {
-      const { error } = await supabase.from('pqr_cases').delete().eq('id', id);
+      const { error } = await supabase.rpc('fn_pqr_soft_delete', { p_case_id: id });
       if (error) throw error;
       mutatedIdsRef.current.add(id);
       setTimeout(() => mutatedIdsRef.current.delete(id), 5000);
-      addToast({ type: 'pqr', title: 'Caso eliminado', message: `Caso #${removed?.order_number || ''} eliminado permanentemente` });
+      addToast({ type: 'pqr', title: 'Caso movido a papelera', message: `Caso #${removed?.order_number || ''} movido a la papelera. Se puede restaurar.` });
     } catch (e) {
-      console.error('Error deleting PQR case:', e);
+      console.error('Error soft-deleting PQR case:', e);
       if (removed) setCases(prev => [...prev, removed].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
-      addToast({ type: 'error', title: 'Error al eliminar', message: e.message || 'No se pudo eliminar el caso' });
+      addToast({ type: 'error', title: 'Error al eliminar', message: e.message || 'No se pudo mover el caso a la papelera' });
     }
   };
 
@@ -487,6 +528,58 @@ export default function PQRPanel({ session, rawOrders = [] }) {
     addToast({ type: 'pqr', title: 'Sincronización completa', message: `${updated} caso(s) actualizado(s) desde Tiendanube` });
   };
 
+  const renderTrashList = () => (
+    <>
+      <div style={{ padding: '10px 20px', background: 'rgba(239,68,68,0.04)', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 10, fontWeight: 700, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          {trashCases.length} caso(s) en papelera
+        </span>
+        <span style={{ fontSize: 9, color: 'var(--on-surface-variant)' }}>Se eliminan después de 30 días</span>
+      </div>
+      {trashCases.map((pqr) => {
+        const st = getStatus(pqr.tracker_status);
+        const daysLeft = pqr.days_in_trash != null ? Math.max(0, 30 - pqr.days_in_trash) : 30;
+        return (
+          <div key={pqr.id}
+            style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-subtle)', background: 'rgba(239,68,68,0.02)', transition: 'all 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.06)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.02)'}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12, fontWeight: 800, color: 'var(--on-surface-variant)' }}>#{pqr.order_number || '—'}</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 7px', borderRadius: 5, fontSize: 9, fontWeight: 700, background: st.bg, color: st.color }}>
+                  <st.icon size={9} /> {st.label}
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                <span style={{ fontSize: 9, color: daysLeft <= 7 ? '#ef4444' : 'var(--on-surface-variant)', fontWeight: daysLeft <= 7 ? 700 : 400 }}>
+                  {daysLeft}d restantes
+                </span>
+                <button onClick={() => handleRestore(pqr.id)} title="Restaurar caso"
+                  style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid rgba(59,130,246,0.3)', background: 'rgba(59,130,246,0.08)', color: '#3b82f6', cursor: 'pointer', fontSize: 10, fontWeight: 700, fontFamily: 'Inter, sans-serif', display: 'flex', alignItems: 'center', gap: 4, transition: 'all 0.2s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.18)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.08)'; }}>
+                  <RotateCcw size={10} /> Restaurar
+                </button>
+                <button onClick={() => handlePermanentDelete(pqr.id)} title="Eliminar permanentemente"
+                  style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.08)', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.2)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; }}>
+                  <Trash2 size={11} />
+                </button>
+              </div>
+            </div>
+            {pqr.customer_name && <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--on-surface-variant)', marginBottom: 2 }}>{pqr.customer_name}</div>}
+            <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', opacity: 0.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              Eliminado: {pqr.deleted_at ? new Date(pqr.deleted_at).toLocaleDateString('es-AR') : '—'}
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+
   // ═══════════════════════════════════════════════════════
   //  RENDER
   // ═══════════════════════════════════════════════════════
@@ -558,17 +651,34 @@ export default function PQRPanel({ session, rawOrders = [] }) {
           {/* Filter Tabs */}
           <div style={{ display: 'flex', gap: 3, marginTop: 8 }}>
             {[{ k: 'all', l: 'Todos' }, { k: 'sent_to_us', l: 'Pendientes' }, { k: 'in_warehouse', l: 'Bodega' }, { k: 'sent_to_client', l: 'Resueltos' }].map(f => (
-              <button key={f.k} onClick={() => setFilterStatus(f.k)}
-                style={{ padding: '4px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 10, fontWeight: filterStatus === f.k ? 700 : 500, fontFamily: 'Inter, sans-serif', background: filterStatus === f.k ? 'var(--primary)' : 'var(--surface-container)', color: filterStatus === f.k ? '#fff' : 'var(--on-surface)', transition: 'all 0.2s' }}>
+              <button key={f.k} onClick={() => { setFilterStatus(f.k); setShowTrash(false); }}
+                style={{ padding: '4px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 10, fontWeight: filterStatus === f.k && !showTrash ? 700 : 500, fontFamily: 'Inter, sans-serif', background: filterStatus === f.k && !showTrash ? 'var(--primary)' : 'var(--surface-container)', color: filterStatus === f.k && !showTrash ? '#fff' : 'var(--on-surface)', transition: 'all 0.2s' }}>
                 {f.l}
               </button>
             ))}
+            <button onClick={() => { setShowTrash(true); fetchTrash(); }}
+              style={{ padding: '4px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 10, fontWeight: showTrash ? 700 : 500, fontFamily: 'Inter, sans-serif', background: showTrash ? '#ef4444' : 'var(--surface-container)', color: showTrash ? '#fff' : 'var(--on-surface)', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Trash2 size={10} /> Papelera
+            </button>
           </div>
         </div>
 
         {/* Case List */}
         <div style={{ flex: 1, overflowY: 'auto' }}>
-          {loading ? (
+          {showTrash ? (
+            loadingTrash ? (
+              <div style={{ padding: 40, textAlign: 'center', color: 'var(--on-surface-variant)', fontSize: 12 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--surface-container)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px', animation: 'pulseGlow 1.5s infinite' }}><Trash2 size={16} /></div>
+                Cargando papelera...
+              </div>
+            ) : trashCases.length === 0 ? (
+              <div style={{ padding: 40, textAlign: 'center' }}>
+                <div style={{ width: 56, height: 56, borderRadius: 14, background: 'var(--surface-container)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', opacity: 0.4 }}><Trash2 size={24} /></div>
+                <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--on-surface)' }}>Papelera vacía</p>
+                <p style={{ fontSize: 11, color: 'var(--on-surface-variant)', opacity: 0.6, marginTop: 4 }}>Los casos eliminados aparecerán aquí por 30 días</p>
+              </div>
+            ) : renderTrashList()
+          ) : loading ? (
             <div style={{ padding: 40, textAlign: 'center', color: 'var(--on-surface-variant)', fontSize: 12 }}>
               <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--surface-container)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px', animation: 'pulseGlow 1.5s infinite' }}><Inbox size={16} /></div>
               Cargando casos...
@@ -579,34 +689,36 @@ export default function PQRPanel({ session, rawOrders = [] }) {
               <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--on-surface)' }}>Sin casos</p>
               <p style={{ fontSize: 11, color: 'var(--on-surface-variant)', opacity: 0.6, marginTop: 4 }}>Creá uno nuevo para comenzar</p>
             </div>
-          ) : filteredCases.map((pqr) => {
-            const st = getStatus(pqr.tracker_status);
-            const isSel = selectedCase?.id === pqr.id;
-            return (
-              <div key={pqr.id} onClick={() => handleSelectCase(pqr)}
-                style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-subtle)', cursor: 'pointer', transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)', background: isSel ? 'var(--primary-container)' : 'transparent', borderLeft: isSel ? '3px solid var(--primary)' : '3px solid transparent', userSelect: 'none' }}
-                onMouseEnter={e => { if (!isSel) { e.currentTarget.style.background = 'var(--surface-container)'; e.currentTarget.style.transform = 'translateX(2px)'; }}}
-                onMouseLeave={e => { if (!isSel) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.transform = 'translateX(0)'; }}}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12, fontWeight: 800, color: 'var(--primary)' }}>#{pqr.order_number || '—'}</span>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 7px', borderRadius: 5, fontSize: 9, fontWeight: 700, background: st.bg, color: st.color }}>
-                      <st.icon size={9} /> {st.label}
-                    </span>
+          ) : (
+            filteredCases.map((pqr) => {
+              const st = getStatus(pqr.tracker_status);
+              const isSel = selectedCase?.id === pqr.id;
+              return (
+                <div key={pqr.id} onClick={() => handleSelectCase(pqr)}
+                  style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-subtle)', cursor: 'pointer', transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)', background: isSel ? 'var(--primary-container)' : 'transparent', borderLeft: isSel ? '3px solid var(--primary)' : '3px solid transparent', userSelect: 'none' }}
+                  onMouseEnter={e => { if (!isSel) { e.currentTarget.style.background = 'var(--surface-container)'; e.currentTarget.style.transform = 'translateX(2px)'; }}}
+                  onMouseLeave={e => { if (!isSel) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.transform = 'translateX(0)'; }}}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12, fontWeight: 800, color: 'var(--primary)' }}>#{pqr.order_number || '—'}</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 7px', borderRadius: 5, fontSize: 9, fontWeight: 700, background: st.bg, color: st.color }}>
+                        <st.icon size={9} /> {st.label}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      {pqr.customer_phone && <WhatsAppBtn phone={pqr.customer_phone} name={pqr.customer_name} orderNum={pqr.order_number} size="small" />}
+                      <ChevronRight size={12} color="var(--on-surface-variant)" style={{ opacity: isSel ? 1 : 0.3, transition: 'opacity 0.2s' }} />
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    {pqr.customer_phone && <WhatsAppBtn phone={pqr.customer_phone} name={pqr.customer_name} orderNum={pqr.order_number} size="small" />}
-                    <ChevronRight size={12} color="var(--on-surface-variant)" style={{ opacity: isSel ? 1 : 0.3, transition: 'opacity 0.2s' }} />
+                  {pqr.customer_name && <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--on-surface)', marginBottom: 2 }}>{pqr.customer_name}</div>}
+                  <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', opacity: 0.6 }}>
+                    {pqr.customer_message || pqr.requested_items || pqr.products_involved || 'Sin detalles'}
                   </div>
                 </div>
-                {pqr.customer_name && <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--on-surface)', marginBottom: 2 }}>{pqr.customer_name}</div>}
-                <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', opacity: 0.6 }}>
-                  {pqr.customer_message || pqr.requested_items || pqr.products_involved || 'Sin detalles'}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </div>
 
@@ -798,7 +910,13 @@ export default function PQRPanel({ session, rawOrders = [] }) {
                   <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--on-surface-variant)' }}>{selectedCase.contact_date} · {getStatus(selectedCase.tracker_status).label}</p>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 6 }}>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <button onClick={handleClose} title="Cerrar detalle"
+                  style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid var(--border-subtle)', background: 'var(--surface-container-high)', color: 'var(--on-surface-variant)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', flexShrink: 0 }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--error-container)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; e.currentTarget.style.color = '#ef4444'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface-container-high)'; e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.color = 'var(--on-surface-variant)'; }}>
+                  <X size={15} />
+                </button>
                 <WhatsAppBtn phone={selectedCase.customer_phone} name={selectedCase.customer_name} orderNum={selectedCase.order_number} />
                 {selectedCase.order_number && rawOrders.length > 0 && (
                   <button onClick={handleRefreshFromTiendanube} style={{ ...S.btn, ...S.btnSuccess }}
@@ -869,12 +987,52 @@ export default function PQRPanel({ session, rawOrders = [] }) {
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--on-surface)' }}>{RETURN_REASONS.find(r => r.id === selectedCase.return_reason)?.label || selectedCase.return_reason}</div>
                 </div>
                 <div style={{ ...S.glassCard, padding: 18 }}>
-                  <div style={S.sectionHead}><Truck size={12} color="#06b6d4" /> Guías</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5, fontSize: 11 }}>
-                    {selectedCase.original_tracking && <div><span style={{ color: 'var(--on-surface-variant)' }}>Original: </span><span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>{selectedCase.original_tracking}</span></div>}
-                    {selectedCase.return_tracking && <div><span style={{ color: 'var(--on-surface-variant)' }}>Devolución: </span><span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>{selectedCase.return_tracking}</span></div>}
-                    {selectedCase.resend_tracking && <div><span style={{ color: 'var(--on-surface-variant)' }}>Reenvío: </span><span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>{selectedCase.resend_tracking}</span></div>}
-                    {!selectedCase.original_tracking && !selectedCase.return_tracking && !selectedCase.resend_tracking && <span style={{ color: 'var(--on-surface-variant)', opacity: 0.4 }}>Sin guías registradas</span>}
+                  <div style={S.sectionHead}><Truck size={12} color="#06b6d4" /> Guías de Envío</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {/* Guía 1: Envío Original */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: selectedCase.original_tracking ? 'rgba(6,182,212,0.06)' : 'rgba(255,255,255,0.02)', border: `1px solid ${selectedCase.original_tracking ? 'rgba(6,182,212,0.2)' : 'var(--border-subtle)'}`, transition: 'all 0.2s' }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 7, background: selectedCase.original_tracking ? 'rgba(6,182,212,0.12)' : 'var(--surface-container-high)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Truck size={13} color={selectedCase.original_tracking ? '#06b6d4' : 'var(--on-surface-variant)'} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Envío Original (TiendaNube)</div>
+                        {selectedCase.original_tracking ? (
+                          <div style={{ fontSize: 12, fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#06b6d4', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedCase.original_tracking}</div>
+                        ) : (
+                          <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', opacity: 0.4, marginTop: 2, fontStyle: 'italic' }}>Sin guía — agregar en Editar</div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Guía 2: Devolución del Cliente */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: selectedCase.return_tracking ? 'rgba(245,158,11,0.06)' : 'rgba(255,255,255,0.02)', border: `1px solid ${selectedCase.return_tracking ? 'rgba(245,158,11,0.2)' : 'var(--border-subtle)'}`, transition: 'all 0.2s' }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 7, background: selectedCase.return_tracking ? 'rgba(245,158,11,0.12)' : 'var(--surface-container-high)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <RotateCcw size={13} color={selectedCase.return_tracking ? '#f59e0b' : 'var(--on-surface-variant)'} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Devolución del Cliente</div>
+                        {selectedCase.return_tracking ? (
+                          <div style={{ fontSize: 12, fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#f59e0b', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedCase.return_tracking}</div>
+                        ) : (
+                          <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', opacity: 0.4, marginTop: 2, fontStyle: 'italic' }}>Esperando devolución del cliente</div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Guía 3: Reenvío / Retorno */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: selectedCase.resend_tracking ? 'rgba(16,185,129,0.06)' : 'rgba(255,255,255,0.02)', border: `1px solid ${selectedCase.resend_tracking ? 'rgba(16,185,129,0.2)' : 'var(--border-subtle)'}`, transition: 'all 0.2s' }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 7, background: selectedCase.resend_tracking ? 'rgba(16,185,129,0.12)' : 'var(--surface-container-high)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Package size={13} color={selectedCase.resend_tracking ? '#10b981' : 'var(--on-surface-variant)'} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Reenvío al Cliente</div>
+                        {selectedCase.resend_tracking ? (
+                          <div style={{ fontSize: 12, fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#10b981', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedCase.resend_tracking}</div>
+                        ) : (
+                          <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', opacity: 0.4, marginTop: 2, fontStyle: 'italic' }}>Pendiente de reenvío</div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

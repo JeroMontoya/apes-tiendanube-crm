@@ -1,0 +1,10 @@
+# .dockerignore para ONYX Brain
+__pycache__/
+*.pyc
+*.pyo
+.env
+.env.local
+.git/
+.vscode/
+*.md
+tests/

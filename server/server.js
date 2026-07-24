@@ -1,16 +1,17 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import crypto from 'crypto';
 import https from 'https';
 import http from 'http';
-import dotenv from 'dotenv';
 import { google } from 'googleapis';
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { MetaAdLibraryAPI, getMetaAdLibraryInsights } from '../src/api/MetaAdLibraryAPI.js';
 import { MerchantCenterAPI } from '../src/api/MerchantCenterAPI.js';
 import { isInvalidEmail } from '../src/utils/unifyClients.js';
 import { createClient } from '@supabase/supabase-js';
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -356,7 +357,7 @@ function proxyToExternal(targetHost, pathRewrite) {
         'Content-Type': req.headers['content-type'] || 'application/json',
         'Authentication': auth,
         'Accept': 'application/json',
-        'User-Agent': req.headers['user-agent'] || 'APES CRM (contact@apesdigital.com)',
+        'User-Agent': req.headers['user-agent'] || 'Onyx Core (contact@onyxcore.com)',
       },
     };
 
@@ -691,7 +692,7 @@ async function tnFetch(path, token) {
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
   tnLastReq = Date.now();
   const res = await fetch(`https://api.tiendanube.com/v1${path}`, {
-    headers: { 'Authentication': `bearer ${token}`, 'User-Agent': 'APES CRM (contact@apesdigital.com)', 'Content-Type': 'application/json' },
+    headers: { 'Authentication': `bearer ${token}`, 'User-Agent': 'Onyx Core (contact@onyxcore.com)', 'Content-Type': 'application/json' },
   });
   if (!res.ok) throw new Error(`TN ${path}: ${res.status}`);
   const link = res.headers.get('link') || '';
@@ -1533,193 +1534,8 @@ REGLAS: Sé ESPECÍFICO con números. Prioriza por revenue. HealthScore REALISTA
 });
 
 // ═══════════════════════════════════════════════════════════════════
-//  WORKSHOP INVENTORY ENDPOINTS
+//  LEGACY TALLER ENDPOINTS REMOVED — ALL INVENTORY NOW VIA /api/inventory
 // ═══════════════════════════════════════════════════════════════════
-
-// POST /api/taller/sync-tn — Pull TiendaNueve products into workshop_inventory
-app.post('/api/taller/sync-tn', async (req, res) => {
-  try {
-    const { data: config } = await supabaseAdmin.from('system_config').select('*').eq('id', 'main').single();
-    const token = config?.tiendanube_access_token;
-    const storeId = config?.tiendanube_store_id;
-    if (!token || !storeId) return res.status(400).json({ error: 'TN credentials missing' });
-
-    // Fetch all products from TN
-    let allProducts = [], pageToken;
-    do {
-      const url = `https://api.tiendanube.com/v1/${storeId}/products?per_page=200${pageToken ? '&page_token=' + pageToken : ''}`;
-      const r = await fetch(url, { headers: { 'Authentication': `Bearer ${token}`, 'User-Agent': 'APES CRM' } });
-      if (!r.ok) break;
-      const products = await r.json();
-      allProducts = allProducts.concat(products);
-      pageToken = r.headers.get('x-next-page-token');
-    } while (pageToken);
-
-    let synced = 0;
-    for (const p of allProducts) {
-      const attrs = p.attributes || [];
-      const colorAttr = attrs.find(a => a.name?.toLowerCase() === 'color');
-      const sizeAttr = attrs.find(a => a.name?.toLowerCase() === 'talla' || a.name?.toLowerCase() === 'size');
-      const imageUrl = p.images?.[0]?.src || '';
-
-      for (const v of (p.variants || [])) {
-        const colorVal = v.values?.find(vv => vv?.option === colorAttr?.id)?.text || '';
-        const sizeVal = v.values?.find(vv => vv?.option === sizeAttr?.id)?.text || '';
-
-        const { error } = await supabaseAdmin.from('workshop_inventory').upsert({
-          source: 'tiendanube',
-          tiendanube_product_id: parseInt(storeId) ? p.id : p.id,
-          tiendanube_variant_id: v.id,
-          sku: v.sku || '',
-          name: p.name?.es || p.name || 'Sin nombre',
-          description: p.description?.es || '',
-          category: 'producto_tn',
-          color: colorVal,
-          size: sizeVal,
-          image_url: imageUrl,
-          sell_price: parseFloat(v.price || '0'),
-          current_stock: v.stock ?? 0,
-          last_synced_at: new Date().toISOString(),
-        }, { onConflict: 'tiendanube_product_id,tiendanube_variant_id' });
-
-        if (!error) synced++;
-      }
-    }
-
-    res.json({ ok: true, products: allProducts.length, variants: synced });
-  } catch (err) {
-    console.error('[Taller Sync]', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// GET /api/taller/inventory — List all inventory items
-app.get('/api/taller/inventory', async (req, res) => {
-  try {
-    const source = req.query.source;
-    let query = supabaseAdmin.from('workshop_inventory').select('*').eq('status', 'active').order('name');
-    if (source) query = query.eq('source', source);
-    const { data, error } = await query;
-    if (error) throw error;
-    res.json({ ok: true, items: data || [] });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// POST /api/taller/inventory — Add local/other_store product
-app.post('/api/taller/inventory', async (req, res) => {
-  try {
-    const item = req.body;
-    const { data, error } = await supabaseAdmin.from('workshop_inventory').insert({
-      source: item.source || 'local',
-      source_store_name: item.source_store_name || '',
-      name: item.name,
-      description: item.description || '',
-      category: item.category || 'otro',
-      color: item.color || '',
-      size: item.size || '',
-      sku: item.sku || '',
-      image_url: item.image_url || '',
-      cost_price: item.cost_price || 0,
-      sell_price: item.sell_price || 0,
-      current_stock: item.current_stock || 0,
-      min_stock: item.min_stock || 0,
-      location: item.location || 'Almacén General',
-      tags: item.tags || [],
-    }).select().single();
-    if (error) throw error;
-    res.json({ ok: true, item: data });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// POST /api/taller/inventory/:id/adjust — Adjust stock with movement log
-app.post('/api/taller/inventory/:id/adjust', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { quantity, movement_type, to_location, from_location, notes, batch_id, performed_by_name } = req.body;
-
-    const { error: movError } = await supabaseAdmin.from('stock_movements').insert({
-      inventory_item_id: id,
-      movement_type: movement_type || 'adjust',
-      quantity: parseInt(quantity),
-      to_location: to_location || '',
-      from_location: from_location || '',
-      batch_id: batch_id || null,
-      notes: notes || '',
-      performed_by_name: performed_by_name || '',
-    });
-    if (movError) throw movError;
-
-    // Sync to Tiendanube if the item came from Tiendanube
-    const { data: itemData, error: itemError } = await supabaseAdmin
-      .from('workshop_inventory')
-      .select('source, current_stock, tiendanube_product_id, tiendanube_variant_id')
-      .eq('id', id)
-      .single();
-
-    if (!itemError && itemData && itemData.source === 'tiendanube' && itemData.tiendanube_product_id && itemData.tiendanube_variant_id) {
-      const { data: config } = await supabaseAdmin.from('system_config').select('tiendanube_access_token, tiendanube_store_id').eq('id', 'main').single();
-      const token = config?.tiendanube_access_token;
-      const storeId = config?.tiendanube_store_id;
-
-      if (token && storeId) {
-        try {
-          const tnUrl = `https://api.tiendanube.com/v1/${storeId}/products/${itemData.tiendanube_product_id}/variants/${itemData.tiendanube_variant_id}`;
-          const r = await fetch(tnUrl, {
-            method: 'PUT',
-            headers: {
-              'Authentication': `Bearer ${token}`,
-              'User-Agent': 'APES CRM',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ stock: itemData.current_stock })
-          });
-          
-          if (!r.ok) {
-            console.error('[Tiendanube Sync] Failed to update variant:', await r.text());
-          } else {
-            console.log(`[Tiendanube Sync] Updated variant ${itemData.tiendanube_variant_id} stock to ${itemData.current_stock}`);
-          }
-        } catch (syncErr) {
-          console.error('[Tiendanube Sync] Exception:', syncErr);
-        }
-      }
-    }
-
-    res.json({ ok: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// GET /api/taller/movements — Recent stock movements
-app.get('/api/taller/movements', async (req, res) => {
-  try {
-    const limit = parseInt(req.query.limit) || 50;
-    const itemId = req.query.item_id;
-    let query = supabaseAdmin.from('stock_movements').select('*, workshop_inventory(name, sku, color, size, image_url)').order('created_at', { ascending: false }).limit(limit);
-    if (itemId) query = query.eq('inventory_item_id', itemId);
-    const { data, error } = await query;
-    if (error) throw error;
-    res.json({ ok: true, movements: data || [] });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// GET /api/taller/locations — Workshop locations
-app.get('/api/taller/locations', async (req, res) => {
-  try {
-    const { data, error } = await supabaseAdmin.from('workshop_locations').select('*').eq('is_active', true).order('name');
-    if (error) throw error;
-    res.json({ ok: true, locations: data || [] });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
 app.post('/api/cron/sync-manual', async (req, res) => {
   const authHeader = req.headers.authorization;
@@ -1741,21 +1557,47 @@ app.post('/api/cron/sync-manual', async (req, res) => {
   }
 });
 
-// === INVENTORY API ROUTES ===
-import inventoryHandler from '../api/inventory/index.js';
-import webhookHandler from '../api/inventory/webhook-tiendanube.js';
-import syncHandler from '../api/inventory/sync-to-tiendanube.js';
-import registerWebhookHandler from '../api/inventory/register-webhook.js';
+// === INVENTORY API ROUTES (dynamic imports to ensure dotenv loads first) ===
+let inventoryHandler, webhookHandler, syncHandler, syncFromTNHandler, registerWebhookHandler, aiScanHandler, aiSearchHandler, aiVisionHandler, tallerSyncHandler;
 
-app.all('/api/inventory/webhook-tiendanube', (req, res) => webhookHandler(req, res));
-app.all('/api/inventory/sync-to-tiendanube', (req, res) => syncHandler(req, res));
-app.all('/api/inventory/register-webhook', (req, res) => registerWebhookHandler(req, res));
-app.all('/api/inventory/*', (req, res) => inventoryHandler(req, res));
+async function loadInventoryRoutes() {
+  const inventoryModule = await import('../api/inventory/index.js');
+  const webhookModule = await import('../api/inventory/webhook-tiendanube.js');
+  const syncModule = await import('../api/inventory/sync-to-tiendanube.js');
+  const syncFromTNModule = await import('../api/inventory/sync-from-tiendanube.js');
+  const registerWebhookModule = await import('../api/inventory/register-webhook.js');
+  const aiScanModule = await import('../api/inventory/ai-scan.js');
+  const aiSearchModule = await import('../api/inventory/ai-search.js');
+  const aiVisionModule = await import('../api/inventory/ai-vision.js');
+  const tallerSyncModule = await import('../api/inventory/taller-sync.js');
 
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
-  });
+  inventoryHandler = inventoryModule.default;
+  webhookHandler = webhookModule.default;
+  syncHandler = syncModule.default;
+  syncFromTNHandler = syncFromTNModule.default;
+  registerWebhookHandler = registerWebhookModule.default;
+  aiScanHandler = aiScanModule.default;
+  aiSearchHandler = aiSearchModule.default;
+  aiVisionHandler = aiVisionModule.default;
+  tallerSyncHandler = tallerSyncModule.default;
 }
+
+loadInventoryRoutes().then(() => {
+  app.all('/api/inventory/webhook-tiendanube', (req, res) => webhookHandler(req, res));
+  app.all('/api/inventory/sync-to-tiendanube', (req, res) => syncHandler(req, res));
+  app.all('/api/inventory/sync-from-tiendanube', (req, res) => syncFromTNHandler(req, res));
+  app.all('/api/inventory/register-webhook', (req, res) => registerWebhookHandler(req, res));
+  app.all('/api/inventory/ai-scan', (req, res) => aiScanHandler(req, res));
+  app.all('/api/inventory/ai-search', (req, res) => aiSearchHandler(req, res));
+  app.all('/api/inventory/ai-vision', (req, res) => aiVisionHandler(req, res));
+  app.all('/api/inventory/taller-sync', (req, res) => tallerSyncHandler(req, res));
+  app.all('/api/inventory/*', (req, res) => inventoryHandler(req, res));
+
+  if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+      console.log(`Server listening on port ${PORT}`);
+    });
+  }
+});
 
 export default app;

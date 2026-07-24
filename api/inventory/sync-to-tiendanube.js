@@ -1,3 +1,5 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
@@ -69,6 +71,21 @@ async function resolveStoreId() {
   return process.env.TIENDANUBE_STORE_ID;
 }
 
+// Cache the WEB location id for the lifetime of the function invocation
+let cachedWebLocationId = null;
+async function resolveWebLocationId() {
+  if (cachedWebLocationId) return cachedWebLocationId;
+  const { data, error } = await supabase
+    .from('inventory_locations')
+    .select('id')
+    .eq('code', 'WEB')
+    .eq('is_active', true)
+    .single();
+  if (error || !data) return null;
+  cachedWebLocationId = data.id;
+  return cachedWebLocationId;
+}
+
 async function pushStockToTiendanube(tiendanubeProductId, tiendanubeVariantId, stock, token, storeId) {
   const baseUrl = `https://api.tiendanube.com/v1/${storeId}`;
   const url = `${baseUrl}/products/${tiendanubeProductId}/variants/${tiendanubeVariantId}`;
@@ -106,6 +123,16 @@ async function syncProductStock(productId) {
     return { success: false, error: 'Product has no TiendaNube mapping' };
   }
 
+  // FIX: sin variant_id mapeado no podemos sincronizar de forma segura —
+  // antes el código usaba product_id como variant_id, lo cual actualizaba
+  // el recurso equivocado en Tiendanube. Ahora se reporta como error explícito.
+  if (!product.tiendanube_variant_id) {
+    return {
+      success: false,
+      error: `Product ${product.sku || product.id} has no tiendanube_variant_id mapped — skipping sync to avoid corrupting wrong variant`,
+    };
+  }
+
   const token = await resolveTiendanubeToken();
   const storeId = await resolveStoreId();
 
@@ -113,54 +140,43 @@ async function syncProductStock(productId) {
     return { success: false, error: 'TiendaNube credentials not configured' };
   }
 
-  const { data: stockEntries, error: stockError } = await supabase
+  const webLocationId = await resolveWebLocationId();
+  if (!webLocationId) {
+    return { success: false, error: 'WEB location not found/active in inventory_locations' };
+  }
+
+  // FIX: Antes se sumaba el stock de las 3 ubicaciones (R5 + APES + WEB).
+  // Eso permitía vender online unidades que físicamente estaban en un local
+  // y no destinadas a e-commerce. Ahora solo se sincroniza lo que está
+  // asignado explícitamente a la ubicación WEB.
+  const { data: webStock, error: stockError } = await supabase
     .from('inventory_stock')
-    .select('quantity, reserved')
-    .eq('product_id', productId);
+    .select('quantity, reserved, unlimited_stock')
+    .eq('product_id', productId)
+    .eq('location_id', webLocationId)
+    .single();
 
-  if (stockError) {
-    return { success: false, error: 'Failed to fetch stock levels' };
+  if (stockError && stockError.code !== 'PGRST116') {
+    return { success: false, error: 'Failed to fetch WEB stock level' };
   }
 
-  const totalAvailable = (stockEntries || []).reduce(
-    (sum, s) => sum + (s.quantity || 0) - (s.reserved || 0),
-    0
-  );
+  const totalAvailable = webStock?.unlimited_stock
+    ? 999999
+    : Math.max(0, (webStock?.quantity || 0) - (webStock?.reserved || 0));
 
-  const results = [];
-
-  if (product.tiendanube_variant_id) {
-    try {
-      await pushStockToTiendanube(
-        product.tiendanube_product_id,
-        product.tiendanube_variant_id,
-        totalAvailable,
-        token,
-        storeId
-      );
-      results.push({ synced: true, stock: totalAvailable });
-    } catch (e) {
-      console.error('[sync] Variant sync failed:', e.message);
-      results.push({ synced: false, error: e.message });
-    }
-  } else {
-    try {
-      await pushStockToTiendanube(
-        product.tiendanube_product_id,
-        product.tiendanube_product_id,
-        totalAvailable,
-        token,
-        storeId
-      );
-      results.push({ synced: true, stock: totalAvailable });
-    } catch (e) {
-      console.error('[sync] Product sync failed:', e.message);
-      results.push({ synced: false, error: e.message });
-    }
+  try {
+    await pushStockToTiendanube(
+      product.tiendanube_product_id,
+      product.tiendanube_variant_id,
+      totalAvailable,
+      token,
+      storeId
+    );
+    return { success: true, total_available: totalAvailable, location: 'WEB' };
+  } catch (e) {
+    console.error('[sync] Variant sync failed:', e.message);
+    return { success: false, error: e.message };
   }
-
-  const allSynced = results.every((r) => r.synced);
-  return { success: allSynced, results, total_available: totalAvailable };
 }
 
 export default async function handler(req, res) {

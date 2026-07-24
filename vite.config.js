@@ -5,55 +5,9 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api/inventory': {
-        target: 'https://apes-tiendanube-crm.vercel.app',
-        changeOrigin: true,
-      },
       '/api': {
-        target: 'https://api.tiendanube.com',
+        target: 'http://localhost:3001',
         changeOrigin: true,
-        configure: (proxy) => {
-          proxy.on('proxyReq', (proxyReq, req) => {
-            try {
-              const url = new URL(req.url, 'http://localhost');
-              
-              // Handle both formats:
-              // 1. /api/tn-proxy?tnpath=storeId/path&params (old format)
-              // 2. /api/tn-proxy/storeId/path?params (new format)
-              let tnpath = url.searchParams.get('tnpath');
-              if (!tnpath) {
-                // Extract from pathname: /api/tn-proxy/storeId/path -> storeId/path
-                const prefix = '/api/tn-proxy/';
-                if (url.pathname.startsWith(prefix)) {
-                  tnpath = url.pathname.slice(prefix.length);
-                }
-              }
-              
-              if (tnpath) {
-                url.searchParams.delete('tnpath');
-                const newPath = url.search || '';
-                const target = `/v1/${tnpath}${newPath ? `?${newPath.slice(1)}` : ''}`;
-                proxyReq.path = target;
-              }
-              
-              const existingAuth = proxyReq.getHeader?.('Authentication') ?? proxyReq.headers?.['Authentication'];
-              if (!existingAuth) {
-                const token = url.searchParams.get('tiendanube_token') || 
-                             (url.searchParams.get('Authorization') ? 
-                              `Bearer ${url.searchParams.get('Authorization')}` : null);
-                if (token) {
-                  if (proxyReq.setHeader) {
-                    proxyReq.setHeader('Authentication', token);
-                  } else if (proxyReq.headers) {
-                    proxyReq.headers['Authentication'] = token;
-                  }
-                }
-              }
-            } catch (e) {
-              console.warn('[Vite Proxy] Error in proxyReq handler:', e.message);
-            }
-          });
-        },
       },
       '/gapi-content': {
         target: 'https://shoppingcontent.googleapis.com',

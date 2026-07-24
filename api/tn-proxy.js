@@ -70,7 +70,7 @@ export default async function handler(req, res) {
       method: req.method,
       headers: {
         'Authentication': `bearer ${tiendanubeToken}`,
-        'User-Agent': 'APES CRM (contact@apesdigital.com)',
+        'User-Agent': 'Onyx Core (contact@onyxcore.com)',
         'Content-Type': 'application/json',
       },
       ...(req.method !== 'GET' && req.method !== 'HEAD' && req.body

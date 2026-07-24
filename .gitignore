@@ -31,3 +31,6 @@ check_headers.cjs
 
 .vercel
 .env*
+server/google-credentials.json
+orders.json
+debug_unified.json
