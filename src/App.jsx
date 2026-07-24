@@ -1030,6 +1030,8 @@ setConnectionStatus('connected');
         metaInsightsLoading={metaInsightsLoading}
         googleAdsData={googleAdsData}
         tiktokData={tiktokData}
+        setGoogleAdsData={setGoogleAdsData}
+        setTiktokData={setTiktokData}
         gscPerformance={gscPerformance}
         mcProducts={mcProducts}
         workspaceData={workspaceData}
@@ -1070,7 +1072,8 @@ function AppContent({
   activeView, setActiveView, theme, toggleTheme, sidebarOpen, setSidebarOpen,
   selectedClient, setSelectedClient, historicClients, unifiedClients, rawOrders,
   tiendanubeProducts, connectionStatus, storeId, lastSync, metaInsights, ga4Insights,
-  metaInsightsLoading, googleAdsData, tiktokData, gscPerformance, mcProducts,
+  metaInsightsLoading, googleAdsData, tiktokData, setGoogleAdsData, setTiktokData,
+  gscPerformance, mcProducts,
   workspaceData, isRefreshingStock, refreshStock, isSyncing, isFetchingInsights,
   session, dateRange, setDateRange, filteredClients, handleConnect, fetchRealData,
   syncProgress, setSyncProgress,
