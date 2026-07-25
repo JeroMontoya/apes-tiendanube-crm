@@ -345,7 +345,8 @@ app.get('/api/competitors/seo', async (req, res) => {
 function proxyToExternal(targetHost, pathRewrite) {
   return (req, res) => {
     const targetPath = pathRewrite ? pathRewrite(req.path, req.url) : req.url;
-    const auth = req.headers['authentication'] || req.headers['Authorization'] || '';
+    // Express lowercases all header keys, so use 'authorization' (lowercase)
+    const auth = req.headers['authorization'] || req.headers['authentication'] || '';
     const devToken = req.headers['developer-token'] || '';
 
     const options = {
@@ -355,7 +356,7 @@ function proxyToExternal(targetHost, pathRewrite) {
       method: req.method,
       headers: {
         'Content-Type': req.headers['content-type'] || 'application/json',
-        'Authentication': auth,
+        'Authorization': auth,
         'Accept': 'application/json',
         'User-Agent': req.headers['user-agent'] || 'Apes Tiendanube CRM',
       },
