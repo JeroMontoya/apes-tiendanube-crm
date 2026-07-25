@@ -1218,7 +1218,8 @@ app.get('/api/data/snapshot', async (req, res) => {
     const rawOrdersStale = rawSample && rawSample.date && typeof rawSample.date === 'object';
     const hasDraftCoupons = unifiedClients.some(c => (c.purchases || []).some(p => p.coupon && p.coupon.startsWith('DRAFT-ORDER')));
     const forceRegen = req.query.force === '1';
-    const needsRegen = forceRegen || hasDraftCoupons || (unifiedClients.length > 0 && (
+    const rawOrdersEmpty = rawOrders.length === 0 && (data.tiendanube_orders || []).length > 0;
+    const needsRegen = forceRegen || hasDraftCoupons || rawOrdersEmpty || (unifiedClients.length > 0 && (
       (sample.orders && !sample.purchases) ||
       (sample.purchases?.length > 0 && !sample.purchases[0].date) ||
       (sample.purchases?.length > 0 && !('couponType' in sample.purchases[0])) ||
@@ -1229,7 +1230,7 @@ app.get('/api/data/snapshot', async (req, res) => {
       rawOrdersStale
     ));
     if (needsRegen) {
-      console.log('[Snapshot] Regenerating unifiedClients + rawOrders from stored TN orders (stale format detected)');
+      console.log(`[Snapshot] Regenerating: force=${forceRegen} rawOrdersEmpty=${rawOrdersEmpty} staleFormat=${!!(unifiedClients.length > 0 && (sample.orders && !sample.purchases))} tnOrders=${(data.tiendanube_orders || []).length}`);
       // Use tiendanube_orders (full TN order objects) for proper mapping
       const tnOrders = data.tiendanube_orders || [];
       unifiedClients = mapToUnified(tnOrders);
