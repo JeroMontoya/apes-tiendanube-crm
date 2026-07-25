@@ -87,7 +87,9 @@ export default function SuperDashboard({
         body: JSON.stringify({
           roas: parseFloat(consolidatedRoas),
           ga4_sessions: ga4Insights?.global?.sessions || 0,
-          cart_abandonment_rate: 65.5 // TODO: Calcular desde GA4 real
+          // Cart abandonment rate requires add_to_cart vs purchase events from GA4
+          // which are not currently available in the batch report
+          cart_abandonment_rate: null
         })
       });
 

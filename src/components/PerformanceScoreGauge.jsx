@@ -3,25 +3,44 @@ import React, { useMemo } from 'react';
 const ACCENT = '#6366f1';
 const ACCENT_LIGHT = 'rgba(99,102,241,0.5)';
 
+// Scoring thresholds - e-commerce benchmarks (COP)
+const THRESHOLDS = {
+  baseScore: 50,
+  revenue: [
+    { min: 100000, points: 10 },
+    { min: 500000, points: 10 },
+  ],
+  orders: [
+    { min: 20, points: 5 },
+    { min: 100, points: 5 },
+  ],
+  repeatRate: [
+    { min: 0.2, points: 5 },
+    { min: 0.4, points: 5 },
+  ],
+  conversionRate: [
+    { min: 0.02, points: 4 },
+    { min: 0.04, points: 4 },
+  ],
+};
+
 export default function PerformanceScoreGauge({ clients, metaInsights, ga4Insights }) {
   const score = useMemo(() => {
-    let s = 50;
+    let s = THRESHOLDS.baseScore;
     const c = clients || [];
     if (c.length > 0) {
       const revenue = c.reduce((sum, cl) => sum + (cl.totalSpent ?? 0), 0);
       const orders = c.reduce((sum, cl) => sum + (cl.purchaseCount ?? 0), 0);
-      if (revenue > 100000) s += 10;
-      if (revenue > 500000) s += 10;
-      if (orders > 20) s += 5;
-      if (orders > 100) s += 5;
       const repeat = c.filter(cl => (cl.purchaseCount ?? 0) > 1).length;
-      if (repeat > c.length * 0.2) s += 5;
-      if (repeat > c.length * 0.4) s += 5;
+      const repeatRate = repeat / c.length;
+      
+      THRESHOLDS.revenue.forEach(t => { if (revenue > t.min) s += t.points; });
+      THRESHOLDS.orders.forEach(t => { if (orders > t.min) s += t.points; });
+      THRESHOLDS.repeatRate.forEach(t => { if (repeatRate > t.min) s += t.points; });
     }
     if (ga4Insights?.ecommerce?.totalPurchases > 0 && ga4Insights?.global?.sessions > 0) {
       const conversionRate = ga4Insights.ecommerce.totalPurchases / ga4Insights.global.sessions;
-      if (conversionRate > 0.02) s += 4;
-      if (conversionRate > 0.04) s += 4;
+      THRESHOLDS.conversionRate.forEach(t => { if (conversionRate > t.min) s += t.points; });
     }
     return Math.min(100, Math.max(0, s));
   }, [clients, metaInsights, ga4Insights]);

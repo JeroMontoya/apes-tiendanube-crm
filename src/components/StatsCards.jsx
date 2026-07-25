@@ -55,6 +55,7 @@ function Sparkline({ data, color, width = 60, height = 24 }) {
 }
 
 function calcDelta(current, previous) {
+  if (previous === null || previous === undefined) return null;
   if (previous === 0) return { percent: current > 0 ? 100 : 0, isPositive: current >= 0 };
   const pct = ((current - previous) / previous) * 100;
   return { percent: Math.abs(pct).toFixed(1), isPositive: pct >= 0 };
@@ -151,10 +152,9 @@ export default function StatsCards({ clients, rawOrders = [], dateRange, metaIns
     // Growth metric
     const growthValue = revenue - prevRevenue;
 
-    // We don't have historical metaSpend for now without a complex API call, so we mock previous spend for the delta
-    const prevMetaSpend = metaSpend * 0.9;
-    const prevRoas = prevMetaSpend > 0 ? (prevRevenue / prevMetaSpend) : 0;
-    const prevCpa = prevTotalOrders > 0 ? (prevMetaSpend / prevTotalOrders) : 0;
+    // No previous Meta spend available without complex API call - deltas will show ---
+    const prevRoas = null;
+    const prevCpa = null;
 
     const buildHistoricSpark = (metric) => {
       if (arr.length === 0) return [0,0,0,0,0,0,0];
@@ -173,7 +173,7 @@ export default function StatsCards({ clients, rawOrders = [], dateRange, metaIns
         if (metric === 'revenue') buckets[index] += parseFloat(p.amount || 0);
         else if (metric === 'orders') buckets[index] += 1;
       });
-      if (buckets.every(b => b === 0)) return [1,1,1,1,1,1,1];
+      if (buckets.every(b => b === 0)) return [0,0,0,0,0,0,0];
       return buckets;
     };
 
@@ -209,10 +209,10 @@ export default function StatsCards({ clients, rawOrders = [], dateRange, metaIns
         const isMetaLoading = metaInsightsLoading && (cfg.key === 'roas' || cfg.key === 'cpa' || cfg.key === 'growth');
         const dataItem = stats.data[cfg.key];
         let delta = dataItem.delta;
-        if (cfg.key === 'cpa') {
+        if (cfg.key === 'cpa' && delta) {
           delta = { ...delta, isPositive: !delta.isPositive };
         }
-        const deltaColor = delta.isPositive ? '#10b981' : '#f43f5e';
+        const deltaColor = delta?.isPositive ? '#10b981' : '#f43f5e';
         
         return (
           <div
@@ -278,7 +278,7 @@ export default function StatsCards({ clients, rawOrders = [], dateRange, metaIns
             {/* Bottom Row: Trend + Sparkline */}
             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', position: 'relative', zIndex: 1, marginTop: 'auto' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingBottom: 4 }}>
-                {!isMetaLoading ? (
+                {!isMetaLoading && delta ? (
                   <>
                     <span style={{
                       display: 'inline-flex', alignItems: 'center', gap: 2,
@@ -295,6 +295,10 @@ export default function StatsCards({ clients, rawOrders = [], dateRange, metaIns
                       vs {stats.prevDateStr}
                     </span>
                   </>
+                ) : !isMetaLoading ? (
+                  <span style={{ fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 500 }}>
+                    Sin datos previos
+                  </span>
                 ) : (
                   <RefreshCw size={12} color="var(--on-surface-variant)" style={{ animation: 'spin 1s linear infinite' }} />
                 )}
