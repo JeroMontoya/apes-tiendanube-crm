@@ -20,7 +20,7 @@
     },
     {
       "path": "/api/cron/inventory-sync-queue",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 7 * * *"
     }
   ],
   "rewrites": [
