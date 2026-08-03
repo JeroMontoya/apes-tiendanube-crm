@@ -6,7 +6,7 @@ export default function useInventory() {
   const [locations, setLocations] = useState([
     { id: 'r5', code: 'r5', name: 'R5', type: 'physical', color: '#3b82f6' },
     { id: 'apes', code: 'apes', name: 'APES', type: 'physical', color: '#8b5cf6' },
-    { id: 'web', code: 'web', name: 'WEB', type: 'online', color: '#10b981' },
+    { id: 'web', code: 'web', name: 'WEB', type: 'online', color: '#06B6D4' },
   ]);
   const [stock, setStock] = useState([]);
   const [movements, setMovements] = useState([]);
@@ -62,7 +62,7 @@ export default function useInventory() {
   const fetchProducts = useCallback(async (filters = {}) => {
     return handleRequest(async () => {
       const params = new URLSearchParams();
-      if (filters.location) params.append('location', filters.location);
+      if (filters.locationId) params.append('location_id', filters.locationId);
       if (filters.category) params.append('category', filters.category);
       if (filters.search) params.append('search', filters.search);
       if (filters.status) params.append('status', filters.status);
@@ -70,7 +70,26 @@ export default function useInventory() {
       if (filters.page) params.append('page', filters.page);
       const qs = params.toString();
       const res = await apiCall(`/products${qs ? `?${qs}` : ''}`);
-      if (res.success) safeSet(setProducts)(res.data);
+      if (res && Array.isArray(res.products)) {
+        const enrichedProducts = (res.products || []).map((p) => {
+          const stockByLocation = {};
+          (p.inventory_stock || []).forEach((s) => {
+            stockByLocation[s.location_id] = (s.quantity || 0) - (s.reserved || 0);
+          });
+          return { ...p, stock_by_location: stockByLocation };
+        });
+        safeSet(setProducts)(enrichedProducts);
+        const flatStock = (res.products || []).flatMap((p) =>
+          (p.inventory_stock || []).map((s) => ({
+            product_id: p.id,
+            location_id: s.location_id,
+            quantity: s.quantity || 0,
+            reserved: s.reserved || 0,
+            low_stock_threshold: s.low_stock_threshold ?? 5,
+          }))
+        );
+        safeSet(setStock)(flatStock);
+      }
       return res;
     });
   }, [apiCall, handleRequest]);
@@ -79,7 +98,7 @@ export default function useInventory() {
     return handleRequest(async () => {
       const res = await apiCall('/stock/adjust', {
         method: 'POST',
-        body: JSON.stringify({ productId, locationId, quantity, type, notes }),
+        body: JSON.stringify({ product_id: productId, location_id: locationId, quantity, type, notes }),
       });
       return res;
     });
@@ -89,7 +108,13 @@ export default function useInventory() {
     return handleRequest(async () => {
       const res = await apiCall('/stock/transfer', {
         method: 'POST',
-        body: JSON.stringify({ productId, fromLocationId, toLocationId, quantity, notes }),
+        body: JSON.stringify({
+          product_id: productId,
+          from_location_id: fromLocationId,
+          to_location_id: toLocationId,
+          quantity,
+          notes,
+        }),
       });
       return res;
     });
@@ -101,13 +126,13 @@ export default function useInventory() {
       if (filters.locationId) params.append('location_id', filters.locationId);
       if (filters.productId) params.append('product_id', filters.productId);
       if (filters.type) params.append('type', filters.type);
-      if (filters.startDate) params.append('start_date', filters.startDate);
-      if (filters.endDate) params.append('end_date', filters.endDate);
+      if (filters.startDate) params.append('date_from', filters.startDate);
+      if (filters.endDate) params.append('date_to', filters.endDate);
       if (filters.page) params.append('page', filters.page);
       if (filters.limit) params.append('limit', filters.limit);
       const qs = params.toString();
       const res = await apiCall(`/movements${qs ? `?${qs}` : ''}`);
-      if (res.success) safeSet(setMovements)(res.data);
+      if (res && Array.isArray(res.movements)) safeSet(setMovements)(res.movements);
       return res;
     });
   }, [apiCall, handleRequest]);
@@ -115,7 +140,7 @@ export default function useInventory() {
   const fetchAlerts = useCallback(async () => {
     return handleRequest(async () => {
       const res = await apiCall('/alerts');
-      if (res.success) safeSet(setAlerts)(res.data);
+      if (Array.isArray(res)) safeSet(setAlerts)(res);
       return res;
     });
   }, [apiCall, handleRequest]);
@@ -123,7 +148,7 @@ export default function useInventory() {
   const acknowledgeAlert = useCallback(async (alertId) => {
     return handleRequest(async () => {
       const res = await apiCall(`/alerts/${alertId}/acknowledge`, { method: 'POST' });
-      if (res.success) {
+      if (res && res.id) {
         safeSet(setAlerts)((prev) =>
           prev.map((a) => (a.id === alertId ? { ...a, acknowledged: true } : a))
         );
@@ -144,7 +169,7 @@ export default function useInventory() {
     return handleRequest(async () => {
       const params = locationId ? `?location_id=${locationId}` : '';
       const res = await apiCall(`/reports/summary${params}`);
-      if (res.success) safeSet(setSummary)(res.data);
+      if (res && typeof res === 'object' && !Array.isArray(res)) safeSet(setSummary)(res);
       return res;
     });
   }, [apiCall, handleRequest]);
@@ -179,18 +204,18 @@ export default function useInventory() {
   const fetchRoles = useCallback(async () => {
     return handleRequest(async () => {
       const res = await apiCall('/roles');
-      if (res.success) safeSet(setRoles)(res.data);
+      if (Array.isArray(res)) safeSet(setRoles)(res);
       return res;
     });
   }, [apiCall, handleRequest]);
 
-  const setUserRole = useCallback(async (userId, role, locationsGranted) => {
+  const setUserRole = useCallback(async (userId, role) => {
     return handleRequest(async () => {
       const res = await apiCall('/roles', {
         method: 'POST',
-        body: JSON.stringify({ userId, role, locations: locationsGranted }),
+        body: JSON.stringify({ user_id: userId, role }),
       });
-      if (res.success) await fetchRoles();
+      if (res && res.id) await fetchRoles();
       return res;
     });
   }, [apiCall, handleRequest, fetchRoles]);
@@ -198,8 +223,8 @@ export default function useInventory() {
   const fetchLocations = useCallback(async () => {
     try {
       const res = await apiCall('/locations');
-      if (res.success && res.data) {
-        safeSet(setLocations)(res.data);
+      if (Array.isArray(res) && res.length > 0) {
+        safeSet(setLocations)(res);
       }
     } catch {
       // Keep default locations
