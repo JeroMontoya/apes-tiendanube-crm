@@ -40,8 +40,12 @@ export default async function handler(req, res) {
     const storeId = config?.tiendanube_store_id;
     if (!token || !storeId) return err(res, 'TiendaNueve credentials not configured', 400);
 
-    // Get WEB location ID
-    const { data: webLoc } = await supabase.from('inventory_locations').select('id').eq('code', 'web').single();
+    // Get WEB location ID (codes are stored uppercase: WEB / R5 / APES)
+    const { data: webLoc } = await supabase
+      .from('inventory_locations')
+      .select('id')
+      .eq('code', 'WEB')
+      .maybeSingle();
     if (!webLoc) return err(res, 'WEB location not found in inventory_locations', 500);
 
     // Fetch all products from TN

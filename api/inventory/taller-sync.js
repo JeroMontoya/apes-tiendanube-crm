@@ -48,6 +48,21 @@ async function rateLimitedFetch(url, options) {
 }
 
 async function resolveTiendanubeToken() {
+  // Prefer the canonical main config row (credentials live as direct columns),
+  // then legacy locations, then env.
+  const { data: mainConfig } = await supabase
+    .from('system_config')
+    .select('*')
+    .eq('id', 'main')
+    .single();
+
+  if (mainConfig?.tiendanube_access_token) {
+    return mainConfig.tiendanube_access_token;
+  }
+  if (mainConfig?.value?.tiendanube_access_token) {
+    return mainConfig.value.tiendanube_access_token;
+  }
+
   const { data: config } = await supabase
     .from('system_config')
     .select('value')
@@ -56,10 +71,25 @@ async function resolveTiendanubeToken() {
 
   if (config?.value) return config.value;
 
-  return process.env.TIENDANUBE_STORE_TOKEN || process.env.TIENDANUBE_TOKEN;
+  return process.env.TIENDANUBE_STORE_TOKEN || process.env.TIENDANUBE_TOKEN || process.env.TIENDANUBE_ACCESS_TOKEN;
 }
 
 async function resolveStoreId() {
+  // Prefer the canonical main config row (credentials live as direct columns),
+  // then legacy locations, then env.
+  const { data: mainConfig } = await supabase
+    .from('system_config')
+    .select('*')
+    .eq('id', 'main')
+    .single();
+
+  if (mainConfig?.tiendanube_store_id) {
+    return mainConfig.tiendanube_store_id;
+  }
+  if (mainConfig?.value?.tiendanube_store_id) {
+    return mainConfig.value.tiendanube_store_id;
+  }
+
   const { data: config } = await supabase
     .from('system_config')
     .select('value')
@@ -106,6 +136,19 @@ async function pushStockToTiendanube(tiendanubeProductId, tiendanubeVariantId, s
   }
 
   return responseBody;
+}
+
+async function enqueueTiendanubeSync(productId, newStock, referenceType) {
+  const { data, error } = await supabase.rpc('fn_enqueue_tiendanube_sync', {
+    p_product_id: productId,
+    p_new_stock: newStock,
+    p_reference_type: referenceType,
+  });
+  if (error) {
+    console.error('[taller-sync] enqueue failed:', error.message);
+    return { success: false, error: error.message };
+  }
+  return data;
 }
 
 /**
@@ -229,42 +272,53 @@ export default async function handler(req, res) {
       return err(res, 'Failed to update stock', 500, rpcError.message);
     }
 
-    // If WEB location, push to TiendaNube immediately
+    // If WEB location, push to TiendaNube immediately.
+    // If the push fails (or credentials are missing), enqueue the sync so the
+    // queue processor retries it with backoff — the change is never lost.
     let tiendanubeSync = null;
     if (location_code === 'WEB' && product.tiendanube_product_id && product.tiendanube_variant_id) {
+      const currentStock = await (async () => {
+        const { data: stockData } = await supabase
+          .from('inventory_stock')
+          .select('quantity, reserved, unlimited_stock')
+          .eq('product_id', product_id)
+          .eq('location_id', location.id)
+          .single();
+        return stockData?.unlimited_stock
+          ? 999999
+          : Math.max(0, (stockData?.quantity || 0) - (stockData?.reserved || 0));
+      })();
+
       try {
         const token = await resolveTiendanubeToken();
         const storeId = await resolveStoreId();
 
         if (token && storeId) {
-          // Get current available stock
-          const { data: stockData } = await supabase
-            .from('inventory_stock')
-            .select('quantity, reserved, unlimited_stock')
-            .eq('product_id', product_id)
-            .eq('location_id', location.id)
-            .single();
-
-          const available = stockData?.unlimited_stock
-            ? 999999
-            : Math.max(0, (stockData?.quantity || 0) - (stockData?.reserved || 0));
-
           await pushStockToTiendanube(
             product.tiendanube_product_id,
             product.tiendanube_variant_id,
-            available,
+            currentStock,
             token,
             storeId
           );
-
-          tiendanubeSync = { success: true, stock_pushed: available };
-          console.log(`[taller-sync] Pushed stock ${available} to TiendaNube for ${product.sku}`);
+          tiendanubeSync = { success: true, stock_pushed: currentStock };
+          console.log(`[taller-sync] Pushed stock ${currentStock} to TiendaNube for ${product.sku}`);
         } else {
-          tiendanubeSync = { success: false, reason: 'TiendaNube credentials not configured' };
+          const enqueued = await enqueueTiendanubeSync(product_id, currentStock, 'taller_manual');
+          tiendanubeSync = {
+            success: false,
+            reason: 'TiendaNube credentials not configured — sync enqueued for retry',
+            queued: enqueued,
+          };
         }
       } catch (syncError) {
         console.error('[taller-sync] TiendaNube push failed:', syncError.message);
-        tiendanubeSync = { success: false, error: syncError.message };
+        const enqueued = await enqueueTiendanubeSync(product_id, currentStock, 'taller_manual');
+        tiendanubeSync = {
+          success: false,
+          error: syncError.message,
+          queued: enqueued,
+        };
       }
     }
 

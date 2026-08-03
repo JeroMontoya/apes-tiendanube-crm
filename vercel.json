@@ -13,6 +13,16 @@
       }
     }
   ],
+  "crons": [
+    {
+      "path": "/api/cron/meta-ads-sync",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/inventory-sync-queue",
+      "schedule": "*/5 * * * *"
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/onyx/(.*)",
@@ -28,6 +38,14 @@
     },
     {
       "source": "/api/data/(.*)",
+      "destination": "/server/server.js"
+    },
+    {
+      "source": "/api/rfm/(.*)",
+      "destination": "/server/server.js"
+    },
+    {
+      "source": "/api/meta/(.*)",
       "destination": "/server/server.js"
     },
     {

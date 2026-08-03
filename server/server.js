@@ -6,6 +6,8 @@ import cors from 'cors';
 import crypto from 'crypto';
 import https from 'https';
 import http from 'http';
+import fs from 'fs';
+import path from 'path';
 import { google } from 'googleapis';
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { MetaAdLibraryAPI, getMetaAdLibraryInsights } from '../src/api/MetaAdLibraryAPI.js';
@@ -570,22 +572,21 @@ app.get('/api/sync/health', (req, res) => {
 // Diagnostic endpoint to check if Supabase data exists
 app.get('/api/diag', async (req, res) => {
   try {
-    const { data: config, error: configErr } = await supabaseAdmin
-      .from('system_config')
-      .select('id, tiendanube_store_id, tiendanube_access_token, meta_ad_account_id, meta_access_token')
-      .eq('id', 'main')
-      .single();
-
     const { data: workspaces, error: wsErr } = await supabaseAdmin
       .from('workspaces')
       .select('user_id, tiendanube_store_id, tiendanube_access_token')
       .limit(5);
 
+    // Never leak credentials: redact tokens
+    const sanitized = (workspaces || []).map(w => ({
+      user_id: w.user_id,
+      tiendanube_store_id: w.tiendanube_store_id,
+      has_tn_token: !!(w.tiendanube_access_token),
+    }));
+
     res.json({
-      system_config: config || null,
-      system_config_error: configErr?.message || null,
       workspaces_count: workspaces?.length || 0,
-      workspaces: workspaces || [],
+      workspaces: sanitized,
       workspaces_error: wsErr?.message || null,
       supabase_url: process.env.VITE_SUPABASE_URL ? 'SET' : 'MISSING',
       has_service_role: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -595,7 +596,7 @@ app.get('/api/diag', async (req, res) => {
   }
 });
 
-// Seed endpoint: saves TiendaNueve credentials into system_config
+// Seed endpoint: saves TiendaNueve credentials into workspaces
 // Uses user's JWT for authenticated writes
 app.post('/api/seed/credentials', express.json(), async (req, res) => {
   const authHeader = req.headers.authorization;
@@ -627,56 +628,38 @@ app.post('/api/seed/credentials', express.json(), async (req, res) => {
     }
   }
 
-  const seedData = {
-    id: 'main',
-    tiendanube_store_id: storeId,
-    tiendanube_access_token: storeToken,
-    meta_access_token: process.env.META_ACCESS_TOKEN || null,
-    meta_ad_account_id: process.env.META_AD_ACCOUNT_ID || null,
-    ga4_property_id: process.env.GA4_PROPERTY_ID || null,
-    ga4_credentials_json: ga4CredsJson,
-    merchant_center_merchant_id: process.env.MERCHANT_CENTER_MERCHANT_ID || null,
-    merchant_center_credentials_json: mcCredsJson,
-    search_console_site_url: process.env.SEARCH_CONSOLE_SITE_URL || null,
-    search_console_credentials_json: scCredsJson,
-    updated_at: new Date().toISOString(),
-  };
-
   try {
-    // Try system_config first (requires admin role)
-    const { error: scErr } = await userSupabase
-      .from('system_config')
-      .upsert(seedData, { onConflict: 'id' });
-
-    if (!scErr) {
-      return res.json({ saved: 'system_config', error: null });
-    }
-
-    // Fallback: save to workspaces (requires user_id)
     const { data: { user } } = await userSupabase.auth.getUser();
     if (!user) return res.status(401).json({ error: 'Not authenticated' });
+
+    // Fetch existing workspace to avoid overwriting valid TN credentials with null from .env
+    const { data: existingWs } = await userSupabase
+      .from('workspaces')
+      .select('tiendanube_store_id, tiendanube_access_token')
+      .eq('user_id', user.id)
+      .single();
 
     const { error: wsErr } = await userSupabase
       .from('workspaces')
       .upsert({
         user_id: user.id,
-        tiendanube_store_id: storeId,
-        tiendanube_access_token: storeToken,
-        meta_access_token: seedData.meta_access_token,
-        meta_ad_account_id: seedData.meta_ad_account_id,
-        ga4_property_id: seedData.ga4_property_id,
+        tiendanube_store_id: storeId || existingWs?.tiendanube_store_id || null,
+        tiendanube_access_token: storeToken || existingWs?.tiendanube_access_token || null,
+        meta_access_token: process.env.META_ACCESS_TOKEN || null,
+        meta_ad_account_id: process.env.META_AD_ACCOUNT_ID || null,
+        ga4_property_id: process.env.GA4_PROPERTY_ID || null,
         ga4_credentials_json: ga4CredsJson,
-        merchant_center_merchant_id: seedData.merchant_center_merchant_id,
+        merchant_center_merchant_id: process.env.MERCHANT_CENTER_MERCHANT_ID || null,
         merchant_center_credentials_json: mcCredsJson,
-        search_console_site_url: seedData.search_console_site_url,
+        search_console_site_url: process.env.SEARCH_CONSOLE_SITE_URL || null,
         search_console_credentials_json: scCredsJson,
       }, { onConflict: 'user_id' });
 
     if (wsErr) {
-      return res.json({ saved: null, system_config_error: scErr.message, workspaces_error: wsErr.message });
+      return res.json({ saved: null, error: wsErr.message });
     }
 
-    return res.json({ saved: 'workspaces', system_config_error: scErr.message, error: null });
+    return res.json({ saved: 'workspaces', error: null });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -714,6 +697,77 @@ async function tnFetchAll(path, token) {
     page = nextPage;
   }
   return all;
+}
+
+// Compact Tiendanube payloads before storing in server_cache.
+// Full TN orders/customers are several MB and make the Postgres upsert
+// exceed the service_role statement_timeout. Keep only the fields the
+// snapshot/needsRegen logic actually consumes.
+function compactTnOrders(orders) {
+  return (orders || []).map(o => ({
+    id: o.id,
+    number: o.number,
+    total: o.total,
+    status: o.status,
+    state: o.state,
+    payment_status: o.payment_status,
+    created_at: o.created_at,
+    completed_at: o.completed_at,
+    date: o.date,
+    contact_email: o.contact_email,
+    contact_name: o.contact_name,
+    contact_phone: o.contact_phone,
+    billing_name: o.billing_name,
+    tracking_number: o.tracking_number,
+    discount: o.discount,
+    coupon: o.coupon,
+    promotional_discount: o.promotional_discount
+      ? {
+          total_discount_amount: o.promotional_discount.total_discount_amount,
+          contents: (o.promotional_discount.contents || []).map(c => ({
+            scope_value_name: c.scope_value_name,
+            discount_script_type: c.discount_script_type,
+            scope_type: c.scope_type,
+            total_discount_amount: c.total_discount_amount,
+          })),
+        }
+      : undefined,
+    customer: o.customer
+      ? { id: o.customer.id, name: o.customer.name, email: o.customer.email, phone: o.customer.phone, city: o.customer.city, province: o.customer.province }
+      : undefined,
+    shipping_address: o.shipping_address
+      ? { city: o.shipping_address.city, province: o.shipping_address.province, locality: o.shipping_address.locality, address: o.shipping_address.address, phone: o.shipping_address.phone }
+      : undefined,
+    billing_address: o.billing_address
+      ? { city: o.billing_address.city, province: o.billing_address.province, locality: o.billing_address.locality, address: o.billing_address.address, phone: o.billing_address.phone }
+      : undefined,
+    products: (o.products || []).map(p => ({ id: p.id, name: p.name, quantity: p.quantity, price: p.price })),
+  }));
+}
+
+function compactTnCustomers(customers) {
+  return (customers || []).map(c => ({
+    id: c.id,
+    name: c.name,
+    email: c.email,
+    phone: c.phone,
+    city: c.city,
+    province: c.province,
+    created_at: c.created_at,
+  }));
+}
+
+function compactTnProducts(products) {
+  return (products || []).map(p => ({
+    id: p.id,
+    name: p.name,
+    attributes: p.attributes,
+    images: p.images,
+    variants: (p.variants || []).map(v => ({
+      id: v.id, name: v.name, stock: v.stock, stock_management: v.stock_management,
+      sku: v.sku, price: v.price, promotional_price: v.promotional_price, values: v.values,
+    })),
+  }));
 }
 
 async function ga4GetAccessToken(sa) {
@@ -982,9 +1036,9 @@ function mapToUnified(orders) {
 
 // GET /api/cron/sync — on-demand server-side data refresh
 app.get('/api/cron/sync', async (req, res) => {
-
   const startTime = Date.now();
-  const errors = [];
+  const globalErrors = [];
+  const workspaceId = req.header('X-Workspace-Id');
 
   const supabaseAdmin = createClient(
     process.env.VITE_SUPABASE_URL || '',
@@ -992,189 +1046,184 @@ app.get('/api/cron/sync', async (req, res) => {
   );
 
   try {
-    // 1. Load credentials from system_config (fallback to env vars)
-    let { data: config, error: cfgErr } = await supabaseAdmin.from('system_config').select('*').eq('id', 'main').single();
-    if (cfgErr || !config) {
-      config = { id: 'main' }; // We'll rely on env vars below
-      console.warn('[Cron] No system_config found, falling back to process.env');
+    let query = supabaseAdmin.from('workspaces').select('*');
+    if (workspaceId && workspaceId !== 'default') {
+      query = query.eq('id', workspaceId);
+    }
+    const { data: workspaces, error: wsErr } = await query;
+
+    if (wsErr || !workspaces || workspaces.length === 0) {
+      throw new Error('No workspaces found for sync.');
     }
 
-    // 1b. Seed missing JSON credentials from env vars (service_role bypasses RLS)
-    const gaCreds = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
-    let gaCredsJson = null;
-    if (gaCreds) { try { gaCredsJson = typeof gaCreds === 'string' ? JSON.parse(gaCreds) : gaCreds; } catch (_) {} }
+    let totalDuration = 0;
+    const syncResults = [];
 
-    const updates = {};
-    if (!config.ga4_credentials_json && gaCredsJson) updates.ga4_credentials_json = gaCredsJson;
-    if (!config.merchant_center_credentials_json && gaCredsJson) updates.merchant_center_credentials_json = gaCredsJson;
-    if (!config.search_console_credentials_json && gaCredsJson) updates.search_console_credentials_json = gaCredsJson;
-    if (!config.meta_ad_account_id && process.env.META_AD_ACCOUNT_ID) updates.meta_ad_account_id = process.env.META_AD_ACCOUNT_ID;
-    if (!config.search_console_site_url && process.env.SEARCH_CONSOLE_SITE_URL) updates.search_console_site_url = process.env.SEARCH_CONSOLE_SITE_URL;
-    if (!config.tiendanube_store_id && process.env.VITE_TIENDANUBE_STORE_ID) updates.tiendanube_store_id = process.env.VITE_TIENDANUBE_STORE_ID;
-    if (!config.tiendanube_access_token && process.env.VITE_TIENDANUBE_TOKEN) updates.tiendanube_access_token = process.env.VITE_TIENDANUBE_TOKEN;
+    for (const config of workspaces) {
+      const errors = [];
+      const storeId = config.tiendanube_store_id;
+      const token = config.tiendanube_access_token;
+      
+      if (!storeId || !token) {
+        errors.push({ api: 'tn_init', msg: 'No TN credentials for this workspace' });
+        continue;
+      }
 
-    if (Object.keys(updates).length > 0) {
-      updates.updated_at = new Date().toISOString();
-      await supabaseAdmin.from('system_config').upsert({ id: 'main', ...updates }, { onConflict: 'id' });
-      console.log('[Cron] Seeded missing credentials:', Object.keys(updates).join(', '));
-      // Reload config
-      const { data: refreshed } = await supabaseAdmin.from('system_config').select('*').eq('id', 'main').single();
-      if (refreshed) config = refreshed;
-    }
-
-    const storeId = config.tiendanube_store_id || process.env.VITE_TIENDANUBE_STORE_ID;
-    const token = config.tiendanube_access_token || process.env.VITE_TIENDANUBE_TOKEN;
-    if (!storeId || !token) throw new Error('No TN credentials');
-
-    // 2. Fetch TiendaNueve data in parallel (respecting rate limit via tnFetch)
-    console.log('[Cron] Fetching TiendaNueve data...');
-    let customers = [], orders = [], products = [];
-    try {
-      customers = await tnFetchAll(`/${storeId}/customers`, token);
-    } catch (e) { errors.push({ api: 'tn_customers', msg: e.message }); }
-
-    try {
-      orders = await tnFetchAll(`/${storeId}/orders`, token);
-    } catch (e) { errors.push({ api: 'tn_orders', msg: e.message }); }
-
-    try {
-      products = await tnFetchAll(`/${storeId}/products`, token);
-    } catch (e) { errors.push({ api: 'tn_products', msg: e.message }); }
-
-    console.log(`[Cron] TN: ${customers.length} customers, ${orders.length} orders, ${products.length} products`);
-
-    // 3. Map to unified format
-    const unifiedClients = mapToUnified(orders);
-    const rawOrders = orders.map(o => {
-      const rawDate = o.completed_at || o.created_at;
-      const dateStr = typeof rawDate === 'string' ? rawDate : rawDate?.date || null;
-      return {
-        id: o.id, number: o.number, total: parseFloat(o.total || 0),
-        created_at: dateStr,
-        date: dateStr,
-        status: o.status, customer_id: o.customer?.id,
-        customer: o.customer ? { name: o.customer.name, email: o.customer.email, phone: o.customer.phone } : undefined,
-        products: (o.products || []).map(p => ({ name: p.name, quantity: p.quantity, price: p.price })),
-        tracking_number: o.tracking_number,
-        shipping_address: o.shipping_address || null,
-        coupon: Array.isArray(o.coupon) ? o.coupon : (o.coupon ? [o.coupon] : []),
-        discount: o.discount,
-        promotional_discount: o.promotional_discount,
-        contact_email: o.contact_email,
-        contact_name: o.contact_name,
-        contact_phone: o.contact_phone,
-        billing_name: o.billing_name,
-      };
-    });
-
-    // 4. Date range for analytics (last 30 days)
-    const end = new Date();
-    const start = new Date(end);
-    start.setDate(start.getDate() - 30);
-    const sd = start.toISOString().split('T')[0];
-    const ed = end.toISOString().split('T')[0];
-
-    // 5. Fetch external APIs in parallel
-    let ga4 = null, meta = null, mc = [], gsc = { queries: [], pages: [], performance: null };
-
-    const sa = config.ga4_credentials_json || config.merchant_center_credentials_json;
-
-    // GA4
-    if (sa && config.ga4_property_id) {
+      console.log(`[Cron] Fetching data for workspace ${config.id}...`);
+      let customers = [], orders = [], products = [];
       try {
-        ga4 = await ga4GetInsights(sa, config.ga4_property_id, sd, ed);
-      } catch (e) { errors.push({ api: 'ga4', msg: e.message }); }
-    }
+        customers = await tnFetchAll(`/${storeId}/customers`, token);
+      } catch (e) { errors.push({ api: 'tn_customers', msg: e.message }); }
 
-    // Merchant Center
-    if (sa && config.merchant_center_merchant_id) {
       try {
-        const token = await mcGetAccessToken(sa);
-        let allProducts = [], pageToken;
-        do {
-          const url = `https://shoppingcontent.googleapis.com/content/v2.1/${config.merchant_center_merchant_id}/products?maxResults=50${pageToken ? '&pageToken=' + pageToken : ''}`;
-          const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-          if (r.ok) { const j = await r.json(); allProducts = allProducts.concat(j.resources || []); pageToken = j.nextPageToken; } else { pageToken = undefined; }
-        } while (pageToken);
-        mc = allProducts;
-      } catch (e) { errors.push({ api: 'mc', msg: e.message }); }
-    }
+        orders = await tnFetchAll(`/${storeId}/orders`, token);
+      } catch (e) { errors.push({ api: 'tn_orders', msg: e.message }); }
 
-    // Search Console
-    if (sa && config.search_console_site_url) {
       try {
-        const token = await ga4GetAccessToken(sa);
-        const siteEnc = encodeURIComponent(config.search_console_site_url);
-        const body = JSON.stringify({ startDate: sd, endDate: ed, dimensions: ['query'], rowLimit: 50 });
-        const [qr, pr] = await Promise.all([
-          fetch(`https://www.googleapis.com/webmasters/v3/sites/${siteEnc}/searchAnalytics/query`, { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body }),
-          fetch(`https://www.googleapis.com/webmasters/v3/sites/${siteEnc}/searchAnalytics/query`, { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ startDate: sd, endDate: ed, dimensions: ['page'], rowLimit: 50 }) }),
-        ]);
-        const qData = qr.ok ? await qr.json() : { rows: [] };
-        const pData = pr.ok ? await pr.json() : { rows: [] };
-        gsc = {
-          queries: (qData.rows || []).map(r => ({ query: r.keys[0], clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position })),
-          pages: (pData.rows || []).map(r => ({ page: r.keys[0], clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position })),
-          performance: { totalClicks: (qData.rows || []).reduce((s, r) => s + r.clicks, 0), totalImpressions: (qData.rows || []).reduce((s, r) => s + r.impressions, 0) },
+        products = await tnFetchAll(`/${storeId}/products`, token);
+      } catch (e) { errors.push({ api: 'tn_products', msg: e.message }); }
+
+      console.log(`[Cron] TN Workspace ${config.id}: ${customers.length} customers, ${orders.length} orders, ${products.length} products`);
+
+      // 3. Map to unified format
+      const unifiedClients = mapToUnified(orders);
+      const rawOrders = orders.map(o => {
+        const rawDate = o.completed_at || o.created_at;
+        const dateStr = typeof rawDate === 'string' ? rawDate : rawDate?.date || null;
+        return {
+          id: o.id, number: o.number, total: parseFloat(o.total || 0),
+          created_at: dateStr,
+          date: dateStr,
+          status: o.status, customer_id: o.customer?.id,
+          customer: o.customer ? { name: o.customer.name, email: o.customer.email, phone: o.customer.phone } : undefined,
+          products: (o.products || []).map(p => ({ name: p.name, quantity: p.quantity, price: p.price })),
+          tracking_number: o.tracking_number,
+          shipping_address: o.shipping_address || null,
+          coupon: Array.isArray(o.coupon) ? o.coupon : (o.coupon ? [o.coupon] : []),
+          discount: o.discount,
+          promotional_discount: o.promotional_discount,
+          contact_email: o.contact_email,
+          contact_name: o.contact_name,
+          contact_phone: o.contact_phone,
+          billing_name: o.billing_name,
         };
-      } catch (e) { errors.push({ api: 'gsc', msg: e.message }); }
+      });
+
+      // 4. Date range for analytics (last 30 days)
+      const end = new Date();
+      const start = new Date(end);
+      start.setDate(start.getDate() - 30);
+      const sd = start.toISOString().split('T')[0];
+      const ed = end.toISOString().split('T')[0];
+
+      // 5. Fetch external APIs in parallel
+      let ga4 = null, meta = null, mc = [], gsc = { queries: [], pages: [], performance: null };
+
+      const sa = config.ga4_credentials_json || config.merchant_center_credentials_json;
+
+      // GA4
+      if (sa && config.ga4_property_id) {
+        try {
+          ga4 = await ga4GetInsights(sa, config.ga4_property_id, sd, ed);
+        } catch (e) { errors.push({ api: 'ga4', msg: e.message }); }
+      }
+
+      // Merchant Center
+      if (sa && config.merchant_center_merchant_id) {
+        try {
+          const mtoken = await mcGetAccessToken(sa);
+          let allProducts = [], pageToken;
+          do {
+            const url = `https://shoppingcontent.googleapis.com/content/v2.1/${config.merchant_center_merchant_id}/products?maxResults=50${pageToken ? '&pageToken=' + pageToken : ''}`;
+            const r = await fetch(url, { headers: { Authorization: `Bearer ${mtoken}` } });
+            if (r.ok) { const j = await r.json(); allProducts = allProducts.concat(j.resources || []); pageToken = j.nextPageToken; } else { pageToken = undefined; }
+          } while (pageToken);
+          mc = allProducts;
+        } catch (e) { errors.push({ api: 'mc', msg: e.message }); }
+      }
+
+      // Search Console
+      if (sa && config.search_console_site_url) {
+        try {
+          const scToken = await ga4GetAccessToken(sa);
+          const siteEnc = encodeURIComponent(config.search_console_site_url);
+          const body = JSON.stringify({ startDate: sd, endDate: ed, dimensions: ['query'], rowLimit: 50 });
+          const [qr, pr] = await Promise.all([
+            fetch(`https://www.googleapis.com/webmasters/v3/sites/${siteEnc}/searchAnalytics/query`, { method: 'POST', headers: { Authorization: `Bearer ${scToken}`, 'Content-Type': 'application/json' }, body }),
+            fetch(`https://www.googleapis.com/webmasters/v3/sites/${siteEnc}/searchAnalytics/query`, { method: 'POST', headers: { Authorization: `Bearer ${scToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ startDate: sd, endDate: ed, dimensions: ['page'], rowLimit: 50 }) }),
+          ]);
+          const qData = qr.ok ? await qr.json() : { rows: [] };
+          const pData = pr.ok ? await pr.json() : { rows: [] };
+          gsc = {
+            queries: (qData.rows || []).map(r => ({ query: r.keys[0], clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position })),
+            pages: (pData.rows || []).map(r => ({ page: r.keys[0], clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position })),
+            performance: { totalClicks: (qData.rows || []).reduce((s, r) => s + r.clicks, 0), totalImpressions: (qData.rows || []).reduce((s, r) => s + r.impressions, 0) },
+          };
+        } catch (e) { errors.push({ api: 'gsc', msg: e.message }); }
+      }
+
+      // Meta Ads
+      if (config.meta_ad_account_id && config.meta_access_token) {
+        try {
+          const metaUrl = `https://graph.facebook.com/v21.0/act_${config.meta_ad_account_id}/insights?fields=impressions,clicks,spend,actions,cost_per_action_type&date_preset=last_30d&access_token=${config.meta_access_token}`;
+          const mr = await fetch(metaUrl);
+          if (mr.ok) { const md = await mr.json(); meta = md.data?.[0] || null; }
+        } catch (e) { errors.push({ api: 'meta', msg: e.message }); }
+      }
+
+      // 6. Save to server_cache
+      const duration = Date.now() - startTime;
+      console.log(`[Cron] Sync completed in ${duration}ms for ${config.id}`);
+
+      const { error: upsertErr } = await supabaseAdmin.from('server_cache').upsert({
+        id: config.id,
+        tiendanube_products: compactTnProducts(products),
+        tiendanube_orders: compactTnOrders(orders),
+        tiendanube_customers: compactTnCustomers(customers),
+        unified_clients: unifiedClients,
+        raw_orders: rawOrders,
+        ga4_insights: ga4,
+        meta_insights: meta,
+        mc_products: mc,
+        gsc_queries: gsc.queries,
+        gsc_pages: gsc.pages,
+        gsc_performance: gsc.performance,
+        sync_status: errors.length > 0 ? 'partial' : 'ok',
+        sync_duration_ms: duration,
+        error_log: errors,
+        last_sync: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'id' });
+
+      if (upsertErr) console.error(`[Cron] Upsert error for ${config.user_id}:`, upsertErr.message);
+
+      // Broadcast sync-complete to all connected SSE clients (we could namespace this by workspace ID later)
+      broadcastToChannel('global', 'sync-complete', {
+        workspaceId: config.user_id,
+        orders: orders.length,
+        customers: customers.length,
+        products: products.length,
+        duration,
+        errors: errors.length,
+      });
+
+      syncResults.push({ workspace: config.user_id, status: 'ok', duration, customers: customers.length, orders: orders.length, products: products.length, errors });
     }
 
-    // Meta Ads
-    if (config.meta_ad_account_id && config.meta_access_token) {
-      try {
-        const metaUrl = `https://graph.facebook.com/v21.0/act_${config.meta_ad_account_id}/insights?fields=impressions,clicks,spend,actions,cost_per_action_type&date_preset=last_30d&access_token=${config.meta_access_token}`;
-        const mr = await fetch(metaUrl);
-        if (mr.ok) { const md = await mr.json(); meta = md.data?.[0] || null; }
-      } catch (e) { errors.push({ api: 'meta', msg: e.message }); }
-    }
-
-    // 6. Save to server_cache
-    const duration = Date.now() - startTime;
-    console.log(`[Cron] Sync completed in ${duration}ms`);
-
-    const { error: upsertErr } = await supabaseAdmin.from('server_cache').upsert({
-      id: 'main',
-      tiendanube_products: products,
-      tiendanube_orders: orders,
-      tiendanube_customers: customers,
-      unified_clients: unifiedClients,
-      raw_orders: rawOrders,
-      ga4_insights: ga4,
-      meta_insights: meta,
-      mc_products: mc,
-      gsc_queries: gsc.queries,
-      gsc_pages: gsc.pages,
-      gsc_performance: gsc.performance,
-      sync_status: errors.length > 0 ? 'partial' : 'ok',
-      sync_duration_ms: duration,
-      error_log: errors,
-      last_sync: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'id' });
-
-    if (upsertErr) console.error('[Cron] Upsert error:', upsertErr.message);
-
-    // Broadcast sync-complete to all connected SSE clients
-    broadcastToChannel('global', 'sync-complete', {
-      orders: orders.length,
-      customers: customers.length,
-      products: products.length,
-      duration,
-      errors: errors.length,
-    });
-
-    res.json({ status: 'ok', duration, customers: customers.length, orders: orders.length, products: products.length, errors });
+    totalDuration = Date.now() - startTime;
+    res.json({ status: 'ok', totalDuration, workspacesSynced: syncResults.length, results: syncResults, globalErrors });
   } catch (err) {
     console.error('[Cron] Fatal:', err.message);
     const duration = Date.now() - startTime;
-    try {
-      await supabaseAdmin.from('server_cache').upsert({
-        id: 'main', sync_status: 'error', sync_duration_ms: duration,
-        error_log: [{ api: 'cron', msg: err.message }],
-        last_sync: new Date().toISOString(), updated_at: new Date().toISOString(),
-      }, { onConflict: 'id' });
-    } catch (_) {}
+    if (workspaceId && workspaceId !== 'default') {
+      try {
+        await supabaseAdmin.from('server_cache').upsert({
+          id: workspaceId, sync_status: 'error', sync_duration_ms: duration,
+          error_log: [{ api: 'cron', msg: err.message }],
+          last_sync: new Date().toISOString(), updated_at: new Date().toISOString(),
+        }, { onConflict: 'id' });
+      } catch (_) {}
+    }
     res.status(500).json({ error: err.message, duration });
   }
 });
@@ -1188,20 +1237,76 @@ app.post('/api/cron/sync', async (req, res) => {
 
 // GET /api/data/snapshot — clients read this for instant data
 app.get('/api/data/snapshot', async (req, res) => {
+  const workspaceId = req.header('X-Workspace-Id');
+  if (!workspaceId || workspaceId === 'default') {
+    return res.status(400).json({ ready: false, message: 'X-Workspace-Id header is required.' });
+  }
+
   const supabaseAdmin = createClient(
     process.env.VITE_SUPABASE_URL || '',
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''
   );
 
   try {
-    const { data, error } = await supabaseAdmin
+    let { data, error } = await supabaseAdmin
       .from('server_cache')
       .select('tiendanube_products, tiendanube_orders, tiendanube_customers, unified_clients, raw_orders, ga4_insights, meta_insights, mc_products, gsc_queries, gsc_pages, gsc_performance, ai_insights, last_sync, sync_status, sync_duration_ms, error_log')
-      .eq('id', 'main')
+      .eq('id', workspaceId)
       .single();
 
+    // FALLBACK: If RLS blocked the cache write or it's empty, read from local orders.json for demo
     if (error || !data) {
-      return res.json({ ready: false, message: 'Cache not initialized yet. First sync pending.' });
+      try {
+        const candidatePaths = [
+          new URL('../orders.json', import.meta.url),
+          path.resolve(process.cwd(), 'orders.json'),
+          path.resolve(path.dirname(new URL(import.meta.url).pathname), '../orders.json'),
+        ];
+        let buffer = null;
+        for (const p of candidatePaths) {
+          try {
+            buffer = fs.readFileSync(p);
+            break;
+          } catch (_) {}
+        }
+        if (!buffer) throw new Error('orders.json not found');
+
+        // Decode: detect UTF-8 BOM, UTF-16 LE/BE BOM; default UTF-8
+        let rawOrdersData;
+        if (buffer.length >= 2 && buffer[0] === 0xFF && buffer[1] === 0xFE) {
+          rawOrdersData = buffer.toString('utf16le').replace(/^\uFEFF/, '');
+        } else if (buffer.length >= 2 && buffer[0] === 0xFE && buffer[1] === 0xFF) {
+          const swapped = Buffer.from(buffer.slice(2));
+          swapped.swap16();
+          rawOrdersData = swapped.toString('utf16le');
+        } else {
+          rawOrdersData = buffer.toString('utf8').replace(/^\uFEFF/, '');
+        }
+
+        const fallbackOrders = JSON.parse(rawOrdersData);
+        const toDateStr = (o) => {
+          const raw = o.completed_at || o.created_at || '';
+          if (typeof raw === 'string') return raw.substring(0, 19);
+          if (raw && typeof raw === 'object' && raw.date) return String(raw.date).substring(0, 19);
+          return '';
+        };
+        const fallbackDates = (fallbackOrders || [])
+          .map(toDateStr)
+          .filter(Boolean)
+          .sort()
+          .reverse();
+        data = {
+          tiendanube_orders: fallbackOrders,
+          tiendanube_products: [],
+          tiendanube_customers: [],
+          unified_clients: [],
+          raw_orders: [],
+          last_sync: fallbackDates[0] || new Date().toISOString(),
+        };
+        error = null;
+      } catch (e) {
+        return res.json({ ready: false, message: 'Cache not initialized yet. First sync pending.' });
+      }
     }
 
     // Auto-regenerate unifiedClients if stored format is stale:
@@ -1259,7 +1364,7 @@ app.get('/api/data/snapshot', async (req, res) => {
         rawOrders = freshRawOrders;
       }
       // Update cache in background
-      supabaseAdmin.from('server_cache').upsert({ id: 'main', unified_clients: unifiedClients, raw_orders: rawOrders, updated_at: new Date().toISOString() }, { onConflict: 'id' }).then(() => {}).catch(() => {});
+      supabaseAdmin.from('server_cache').upsert({ id: workspaceId, unified_clients: unifiedClients, raw_orders: rawOrders, updated_at: new Date().toISOString() }, { onConflict: 'id' }).then(() => {}).catch(() => {});
     }
 
     res.json({
@@ -1322,6 +1427,10 @@ app.get('/api/data/snapshot', async (req, res) => {
 //  GET /api/data/diagnostic — lightweight data integrity check
 // ═══════════════════════════════════════════════════════════════════
 app.get('/api/data/diagnostic', async (req, res) => {
+  const workspaceId = req.header('X-Workspace-Id');
+  if (!workspaceId || workspaceId === 'default') {
+    return res.status(400).json({ error: 'X-Workspace-Id header is required.' });
+  }
   const supabaseAdmin = createClient(
     process.env.VITE_SUPABASE_URL || '',
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''
@@ -1330,7 +1439,7 @@ app.get('/api/data/diagnostic', async (req, res) => {
     const { data, error } = await supabaseAdmin
       .from('server_cache')
       .select('unified_clients, raw_orders, tiendanube_orders, tiendanube_customers, last_sync, sync_status, error_log')
-      .eq('id', 'main')
+      .eq('id', workspaceId)
       .single();
     if (error || !data) return res.json({ error: 'No data in server_cache' });
 
@@ -1391,12 +1500,17 @@ app.get('/api/data/diagnostic', async (req, res) => {
 //  POST /api/ai/brand-intelligence — Deep cross-channel brand analysis
 // ═══════════════════════════════════════════════════════════════════
 app.post('/api/ai/brand-intelligence', async (req, res) => {
+  const workspaceId = req.header('X-Workspace-Id');
+  if (!workspaceId || workspaceId === 'default') {
+    return res.status(400).json({ error: 'X-Workspace-Id header is required.' });
+  }
+
   try {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) return res.status(500).json({ error: 'GEMINI_API_KEY not configured' });
 
     const { data: cache } = await supabaseAdmin
-      .from('server_cache').select('*').eq('id', 'main').single();
+      .from('server_cache').select('*').eq('id', workspaceId).single();
 
     if (!cache) return res.status(500).json({ error: 'No data cached yet' });
 
@@ -1407,6 +1521,21 @@ app.post('/api/ai/brand-intelligence', async (req, res) => {
     const meta = cache.meta_insights;
     const mc = cache.mc_products || [];
     const gsc = { queries: cache.gsc_queries || [], pages: cache.gsc_pages || [], performance: cache.gsc_performance };
+
+    // Fetch competitor data from Firecrawl cache
+    const { data: competitorCache } = await supabaseAdmin
+      .from('competitor_scrape_cache')
+      .select('competitor, data, scraped_at')
+      .in('competitor', ['topara', 'qulybet', 'laskabran', 'columbia']);
+
+    let competitorSummary = 'Sin datos de competidores (ejecutar /api/ai/firecrawl-competitor)';
+    if (competitorCache && competitorCache.length > 0) {
+      competitorSummary = competitorCache.map(c => {
+        const products = c.data?.flatMap(d => d.products || []) || [];
+        const sample = products.slice(0, 10).map(p => `${p.name}: ${p.price}${p.discount ? ` (-${p.discount}%)` : ''}`).join('; ');
+        return `${c.competitor} (${new Date(c.scraped_at).toLocaleDateString('es-CO')}): ${products.length} productos | ${sample}`;
+      }).join('\n');
+    }
 
     const totalClients = clients.length;
     const buyers = clients.filter(c => (c.purchaseCount || 0) > 0);
@@ -1488,6 +1617,9 @@ ${gscSummary}
 === GOOGLE MERCHANT CENTER ===
 ${mcSummary}
 
+=== COMPETIDORES (Firecrawl) ===
+${competitorSummary}
+
 Genera un JSON con esta estructura EXACTA:
 {
   "brandHealthScore": {
@@ -1551,10 +1683,8 @@ app.post('/api/cron/sync-manual', async (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ error: 'No auth token' });
 
-  // Trigger the same sync logic
   req.method = 'GET';
   req.headers.authorization = undefined;
-  // Use internal fetch to call ourselves
   try {
     const protocol = req.headers['x-forwarded-proto'] || 'https';
     const host = req.headers.host;
@@ -1566,6 +1696,151 @@ app.post('/api/cron/sync-manual', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// ═══════════════════════════════════════════════════════════════════
+//  STEP 1: DATA AUDIT — Diagnostic de integridad de datos
+// ═══════════════════════════════════════════════════════════════════
+app.get('/api/data/audit', async (req, res) => {
+  try {
+    const findings = await runDataAudit(supabaseAdmin);
+    const critical = findings.filter(f => f.severity === 'critical').length;
+    const warnings = findings.filter(f => f.severity === 'warning').length;
+    const info = findings.filter(f => f.severity === 'info').length;
+
+    res.json({
+      status: 'ok',
+      total_findings: findings.length,
+      critical,
+      warnings,
+      info,
+      findings,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════
+//  STEP 3: RFM BATCH — Clasificación Alfa/VIP/Riesgo
+// ═══════════════════════════════════════════════════════════════════
+
+// POST /api/rfm/calculate — Recálculo completo (batch nocturno)
+app.post('/api/rfm/calculate', async (req, res) => {
+  const cronSecret = process.env.CRON_SECRET || process.env.VERCEL_CRON_SECRET;
+  if (cronSecret) {
+    const authHeader = req.headers.authorization;
+    if (authHeader !== 'Bearer ' + cronSecret && req.query.secret !== cronSecret) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+  }
+  try {
+    const result = await runFullRfmCalculation();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/rfm/summary — Resumen de segmentos
+app.get('/api/rfm/summary', async (req, res) => {
+  try {
+    const summary = await getRfmSummary();
+    res.json(summary);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/rfm/vip-users — Usuarios VIP/Alfa para exportar a Meta
+app.get('/api/rfm/vip-users', async (req, res) => {
+  try {
+    const result = await getVipUsersForAudience();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/rfm/incremental/:customerId — RFM incremental para un cliente
+app.post('/api/rfm/incremental/:customerId', async (req, res) => {
+  try {
+    const result = await runIncrementalRfmForCustomer(req.params.customerId);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════
+//  STEP 4: META CUSTOM AUDIENCES — Sincronización de segmentos VIP
+// ═══════════════════════════════════════════════════════════════════
+
+// POST /api/meta/custom-audience/sync — Sube segmento a Meta Custom Audiences
+let customAudienceHandler;
+import('../api/cron/sync-custom-audience.js').then(m => { customAudienceHandler = m.default; }).catch(() => {});
+
+app.all('/api/meta/custom-audience/sync', async (req, res) => {
+  if (customAudienceHandler) {
+    customAudienceHandler(req, res);
+  } else {
+    res.status(500).json({ error: 'Custom audience module not loaded' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════
+//  STEP 6: ABANDONED CHECKOUTS — Polling de carritos abandonados
+// ═══════════════════════════════════════════════════════════════════
+
+// GET /api/cron/abandoned-checkouts — Polling de checkouts abandonados
+import('../api/cron/abandoned-checkouts.js').then(m => {
+  app.all('/api/cron/abandoned-checkouts', (req, res) => m.default(req, res));
+}).catch(err => console.error('[Abandoned Checkouts] Load error:', err.message));
+
+// POST /api/cron/process-webhook-queue — Procesador de cola de webhooks
+import('../api/cron/process-webhook-queue.js').then(m => {
+  app.all('/api/cron/process-webhook-queue', (req, res) => m.default(req, res));
+}).catch(err => console.error('[Webhook Queue] Load error:', err.message));
+
+// POST /api/tracking/capture — Beacon del storefront (UTM/fbclid capture)
+import('../api/tracking/capture.js').then(m => {
+  app.post('/api/tracking/capture', (req, res) => m.default(req, res));
+}).catch(err => console.error('[Tracking Capture] Load error:', err.message));
+
+// GET /api/cron/meta-ads-sync — Sincronización diaria de Meta Ads Insights
+import('../api/cron/meta-ads-sync.js').then(m => {
+  app.all('/api/cron/meta-ads-sync', (req, res) => m.default(req, res));
+}).catch(err => console.error('[Meta Ads Sync] Load error:', err.message));
+
+// GET /api/cron/failed-items — Items fallidos de la cola de webhooks
+import('../api/cron/failed-items.js').then(m => {
+  app.get('/api/cron/failed-items', (req, res) => m.default(req, res));
+}).catch(err => console.error('[Failed Items] Load error:', err.message));
+
+// GET /api/cron/inventory-sync-queue — Procesador de cola de sync a TiendaNube
+// Reintenta los cambios de stock que el push inmediato del taller no pudo aplicar.
+import('../api/inventory/sync-queue.js').then(m => {
+  app.all('/api/cron/inventory-sync-queue', (req, res) => m.default(req, res));
+}).catch(err => console.error('[Inventory Sync Queue] Load error:', err.message));
+
+// POST /api/cron/rfm — Alias para RFM batch
+app.post('/api/cron/rfm', async (req, res) => {
+  req.url = '/api/rfm/calculate';
+  app.handle(req, res);
+});
+
+// POST /api/cron/sync-custom-audience — Alias para Custom Audience sync
+app.all('/api/cron/sync-custom-audience', async (req, res) => {
+  if (customAudienceHandler) {
+    customAudienceHandler(req, res);
+  } else {
+    res.status(500).json({ error: 'Custom audience module not loaded' });
+  }
+});
+
+// === NEW ENHANCED SERVICES ===
+import { runDataAudit } from './services/data-audit.js';
+import { runFullRfmCalculation, getRfmSummary, runIncrementalRfmForCustomer, getVipUsersForAudience } from './services/rfm-engine.js';
 
 // === INVENTORY API ROUTES (dynamic imports to ensure dotenv loads first) ===
 let inventoryHandler, webhookHandler, syncHandler, syncFromTNHandler, registerWebhookHandler, aiScanHandler, aiSearchHandler, aiVisionHandler, tallerSyncHandler;

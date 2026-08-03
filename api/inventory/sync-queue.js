@@ -18,6 +18,56 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const BATCH_SIZE = 5;
 
+async function resolveTiendanubeToken() {
+  const { data: mainConfig } = await supabase
+    .from('system_config')
+    .select('*')
+    .eq('id', 'main')
+    .single();
+
+  if (mainConfig?.tiendanube_access_token) {
+    return mainConfig.tiendanube_access_token;
+  }
+  if (mainConfig?.value?.tiendanube_access_token) {
+    return mainConfig.value.tiendanube_access_token;
+  }
+
+  const { data: config } = await supabase
+    .from('system_config')
+    .select('value')
+    .eq('key', 'tiendanube_store_token')
+    .single();
+
+  if (config?.value) return config.value;
+
+  return process.env.TIENDANUBE_STORE_TOKEN || process.env.TIENDANUBE_ACCESS_TOKEN;
+}
+
+async function resolveStoreId() {
+  const { data: mainConfig } = await supabase
+    .from('system_config')
+    .select('*')
+    .eq('id', 'main')
+    .single();
+
+  if (mainConfig?.tiendanube_store_id) {
+    return mainConfig.tiendanube_store_id;
+  }
+  if (mainConfig?.value?.tiendanube_store_id) {
+    return mainConfig.value.tiendanube_store_id;
+  }
+
+  const { data: config } = await supabase
+    .from('system_config')
+    .select('value')
+    .eq('key', 'tiendanube_store_id')
+    .single();
+
+  if (config?.value) return config.value;
+
+  return process.env.TIENDANUBE_STORE_ID;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -26,6 +76,14 @@ export default async function handler(req, res) {
   const startTime = Date.now();
 
   try {
+    const token = await resolveTiendanubeToken();
+    const storeId = await resolveStoreId();
+
+    if (!token || !storeId) {
+      console.warn('[sync-queue] TiendaNube credentials not configured — skipping');
+      return res.status(200).json({ status: 'ok', processed: 0, skipped: 'no_credentials', elapsed_ms: Date.now() - startTime });
+    }
+
     const now = new Date().toISOString();
 
     // Fetch pending syncs where next_retry has passed
@@ -54,11 +112,11 @@ export default async function handler(req, res) {
 
       try {
         const response = await axios.put(
-          `https://api.tiendanube.com/v1/${process.env.TIENDANUBE_STORE_ID}/products/${sync.tn_product_id}/variants/${sync.tn_variant_id}`,
+          `https://api.tiendanube.com/v1/${storeId}/products/${sync.tn_product_id}/variants/${sync.tn_variant_id}`,
           { stock: sync.new_stock },
           {
             headers: {
-              'Authentication': `bearer ${process.env.TIENDANUBE_ACCESS_TOKEN}`,
+              'Authentication': `bearer ${token}`,
               'User-Agent': 'ApesCRM (taller@apes.com)',
               'Content-Type': 'application/json',
             },
@@ -72,11 +130,13 @@ export default async function handler(req, res) {
             processed_at: new Date().toISOString(),
           }).eq('id', sync.id);
 
-          // Mark related transfer as synced
-          await supabase.from('inventory_transfers')
-            .update({ tn_synced: true, tn_sync_at: new Date().toISOString() })
-            .eq('variant_id', sync.variant_id)
-            .eq('tn_synced', false);
+          // Mark related transfer as synced (only for CAS/variant-based syncs)
+          if (sync.variant_id) {
+            await supabase.from('inventory_transfers')
+              .update({ tn_synced: true, tn_sync_at: new Date().toISOString() })
+              .eq('variant_id', sync.variant_id)
+              .eq('tn_synced', false);
+          }
 
           results.push({ id: sync.id, status: 'completed' });
         }
@@ -92,11 +152,13 @@ export default async function handler(req, res) {
             processed_at: new Date().toISOString(),
           }).eq('id', sync.id);
 
-          // Log error on transfer record
-          await supabase.from('inventory_transfers')
-            .update({ tn_sync_error: syncError.message })
-            .eq('variant_id', sync.variant_id)
-            .eq('tn_synced', false);
+          // Log error on transfer record (only for CAS/variant-based syncs)
+          if (sync.variant_id) {
+            await supabase.from('inventory_transfers')
+              .update({ tn_sync_error: syncError.message })
+              .eq('variant_id', sync.variant_id)
+              .eq('tn_synced', false);
+          }
 
           results.push({ id: sync.id, status: 'failed', error: syncError.message });
         } else {

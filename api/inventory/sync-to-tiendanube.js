@@ -48,6 +48,16 @@ async function rateLimitedFetch(url, options) {
 }
 
 async function resolveTiendanubeToken() {
+  // Prefer the canonical main config row (credentials live as direct columns).
+  const { data: mainConfig } = await supabase
+    .from('system_config')
+    .select('*')
+    .eq('id', 'main')
+    .single();
+
+  if (mainConfig?.tiendanube_access_token) return mainConfig.tiendanube_access_token;
+  if (mainConfig?.value?.tiendanube_access_token) return mainConfig.value.tiendanube_access_token;
+
   const { data: config } = await supabase
     .from('system_config')
     .select('value')
@@ -56,10 +66,20 @@ async function resolveTiendanubeToken() {
 
   if (config?.value) return config.value;
 
-  return process.env.TIENDANUBE_STORE_TOKEN || process.env.TIENDANUBE_TOKEN;
+  return process.env.TIENDANUBE_STORE_TOKEN || process.env.TIENDANUBE_ACCESS_TOKEN;
 }
 
 async function resolveStoreId() {
+  // Prefer the canonical main config row (credentials live as direct columns).
+  const { data: mainConfig } = await supabase
+    .from('system_config')
+    .select('*')
+    .eq('id', 'main')
+    .single();
+
+  if (mainConfig?.tiendanube_store_id) return mainConfig.tiendanube_store_id;
+  if (mainConfig?.value?.tiendanube_store_id) return mainConfig.value.tiendanube_store_id;
+
   const { data: config } = await supabase
     .from('system_config')
     .select('value')
