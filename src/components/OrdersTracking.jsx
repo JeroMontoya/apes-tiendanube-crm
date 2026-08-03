@@ -13,33 +13,33 @@ import {
 } from 'lucide-react';
 
 const PAYMENT_STATUS = {
-  pending: { label: 'Pendiente', color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.12)', icon: Clock, subLabel: 'Esperando pago' },
-  paid: { label: 'Pagado', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: CheckCircle2, subLabel: 'Confirmado' },
-  cancelled: { label: 'Cancelado', color: '#ef4444', bg: 'rgba(239,68,68,0.12)', icon: XCircle, subLabel: 'Por el cliente' },
+  pending: { label: 'Pendiente', color: 'var(--primary-container)', bg: 'rgba(6, 182, 212,0.12)', icon: Clock, subLabel: 'Esperando pago' },
+  paid: { label: 'Pagado', color: '#06B6D4', bg: 'rgba(16,185,129,0.12)', icon: CheckCircle2, subLabel: 'Confirmado' },
+  cancelled: { label: 'Cancelado', color: '#E11D48', bg: 'rgba(239,68,68,0.12)', icon: XCircle, subLabel: 'Por el cliente' },
   refunded: { label: 'Reembolsado', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)', icon: RotateCcw, subLabel: 'Dinero devuelto' },
   voided: { label: 'Anulado', color: '#6b7280', bg: 'rgba(107,114,128,0.12)', icon: XCircle, subLabel: 'Transacción void' },
 };
 
 const ORDER_STATE = {
-  open: { label: 'Abierta', color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', icon: Clock },
-  closed: { label: 'Cerrada', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: CheckCircle2 },
-  cancelled: { label: 'Cancelada', color: '#ef4444', bg: 'rgba(239,68,68,0.12)', icon: XCircle },
+  open: { label: 'Abierta', color: '#6366f1', bg: 'rgba(99, 102, 241,0.12)', icon: Clock },
+  closed: { label: 'Cerrada', color: '#06B6D4', bg: 'rgba(16,185,129,0.12)', icon: CheckCircle2 },
+  cancelled: { label: 'Cancelada', color: '#E11D48', bg: 'rgba(239,68,68,0.12)', icon: XCircle },
 };
 
 const FULFILLMENT_STATUS = {
-  pending: { label: 'Por preparar', color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.12)', icon: Package, action: 'Preparar', step: 1 },
+  pending: { label: 'Por preparar', color: 'var(--primary-container)', bg: 'rgba(6, 182, 212,0.12)', icon: Package, action: 'Preparar', step: 1 },
   partial: { label: 'Despacho parcial', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)', icon: Package, action: 'Completar', step: 2 },
-  fulfilled: { label: 'Despachado', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: Truck, action: 'Entregado', step: 3 },
-  delivered: { label: 'Entregado', color: '#059669', bg: 'rgba(5,150,105,0.12)', icon: CheckCircle2, action: 'Completado', step: 4 },
-  cancelled: { label: 'Cancelado', color: '#ef4444', bg: 'rgba(239,68,68,0.12)', icon: XCircle, action: '—', step: 0 },
+  fulfilled: { label: 'Despachado', color: '#06B6D4', bg: 'rgba(16,185,129,0.12)', icon: Truck, action: 'Entregado', step: 3 },
+  delivered: { label: 'Entregado', color: '#0891b2', bg: 'rgba(5,150,105,0.12)', icon: CheckCircle2, action: 'Completado', step: 4 },
+  cancelled: { label: 'Cancelado', color: '#E11D48', bg: 'rgba(239,68,68,0.12)', icon: XCircle, action: '—', step: 0 },
 };
 
 const FUNNEL_STEPS = [
-  { key: 'created', label: 'Creados', icon: ShoppingCart, color: '#3b82f6' },
-  { key: 'paid', label: 'Pagados', icon: CreditCard, color: '#10b981' },
+  { key: 'created', label: 'Creados', icon: ShoppingCart, color: '#6366f1' },
+  { key: 'paid', label: 'Pagados', icon: CreditCard, color: '#06B6D4' },
   { key: 'preparing', label: 'En preparación', icon: Package, color: 'var(--primary-container)' },
   { key: 'shipped', label: 'Despachados', icon: Truck, color: '#8b5cf6' },
-  { key: 'delivered', label: 'Entregados', icon: CheckCircle2, color: '#059669' },
+  { key: 'delivered', label: 'Entregados', icon: CheckCircle2, color: '#0891b2' },
 ];
 
 function formatCurrency(value, currency = 'COP') {
@@ -82,7 +82,7 @@ function getFulfillmentConfig(order) {
   return FULFILLMENT_STATUS.pending;
 }
 
-function Sparkline({ data, color = '#3b82f6', height = 32 }) {
+function Sparkline({ data, color = '#6366f1', height = 32 }) {
   if (!data || data.length < 2) return <div style={{ width: 100, height, opacity: 0.3 }} />;
   const max = Math.max(...data);
   const min = Math.min(...data);
@@ -147,7 +147,7 @@ function PaymentFunnel({ orders }) {
   return (
     <div className="glass-card" style={{ padding: 20 }}>
       <h3 style={{ margin: '0 0 16px', fontSize: 14, fontWeight: 700, color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <BarChart2 size={16} color="#3b82f6" /> Embudo de Conversión
+        <BarChart2 size={16} color="#6366f1" /> Embudo de Conversión
       </h3>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 120 }}>
         {FUNNEL_STEPS.map((step, i) => {
@@ -190,7 +190,7 @@ function PaymentFunnel({ orders }) {
                   {(count / funnelData.created * 100).toFixed(1)}% del total
                 </div>
                 {i > 0 && dropOff > 0 && (
-                  <div style={{ fontSize: 9, color: '#ef4444', fontWeight: 600, marginTop: 2 }}>
+                  <div style={{ fontSize: 9, color: '#E11D48', fontWeight: 600, marginTop: 2 }}>
                     −{dropPct}% ({dropOff.toLocaleString()})
                   </div>
                 )}
@@ -213,18 +213,18 @@ function ShippingTimeline({ order }) {
   const config = getFulfillmentConfig(order);
   
   const steps = [
-    { key: 'created', label: 'Pedido creado', time: order.created_at, icon: ShoppingCart, color: '#3b82f6', completed: true },
-    { key: 'paid', label: 'Pago confirmado', time: order.paid_at || order.updated_at, icon: CreditCard, color: '#10b981', completed: order.payment_status === 'paid' },
+    { key: 'created', label: 'Pedido creado', time: order.created_at, icon: ShoppingCart, color: '#6366f1', completed: true },
+    { key: 'paid', label: 'Pago confirmado', time: order.paid_at || order.updated_at, icon: CreditCard, color: '#06B6D4', completed: order.payment_status === 'paid' },
     { key: 'preparing', label: 'En preparación', time: order.preparing_at, icon: Package, color: 'var(--primary-container)', completed: fs !== 'pending', current: fs === 'pending' },
     { key: 'shipped', label: 'Despachado', time: order.shipped_at, icon: Truck, color: '#8b5cf6', completed: fs === 'fulfilled' || fs === 'partial' || fs === 'delivered', current: fs === 'partial' },
-    { key: 'delivered', label: 'Entregado', time: order.delivered_at, icon: CheckCircle2, color: '#059669', completed: fs === 'delivered', current: fs === 'fulfilled' },
+    { key: 'delivered', label: 'Entregado', time: order.delivered_at, icon: CheckCircle2, color: '#0891b2', completed: fs === 'delivered', current: fs === 'fulfilled' },
   ];
 
   return (
     <div className="glass-card" style={{ padding: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Activity size={16} color="#3b82f6" /> Timeline de Envío
+          <Activity size={16} color="#6366f1" /> Timeline de Envío
         </h3>
         {order.tracking_number && (
           <a href={order.tracking_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--primary)', textDecoration: 'none', fontWeight: 600 }}>
@@ -273,7 +273,7 @@ function ShippingTimeline({ order }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {trackingEvents.slice(0, 10).map((event, i) => (
               <div key={i} style={{ display: 'flex', gap: 10, padding: '8px 10px', background: 'var(--surface-container)', borderRadius: 8, fontSize: 11 }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#3b82f6', marginTop: 6, flexShrink: 0 }} />
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366f1', marginTop: 6, flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
                   <div style={{ color: 'var(--on-surface)', fontWeight: 500 }}>{event.status || event.description || 'Actualización'}</div>
                   <div style={{ color: 'var(--on-surface-variant)' }}>{event.location ? `${event.location} · ` : ''}{event.timestamp ? formatDateTime(event.timestamp) : ''}</div>
@@ -311,7 +311,7 @@ function OrderDetailModal({ order, onClose, rawOrders }) {
         minWidth: 0, wordBreak: 'break-word'
       }}>
         {/* Header */}
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: 'linear-gradient(180deg, rgba(59,130,246,0.04) 0%, transparent 100%)' }}>
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: 'linear-gradient(180deg, rgba(99, 102, 241,0.04) 0%, transparent 100%)' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
               <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 18, fontWeight: 800, color: 'var(--primary)' }}>#{order.number || order.id}</span>
@@ -332,7 +332,7 @@ function OrderDetailModal({ order, onClose, rawOrders }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
             {/* Order Summary */}
             <div className="glass-card" style={{ padding: 20 }}>
-              <h4 style={{ margin: '0 0 16px', fontSize: 13, fontWeight: 700, color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: 8 }}><ShoppingCart size={16} color="#3b82f6" /> Resumen del Pedido</h4>
+              <h4 style={{ margin: '0 0 16px', fontSize: 13, fontWeight: 700, color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: 8 }}><ShoppingCart size={16} color="#6366f1" /> Resumen del Pedido</h4>
               <div className="responsive-grid-xs" style={{ gap: 12 }}>
                 <div><span style={{ fontSize: 10, color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Subtotal</span><div style={{ fontWeight: 700, color: 'var(--on-surface)' }}>{formatCurrency(order.subtotal)}</div></div>
                 <div><span style={{ fontSize: 10, color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Descuento</span><div style={{ fontWeight: 700, color: 'var(--primary-container)' }}>-{formatCurrency(order.discount)}</div></div>
@@ -340,7 +340,7 @@ function OrderDetailModal({ order, onClose, rawOrders }) {
                 <div><span style={{ fontSize: 10, color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Impuestos</span><div style={{ fontWeight: 700, color: 'var(--on-surface)' }}>{formatCurrency(order.tax)}</div></div>
                 <div style={{ gridColumn: 'span 2', borderTop: '1px solid var(--border-subtle)', paddingTop: 12 }}>
                   <span style={{ fontSize: 10, color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>TOTAL</span>
-                  <div style={{ fontSize: 24, fontWeight: 800, color: '#10b981' }}>{formatCurrency(order.total)}</div>
+                  <div style={{ fontSize: 24, fontWeight: 800, color: '#06B6D4' }}>{formatCurrency(order.total)}</div>
                 </div>
               </div>
             </div>
@@ -359,7 +359,7 @@ function OrderDetailModal({ order, onClose, rawOrders }) {
                         <span>{p.sku || p.variant_id ? `SKU: ${p.sku || p.variant_id}` : ''}</span>
                       </div>
                     </div>
-                    <div style={{ fontWeight: 700, color: '#10b981', fontSize: 13 }}>{formatCurrency((parseFloat(p.price) || 0) * (p.quantity || 1))}</div>
+                    <div style={{ fontWeight: 700, color: '#06B6D4', fontSize: 13 }}>{formatCurrency((parseFloat(p.price) || 0) * (p.quantity || 1))}</div>
                   </div>
                 ))}
               </div>
@@ -422,7 +422,7 @@ function OrderDetailModal({ order, onClose, rawOrders }) {
                         <StatusBadge status={o.fulfillment_status || 'pending'} config={getFulfillmentConfig(o)} />
                       </div>
                       <div style={{ textAlign: 'right', fontSize: 11 }}>
-                        <div style={{ fontWeight: 700, color: '#10b981' }}>{formatCurrency(o.total)}</div>
+                        <div style={{ fontWeight: 700, color: '#06B6D4' }}>{formatCurrency(o.total)}</div>
                         <div style={{ color: 'var(--on-surface-variant)' }}>{formatDate(o.created_at)}</div>
                       </div>
                     </div>
@@ -440,11 +440,11 @@ function OrderDetailModal({ order, onClose, rawOrders }) {
 function KanbanBoard({ orders, onUpdateOrder, onSelectOrder }) {
   const columns = [
     { key: 'pending', title: 'Por Pagar', icon: Clock, color: 'var(--primary-container)', filter: o => o.payment_status === 'pending' },
-    { key: 'paid', title: 'Pagados · Por Preparar', icon: CreditCard, color: '#3b82f6', filter: o => o.payment_status === 'paid' && o.fulfillment_status === 'pending' },
+    { key: 'paid', title: 'Pagados · Por Preparar', icon: CreditCard, color: '#6366f1', filter: o => o.payment_status === 'paid' && o.fulfillment_status === 'pending' },
     { key: 'preparing', title: 'En Preparación', icon: Package, color: 'var(--primary-container)', filter: o => o.fulfillment_status === 'pending' && o.payment_status === 'paid' },
     { key: 'partial', title: 'Despacho Parcial', icon: Package, color: '#8b5cf6', filter: o => o.fulfillment_status === 'partial' },
     { key: 'shipped', title: 'Despachados', icon: Truck, color: '#8b5cf6', filter: o => o.fulfillment_status === 'fulfilled' },
-    { key: 'delivered', title: 'Entregados', icon: CheckCircle2, color: '#10b981', filter: o => o.fulfillment_status === 'delivered' },
+    { key: 'delivered', title: 'Entregados', icon: CheckCircle2, color: '#06B6D4', filter: o => o.fulfillment_status === 'delivered' },
   ];
 
   return (
@@ -481,7 +481,7 @@ function KanbanBoard({ orders, onUpdateOrder, onSelectOrder }) {
                       <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--on-surface)', marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{order.customer?.name || order.contact_name || 'Sin nombre'}</div>
                       <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', marginBottom: 8 }}>{order.customer?.email || order.contact_email || ''}</div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ fontWeight: 700, color: '#10b981', fontSize: 14 }}>{formatCurrency(order.total)}</div>
+                        <div style={{ fontWeight: 700, color: '#06B6D4', fontSize: 14 }}>{formatCurrency(order.total)}</div>
                         <div style={{ display: 'flex', gap: 4 }}>
                           <StatusBadge status={order.payment_status} config={PAYMENT_STATUS[order.payment_status] || PAYMENT_STATUS.pending} />
                           <StatusBadge status={order.fulfillment_status || 'pending'} config={getFulfillmentConfig(order)} />
@@ -758,7 +758,7 @@ export default function OrdersTracking({ rawOrders, lastSync, refreshOrders, sto
       <div className="section-header" style={{ marginBottom: 20 }}>
         <div>
           <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, margin: 0 }}>
-            <ShoppingCart size={24} color="#3b82f6" /> Centro de Operaciones
+            <ShoppingCart size={24} color="#6366f1" /> Centro de Operaciones
           </h1>
           <p style={{ margin: '4px 0 0', color: 'var(--on-surface-variant)', fontSize: 13 }}>
             Pipeline completo: pago → preparación → envío → entrega
@@ -769,7 +769,7 @@ export default function OrdersTracking({ rawOrders, lastSync, refreshOrders, sto
           <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--on-surface-variant)', cursor: 'pointer' }}>
             <input type="checkbox" checked={autoRefresh} onChange={e => setAutoRefresh(e.target.checked)} style={{ accentColor: 'var(--primary)' }} /> Auto-sync 90s
           </label>
-          <button onClick={() => handleRefresh(false)} disabled={isRefreshing || !storeId} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid var(--glass-border)', background: isRefreshing ? 'rgba(59,130,246,0.1)' : 'var(--border-subtle)', color: isRefreshing ? '#3b82f6' : 'var(--on-surface)', cursor: isRefreshing ? 'wait' : 'pointer', fontSize: 12, fontWeight: 600, transition: 'all 0.2s' }}><RefreshCw size={14} style={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }} />{isRefreshing ? 'Sincronizando...' : 'Actualizar'}</button>
+          <button onClick={() => handleRefresh(false)} disabled={isRefreshing || !storeId} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid var(--glass-border)', background: isRefreshing ? 'rgba(99, 102, 241,0.1)' : 'var(--border-subtle)', color: isRefreshing ? '#6366f1' : 'var(--on-surface)', cursor: isRefreshing ? 'wait' : 'pointer', fontSize: 12, fontWeight: 600, transition: 'all 0.2s' }}><RefreshCw size={14} style={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }} />{isRefreshing ? 'Sincronizando...' : 'Actualizar'}</button>
           <button onClick={() => setShowShortcuts(!showShortcuts)} style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid var(--glass-border)', background: showShortcuts ? 'var(--primary)' : 'var(--border-subtle)', color: showShortcuts ? '#fff' : 'var(--on-surface-variant)', cursor: 'pointer', fontSize: 12, fontWeight: 600, transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6 }}><Keyboard size={14} /> Atajos</button>
         </div>
       </div>
@@ -777,12 +777,12 @@ export default function OrdersTracking({ rawOrders, lastSync, refreshOrders, sto
       {/* KPIs Row */}
       <div className="responsive-grid-sm" style={{ marginBottom: 20 }}>
         {[
-          { label: 'Total', value: stats.total, icon: ShoppingCart, color: '#3b82f6', trend: '+5%' },
-          { label: 'Pagados', value: stats.paid, icon: CreditCard, color: '#10b981', trend: '+3%' },
+          { label: 'Total', value: stats.total, icon: ShoppingCart, color: '#6366f1', trend: '+5%' },
+          { label: 'Pagados', value: stats.paid, icon: CreditCard, color: '#06B6D4', trend: '+3%' },
           { label: 'Pendientes', value: stats.pending, icon: Clock, color: 'var(--primary-container)', trend: '-2%' },
           { label: 'Entregados', value: stats.fulfilled, icon: CheckCircle2, color: '#06b6d4', trend: '+8%' },
           { label: 'Parciales', value: stats.partial, icon: Package, color: '#8b5cf6', trend: '+1%' },
-          { label: 'Retrasados', value: stats.late, icon: AlertCircle, color: '#ef4444', trend: '-3%' },
+          { label: 'Retrasados', value: stats.late, icon: AlertCircle, color: '#E11D48', trend: '-3%' },
           { label: 'Ingresos', value: formatCurrency(stats.totalRevenue), icon: DollarSign, color: '#06b6d4', trend: '+12%' },
         ].map((s, i) => (
           <div key={i} style={{
@@ -815,14 +815,14 @@ export default function OrdersTracking({ rawOrders, lastSync, refreshOrders, sto
         ))}
 
         {/* Conversion Metrics */}
-        <div className="glass-card" style={{ padding: 16, background: 'linear-gradient(135deg, rgba(59,130,246,0.05) 0%, rgba(16,185,129,0.05) 100%)', border: '1px solid var(--glass-border)' }}>
+        <div className="glass-card" style={{ padding: 16, background: 'linear-gradient(135deg, rgba(99, 102, 241,0.05) 0%, rgba(16,185,129,0.05) 100%)', border: '1px solid var(--glass-border)' }}>
           <div className="responsive-grid-sm" style={{ gap: 16 }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 28, fontWeight: 800, color: '#3b82f6', lineHeight: 1 }}>{stats.conversionRate.toFixed(1)}%</div>
+              <div style={{ fontSize: 28, fontWeight: 800, color: '#6366f1', lineHeight: 1 }}>{stats.conversionRate.toFixed(1)}%</div>
               <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', fontWeight: 600, textTransform: 'uppercase' }}>Conversión Pago</div>
             </div>
             <div style={{ textAlign: 'center', borderLeft: '1px solid var(--border-subtle)', borderRight: '1px solid var(--border-subtle)' }}>
-              <div style={{ fontSize: 28, fontWeight: 800, color: '#10b981', lineHeight: 1 }}>{stats.fulfillmentRate.toFixed(1)}%</div>
+              <div style={{ fontSize: 28, fontWeight: 800, color: '#06B6D4', lineHeight: 1 }}>{stats.fulfillmentRate.toFixed(1)}%</div>
               <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', fontWeight: 600, textTransform: 'uppercase' }}>Cumplimiento</div>
             </div>
             <div style={{ textAlign: 'center' }}>
@@ -864,7 +864,7 @@ export default function OrdersTracking({ rawOrders, lastSync, refreshOrders, sto
           <PaymentFunnel orders={filteredOrders} />
           <div className="glass-card" style={{ padding: 20 }}>
             <h3 style={{ margin: '0 0 16px', fontSize: 14, fontWeight: 700, color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Activity size={16} color="#3b82f6" /> Ingresos semanales (12 semanas)
+              <Activity size={16} color="#6366f1" /> Ingresos semanales (12 semanas)
             </h3>
             <div style={{ height: 60, display: 'flex', alignItems: 'flex-end', gap: 4 }}>
               {weeklyRevenue.map((v, i) => (
@@ -944,10 +944,10 @@ export default function OrdersTracking({ rawOrders, lastSync, refreshOrders, sto
                         {order.carrier || '—'}
                         {order.shipping_method && <span style={{ fontSize: 10, color: 'var(--on-surface-variant)' }}> · {order.shipping_method}</span>}
                       </td>
-                      <td style={{ padding: '12px', borderBottom: '1px solid var(--border-subtle)', textAlign: 'right', fontWeight: 700, color: '#10b981', fontSize: 13, whiteSpace: 'nowrap' }}>{formatCurrency(order.total)}</td>
+                      <td style={{ padding: '12px', borderBottom: '1px solid var(--border-subtle)', textAlign: 'right', fontWeight: 700, color: '#06B6D4', fontSize: 13, whiteSpace: 'nowrap' }}>{formatCurrency(order.total)}</td>
                       <td style={{ padding: '12px', borderBottom: '1px solid var(--border-subtle)', textAlign: 'center', fontSize: 11 }}>
                         {order.isLate ? (
-                          <span style={{ color: '#ef4444', fontWeight: 600 }}>{order.daysSinceCreated}d <AlertCircle size={12} style={{ verticalAlign: 'middle' }} /></span>
+                          <span style={{ color: '#E11D48', fontWeight: 600 }}>{order.daysSinceCreated}d <AlertCircle size={12} style={{ verticalAlign: 'middle' }} /></span>
                         ) : (
                           <span style={{ color: 'var(--on-surface-variant)' }}>{order.daysSinceCreated}d</span>
                         )}

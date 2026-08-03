@@ -109,7 +109,7 @@ export default function InventoryReports({ summary, movements, locations, produc
   }, [products]);
 
   const TYPE_COLORS = {
-    receive: '#10b981', dispatch: '#ef4444', transfer: '#3b82f6',
+    receive: '#06B6D4', dispatch: '#E11D48', transfer: '#6366f1',
     adjustment: 'var(--primary-container)', sync: '#8b5cf6', production_in: '#06b6d4', return: 'var(--primary-container)',
   };
   const TYPE_LABELS = {
@@ -163,7 +163,7 @@ export default function InventoryReports({ summary, movements, locations, produc
             onClick={() => setActiveTab(t.key)}
             style={{
               flex: 1, padding: '10px 16px', borderRadius: '10px', border: 'none',
-              background: activeTab === t.key ? '#3b82f6' : 'transparent',
+              background: activeTab === t.key ? '#6366f1' : 'transparent',
               color: activeTab === t.key ? '#fff' : 'var(--on-surface-variant)',
               fontSize: '13px', fontWeight: activeTab === t.key ? '700' : '500',
               cursor: 'pointer', fontFamily: 'inherit',
@@ -195,27 +195,27 @@ export default function InventoryReports({ summary, movements, locations, produc
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
           <div style={cardStyle}>
             <h3 style={{ margin: '0 0 16px', fontSize: '15px', fontWeight: '700', color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <DollarSign size={18} color="#10b981" /> Valor por Ubicación
+              <DollarSign size={18} color="#06B6D4" /> Valor por Ubicación
             </h3>
             {summaryData.locBreakdown.length === 0 ? (
               <p style={{ color: 'var(--on-surface-variant)', fontSize: '13px', textAlign: 'center', padding: '20px' }}>Sin datos disponibles</p>
             ) : (
               summaryData.locBreakdown.map((l) => (
-                <MiniBar key={l.location_id || l.name} value={l.total_value || 0} max={Math.max(1, ...summaryData.locBreakdown.map((x) => x.total_value || 0))} color={(locations || []).find((loc) => loc.id === l.location_id)?.color || '#3b82f6'} label={l.name || l.location_id} />
+                <MiniBar key={l.location_id || l.name} value={l.total_value || 0} max={Math.max(1, ...summaryData.locBreakdown.map((x) => x.total_value || 0))} color={(locations || []).find((loc) => loc.id === l.location_id)?.color || '#6366f1'} label={l.name || l.location_id} />
               ))
             )}
           </div>
           <div style={cardStyle}>
             <h3 style={{ margin: '0 0 16px', fontSize: '15px', fontWeight: '700', color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Package size={18} color="#3b82f6" /> Resumen General
+              <Package size={18} color="#6366f1" /> Resumen General
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {[
-                ['Total Productos', summaryData.totalProducts, '#3b82f6'],
-                ['Stock Total', formatNumber(summaryData.totalStock), '#10b981'],
+                ['Total Productos', summaryData.totalProducts, '#6366f1'],
+                ['Stock Total', formatNumber(summaryData.totalStock), '#06B6D4'],
                 ['Valor Total', formatCurrency(summaryData.totalValue), '#8b5cf6'],
                 ['Stock Bajo', summary?.low_stock_count || 0, 'var(--primary-container)'],
-                ['Sin Stock', summary?.out_of_stock_count || 0, '#ef4444'],
+                ['Sin Stock', summary?.out_of_stock_count || 0, '#E11D48'],
               ].map(([label, value, color]) => (
                 <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderRadius: '8px', background: 'var(--surface-container-low, var(--surface-container-low))' }}>
                   <span style={{ fontSize: '13px', color: 'var(--on-surface-variant)' }}>{label}</span>
@@ -241,12 +241,12 @@ export default function InventoryReports({ summary, movements, locations, produc
                 <div key={type} style={{ marginBottom: '10px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                     <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--on-surface)' }}>{TYPE_LABELS[type] || type}</span>
-                    <span style={{ fontSize: '12px', fontWeight: '700', color: TYPE_COLORS[type] || '#3b82f6', fontFamily: "'JetBrains Mono', monospace" }}>
+                    <span style={{ fontSize: '12px', fontWeight: '700', color: TYPE_COLORS[type] || '#6366f1', fontFamily: "'JetBrains Mono', monospace" }}>
                       {data.count} mov. · {formatNumber(data.totalQty)} und.
                     </span>
                   </div>
                   <div style={{ height: '8px', borderRadius: '4px', background: 'var(--border-subtle)', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', borderRadius: '4px', width: `${(data.count / movementStats.maxQty) * 100}%`, background: TYPE_COLORS[type] || '#3b82f6', transition: 'width 0.4s' }} />
+                    <div style={{ height: '100%', borderRadius: '4px', width: `${(data.count / movementStats.maxQty) * 100}%`, background: TYPE_COLORS[type] || '#6366f1', transition: 'width 0.4s' }} />
                   </div>
                 </div>
               ))
@@ -267,10 +267,10 @@ export default function InventoryReports({ summary, movements, locations, produc
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--on-surface)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</div>
                       <div style={{ height: '4px', borderRadius: '2px', background: 'var(--border-subtle)', marginTop: '3px', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', borderRadius: '2px', width: `${(qty / maxP) * 100}%`, background: '#3b82f6' }} />
+                        <div style={{ height: '100%', borderRadius: '2px', width: `${(qty / maxP) * 100}%`, background: '#6366f1' }} />
                       </div>
                     </div>
-                    <span style={{ fontSize: '12px', fontWeight: '700', fontFamily: "'JetBrains Mono', monospace", color: '#3b82f6' }}>{formatNumber(qty)}</span>
+                    <span style={{ fontSize: '12px', fontWeight: '700', fontFamily: "'JetBrains Mono', monospace", color: '#6366f1' }}>{formatNumber(qty)}</span>
                   </div>
                 );
               })
@@ -292,11 +292,11 @@ export default function InventoryReports({ summary, movements, locations, produc
                 <div style={{ fontSize: '11px', color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Valor de Costo</div>
               </div>
               <div style={{ padding: '14px', borderRadius: '10px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                <div style={{ fontSize: '22px', fontWeight: '800', color: '#10b981', fontFamily: "'JetBrains Mono', monospace" }}>{formatCurrency(valuationData.totalSellValue)}</div>
+                <div style={{ fontSize: '22px', fontWeight: '800', color: '#06B6D4', fontFamily: "'JetBrains Mono', monospace" }}>{formatCurrency(valuationData.totalSellValue)}</div>
                 <div style={{ fontSize: '11px', color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Valor de Venta</div>
               </div>
-              <div style={{ padding: '14px', borderRadius: '10px', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)' }}>
-                <div style={{ fontSize: '22px', fontWeight: '800', color: '#3b82f6', fontFamily: "'JetBrains Mono', monospace" }}>
+              <div style={{ padding: '14px', borderRadius: '10px', background: 'rgba(99, 102, 241,0.1)', border: '1px solid rgba(99, 102, 241,0.2)' }}>
+                <div style={{ fontSize: '22px', fontWeight: '800', color: '#6366f1', fontFamily: "'JetBrains Mono', monospace" }}>
                   {formatCurrency(valuationData.totalSellValue - valuationData.totalStockValue)}
                 </div>
                 <div style={{ fontSize: '11px', color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Utilidad Potencial</div>

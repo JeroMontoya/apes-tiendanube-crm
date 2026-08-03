@@ -1,13 +1,20 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTeam } from '../contexts/TeamContext';
+import WorkspaceSelector from './WorkspaceSelector';
 import {
   LayoutDashboard, Users, Target, Brain, TrendingUp,
   Megaphone, Globe, KanbanSquare, PackageSearch, ShoppingCart,
   Settings, Download, Menu, X, Zap, Calendar, Sun, Moon, Warehouse,
   Hammer, BarChart3, Clock, ChevronDown, ChevronRight, ChevronLeft, MoreHorizontal,
-  BarChart2, MessageSquare, Repeat, FileText, Sparkles,
-  Music, Video, Link, LogOut, Eye, Factory, Activity
+  BarChart2, MessageSquare, Repeat, FileText, Sparkles, CheckSquare,
+  Music, Video, Link, LogOut, Eye, Factory, Activity, Search, Command
 } from 'lucide-react';
+
+const GROUP_COLORS = {
+  principal: '#8B5CF6',
+  taller: '#06B6D4',
+  clientes: '#3B82F6',
+};
 
 const NAV_GROUPS = [
   {
@@ -15,6 +22,7 @@ const NAV_GROUPS = [
     label: null,
     items: [
       { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['admin', 'taller', 'ventas', 'atencion_cliente'] },
+      { id: 'organizador', icon: CheckSquare, label: 'Productividad', roles: ['admin', 'ventas', 'taller'] },
       { id: 'marketing_center', icon: Brain, label: 'Centro de Marketing', roles: ['admin'] },
       { id: 'calendario', icon: Calendar, label: 'Calendario', roles: ['admin'] },
     ],
@@ -76,6 +84,7 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
       return true; // Start collapsed by default for the new dashboard
     } catch { return true; }
   });
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-sidebar', railCollapsed ? 'collapsed' : 'expanded');
@@ -92,6 +101,7 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
     onNavigate(id);
     setMobileOpen(false);
     setMoreOpen(false);
+    setSearchOpen(false);
   }, [onNavigate]);
 
   const toggleGroup = (groupId) => {
@@ -114,20 +124,33 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
       if (e.key === 'Escape') {
         setMobileOpen(false);
         setMoreOpen(false);
+        setSearchOpen(false);
       }
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, []);
 
+  // ── Cmd/Ctrl+K command palette ──
   useEffect(() => {
-    if (mobileOpen || moreOpen) {
+    const handler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchOpen(o => !o);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
+  useEffect(() => {
+    if (mobileOpen || moreOpen || searchOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
     }
     return () => { document.body.style.overflow = ''; };
-  }, [mobileOpen, moreOpen]);
+  }, [mobileOpen, moreOpen, searchOpen]);
 
   return (
     <>
@@ -156,39 +179,39 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
               {railCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
             </button>
 
-            {/* ── Logo ── */}
-            <div className="sidebar-logo">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div className="sidebar-logo-icon" style={{ background: 'transparent' }}>
-                  <img src="/favicon.svg" alt="Onyx Logo" style={{ width: 24, height: 24 }} />
-                </div>
-                <div className="brand-text">
-                  <h1>Onyx</h1>
-                  <div className="logo-subtitle">Core</div>
-                </div>
+            {/* ── Brand Header ── */}
+            <div className="sidebar-brand">
+              <div className="sidebar-brand-icon">
+                <img src="/favicon.svg" alt="Onyx" width={22} height={22} />
+                <span className="sidebar-brand-badge"><Sparkles size={9} /></span>
+              </div>
+              <div className="brand-text">
+                <span className="sidebar-brand-name">Onyx</span>
+                <span className="sidebar-brand-sub">CRM Tiendanube</span>
               </div>
             </div>
 
-            {/* ── Current Member Badge ── */}
-            <div className="member-badge-wrapper">
-              <SidebarProfile
-                currentMember={currentMember}
-                logout={logout}
-                ROLE_COLORS={ROLE_COLORS}
-                ROLE_ICONS={ROLE_ICONS}
-                ROLE_LABELS={ROLE_LABELS}
-                collapsed={false}
-                isMobile={false}
-                onNavigate={handleNavigate}
-              />
+            {/* ── Workspace / Brand Selector ── */}
+            <div style={{ marginTop: 4 }}>
+              <WorkspaceSelector collapsed={railCollapsed} />
+            </div>
+
+            {/* ── Quick Search ── */}
+            <div className="sidebar-search-wrap" title={railCollapsed ? 'Buscar (Ctrl+K)' : undefined}>
+              <button className="sidebar-search-btn" onClick={() => setSearchOpen(true)}>
+                <Search size={15} />
+                <span>Buscar módulo…</span>
+                <kbd className="sidebar-search-kbd">⌘K</kbd>
+              </button>
             </div>
 
             {/* ── Navigation Groups ── */}
             <nav className="sidebar-nav">
               {filteredGroups.map((group, groupIdx) => {
                 const isCollapsed = collapsed[group.id];
+                const accent = GROUP_COLORS[group.id] || 'var(--primary)';
                 return (
-                  <div key={group.id} className="sidebar-nav-group">
+                  <div key={group.id} className="sidebar-nav-group" data-group={group.id}>
                     {group.label && (
                       <div
                         className="nav-group-toggle"
@@ -196,12 +219,11 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
                       >
                         <span className="nav-group-label">
                           {isCollapsed ? <ChevronRight size={10} /> : <ChevronDown size={10} />}
+                          <span className="nav-group-dot" style={{ background: accent }} />
                           {group.label}
                         </span>
                         {group.items.length > 1 && (
-                          <span className="nav-group-count">
-                            {group.items.length}
-                          </span>
+                          <span className="nav-group-count">{group.items.length}</span>
                         )}
                       </div>
                     )}
@@ -217,11 +239,13 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
                               className={`sidebar-nav-item ${active ? 'active' : ''}`}
                               onClick={() => handleNavigate(item.id)}
                               title={railCollapsed ? item.label : undefined}
+                              style={{ '--group-accent': accent }}
                             >
                               <span className="nav-icon">
                                 <Icon size={16} strokeWidth={active ? 2.2 : 1.8} />
                               </span>
                               <span>{item.label}</span>
+                              {active && <span className="nav-item-active-bar" />}
                             </button>
                           );
                         })}
@@ -263,12 +287,16 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
       {isMobile && (
         <>
           <div className="mobile-topbar">
-            <div className="mobile-topbar-logo" style={{ background: 'transparent' }}>
+            <div className="mobile-topbar-logo">
               <img src="/favicon.svg" alt="Onyx Logo" style={{ width: 24, height: 24 }} />
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--on-surface)', letterSpacing: '-0.02em' }}>Onyx</div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--on-surface-variant)', letterSpacing: '0.5px' }}>CRM Tiendanube</div>
             </div>
+            <button className="mobile-topbar-search" onClick={() => setSearchOpen(true)}>
+              <Search size={16} />
+            </button>
             <SidebarProfile
               currentMember={currentMember}
               logout={logout}
@@ -293,6 +321,17 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
           />
         </>
       )}
+
+      {/* ════════════════════════════════════════════
+          COMMAND PALETTE (Ctrl+K) — all devices
+          ════════════════════════════════════════════ */}
+      <SearchPalette
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onNavigate={handleNavigate}
+        groups={filteredGroups}
+        activeView={activeView}
+      />
     </>
   );
 }
@@ -300,7 +339,14 @@ export default function Sidebar({ activeView, onNavigate, theme, toggleTheme, cu
 /* ════════════════════════════════════════════════════════════
    Sidebar Profile Dropdown Component
    ════════════════════════════════════════════════════════════ */
-function SidebarProfile({ currentMember, logout, ROLE_COLORS, ROLE_ICONS, ROLE_LABELS, collapsed, isMobile, onNavigate }) {
+const ROLE_GRADIENTS = {
+  admin: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+  taller: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
+  ventas: 'linear-gradient(135deg, #06b6d4, #14b8a6)',
+  atencion_cliente: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+};
+
+export function SidebarProfile({ currentMember, logout, ROLE_COLORS, ROLE_ICONS, ROLE_LABELS, collapsed, isMobile, onNavigate }) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
   const teamCtx = useTeam();
@@ -318,36 +364,81 @@ function SidebarProfile({ currentMember, logout, ROLE_COLORS, ROLE_ICONS, ROLE_L
     hasPermission(`view_${item.id}`) || item.roles.includes(currentMember?.role || 'admin')
   );
 
+  const roleColor = ROLE_COLORS[currentMember.role] || 'var(--primary)';
+  const gradient = ROLE_GRADIENTS[currentMember.role] || 'linear-gradient(135deg, #8b5cf6, #6366f1)';
+  const initial = (currentMember.name || '?').charAt(0).toUpperCase();
+  const roleLabel = ROLE_LABELS[currentMember.role] || currentMember.role;
+  const roleIcon = ROLE_ICONS[currentMember.role] || '👤';
+
+  const avatar = (extraClass) => (
+    <span className={`member-avatar-ring ${extraClass || ''}`} style={{ '--ring-color': roleColor }}>
+      <span className="member-avatar" style={{ background: gradient, color: '#fff' }}>
+        {initial}
+        <span className="member-status-dot" />
+      </span>
+    </span>
+  );
+
   return (
     <div ref={dropdownRef} className="sidebar-profile-wrapper">
       {isMobile ? (
-        <div onClick={() => setOpen(!open)} className="sidebar-avatar">
-          {currentMember.name?.charAt(0)?.toUpperCase()}
+        <div
+          onClick={() => setOpen(!open)}
+          className={`sidebar-avatar sidebar-avatar--gradient${open ? ' open' : ''}`}
+          style={{ background: gradient, color: '#fff' }}
+          title={currentMember.name}
+        >
+          {avatar()}
+        </div>
+      ) : collapsed ? (
+        <div
+          onClick={() => setOpen(!open)}
+          className={`sidebar-avatar sidebar-avatar--gradient${open ? ' open' : ''}`}
+          style={{ background: gradient, color: '#fff' }}
+          title={currentMember.name}
+        >
+          {avatar()}
         </div>
       ) : (
-        <div onClick={() => setOpen(!open)} className="member-info">
-          <div className="member-avatar">
-            {ROLE_ICONS[currentMember.role]}
-          </div>
+        <div onClick={() => setOpen(!open)} className={`member-info${open ? ' open' : ''}`}>
+          {avatar()}
           {!collapsed && (
             <div className="member-text-desktop">
               <div className="member-name">{currentMember.name}</div>
-              <div className="member-role">{ROLE_LABELS[currentMember.role]}</div>
+              <div className="member-role" style={{ color: roleColor }}>
+                <span className="member-role-dot" style={{ background: roleColor }} />
+                {roleLabel}
+              </div>
             </div>
+          )}
+          {!collapsed && (
+            <ChevronDown size={13} className={`member-chevron${open ? ' open' : ''}`} />
           )}
         </div>
       )}
 
       {open && (
         <div className="sidebar-profile-dropdown" style={{ left: 'auto', right: 0 }}>
+          {/* Glow header */}
+          <div className="dropdown-glow" style={{ background: `radial-gradient(120px 60px at 20% 0%, ${roleColor}33, transparent 70%), radial-gradient(100px 50px at 90% 10%, ${roleColor}22, transparent 70%)` }} />
+
           {/* User info header */}
           <div className="dropdown-user-header">
-            <div className="dropdown-user-avatar">
-              {ROLE_ICONS[currentMember.role]}
+            <div className="dropdown-user-avatar-wrap">
+              {avatar('dropdown')}
             </div>
             <div className="dropdown-user-info">
               <div className="dropdown-user-name">{currentMember.name}</div>
               <div className="dropdown-user-email">{currentMember.email}</div>
+              <div className="dropdown-user-meta">
+                <span className="member-status-chip">
+                  <span className="member-status-dot" />
+                  En línea
+                </span>
+                <span className="dropdown-user-role-badge" style={{ borderColor: `${roleColor}55`, color: roleColor, background: `${roleColor}14` }}>
+                  {roleIcon} {roleLabel}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -362,30 +453,108 @@ function SidebarProfile({ currentMember, logout, ROLE_COLORS, ROLE_ICONS, ROLE_L
                 className="dropdown-menu-item"
                 onClick={() => { setOpen(false); onNavigate?.(item.id); }}
               >
-                <Icon size={15} />
+                <span className="dropdown-menu-icon"><Icon size={15} /></span>
                 <span>{item.label}</span>
+                <ChevronRight size={13} className="dropdown-menu-arrow" />
               </button>
             );
           })}
-
-          {/* Theme toggle in profile menu */}
-          <button
-            className="dropdown-menu-item"
-            onClick={() => { setOpen(false); }}
-          >
-            <Sun size={15} />
-            <span>Tema</span>
-          </button>
 
           <div className="dropdown-divider" />
 
           {/* Logout */}
           <button className="dropdown-menu-item dropdown-logout" onClick={() => { setOpen(false); logout?.(); }}>
-            <LogOut size={15} />
+            <span className="dropdown-menu-icon"><LogOut size={15} /></span>
             <span>Cerrar sesión</span>
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════
+   Command Palette — Search across all modules
+   ════════════════════════════════════════════════════════════ */
+function SearchPalette({ open, onClose, onNavigate, groups, activeView }) {
+  const [query, setQuery] = useState('');
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (open) {
+      setQuery('');
+      setTimeout(() => inputRef.current?.focus(), 30);
+    }
+  }, [open]);
+
+  if (!open) return null;
+
+  const q = query.trim().toLowerCase();
+  const results = groups
+    .map(group => ({
+      ...group,
+      items: group.items.filter(item =>
+        !q || item.label.toLowerCase().includes(q) || group.label?.toLowerCase().includes(q)
+      ),
+    }))
+    .filter(group => group.items.length > 0);
+
+  return (
+    <div className="palette-backdrop" onClick={onClose}>
+      <div className="palette-dialog" onClick={e => e.stopPropagation()}>
+        <div className="palette-input-row">
+          <Search size={18} />
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && results[0]?.items[0]) onNavigate(results[0].items[0].id);
+              if (e.key === 'Escape') onClose();
+            }}
+            placeholder="Buscar módulo o sección…"
+          />
+          <kbd>ESC</kbd>
+        </div>
+
+        <div className="palette-results">
+          {results.length === 0 && (
+            <div className="palette-empty">
+              <Eye size={18} />
+              Sin resultados para “{query}”
+            </div>
+          )}
+          {results.map(group => (
+            <div key={group.id} className="palette-group">
+              <div className="palette-group-label">
+                <span className="nav-group-dot" style={{ background: GROUP_COLORS[group.id] || 'var(--primary)' }} />
+                {group.label || 'Principal'}
+              </div>
+              {group.items.map(item => {
+                const Icon = item.icon;
+                const active = item.id === activeView;
+                return (
+                  <button
+                    key={item.id}
+                    className={`palette-item ${active ? 'active' : ''}`}
+                    onClick={() => onNavigate(item.id)}
+                  >
+                    <span className="palette-item-icon"><Icon size={15} /></span>
+                    <span className="palette-item-label">{item.label}</span>
+                    {active && <span className="palette-item-check">●</span>}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+
+        <div className="palette-footer">
+          <span><kbd>↵</kbd> ir</span>
+          <span><kbd>ESC</kbd> cerrar</span>
+          <span className="palette-footer-brand">Onyx Command</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -399,10 +568,10 @@ function FloatingOrbNav({ activeView, onNavigate, moreOpen, setMoreOpen, theme, 
   const orbRef = useRef(null);
 
   const quickNav = [
-    { id: 'dashboard', icon: LayoutDashboard, label: 'Inicio', color: '#3b82f6' },
-    { id: 'clientes', icon: Users, label: 'Clientes', color: '#10b981' },
+    { id: 'dashboard', icon: LayoutDashboard, label: 'Inicio', color: '#6366f1' },
+    { id: 'clientes', icon: Users, label: 'Clientes', color: '#06B6D4' },
     { id: 'taller_stock', icon: Factory, label: 'Control Taller', color: 'var(--primary-container)' },
-    { id: 'marketing_center', icon: TrendingUp, label: 'Marketing', color: '#ec4899' },
+    { id: 'marketing_center', icon: TrendingUp, label: 'Marketing', color: '#8B5CF6' },
     { id: 'ventas_view', icon: BarChart2, label: 'Ventas', color: '#06b6d4' },
   ];
 
@@ -483,7 +652,7 @@ function FloatingOrbNav({ activeView, onNavigate, moreOpen, setMoreOpen, theme, 
           width: expanded ? 54 : 60, height: expanded ? 54 : 60,
           background: expanded
             ? 'linear-gradient(135deg, #4f46e5, #9333ea)'
-            : 'linear-gradient(135deg, #6366f1, #a855f7, #ec4899)',
+            : 'linear-gradient(135deg, #6366f1, #a855f7, #8B5CF6)',
           boxShadow: expanded
             ? '0 8px 32px rgba(139,92,246,0.5), inset 0 2px 8px rgba(255,255,255,0.3)'
             : '0 12px 36px rgba(139,92,246,0.6), 0 0 40px rgba(139,92,246,0.4), inset 0 2px 10px rgba(255,255,255,0.3)',
@@ -511,7 +680,10 @@ function FloatingOrbNav({ activeView, onNavigate, moreOpen, setMoreOpen, theme, 
 
             {filteredGroups.filter(g => g.id !== 'principal').map(group => (
               <div key={group.id} className="mobile-more-group">
-                <div className="mobile-more-group-label">{group.label}</div>
+                <div className="mobile-more-group-label">
+                  <span className="nav-group-dot" style={{ background: GROUP_COLORS[group.id] || 'var(--primary)' }} />
+                  {group.label}
+                </div>
                 {group.items.map(item => {
                   const Icon = item.icon;
                   return (

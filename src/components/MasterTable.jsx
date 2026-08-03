@@ -23,7 +23,7 @@ const PAGE_SIZE = 10;
 
 const SEGMENT_BADGES = {
   abandoned: { bg: 'rgba(239, 68, 68, 0.1)', color: '#F87171', border: '1px solid rgba(239, 68, 68, 0.2)', label: 'Ocasional' },
-  regular: { bg: 'rgba(52, 211, 153, 0.1)', color: '#34D399', border: '1px solid rgba(52, 211, 153, 0.2)', label: 'Fiel' },
+  regular: { bg: 'rgba(52, 211, 153, 0.1)', color: '#22d3ee', border: '1px solid rgba(52, 211, 153, 0.2)', label: 'Fiel' },
   vip: { bg: 'rgba(251, 191, 36, 0.1)', color: '#FBBF24', border: '1px solid rgba(251, 191, 36, 0.2)', label: 'VIP' },
 };
 

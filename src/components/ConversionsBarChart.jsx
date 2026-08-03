@@ -35,11 +35,11 @@ export default function ConversionsBarChart({ rawOrders }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--on-surface-variant)', fontSize: 13, fontWeight: 600 }}>
           <BarChart2 size={15} /> Conversiones
         </div>
-        <span style={{ fontSize: 10, color: 'var(--on-surface-variant)', background: 'var(--border-subtle)', padding: '2px 8px', borderRadius: 10 }}>7 días</span>
+        <span style={{ fontSize: 10, color: 'var(--on-surface-variant)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 10 }}>7 días</span>
       </div>
       <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--on-surface)', display: 'flex', alignItems: 'baseline', gap: 8 }}>
         {total.toLocaleString('es-CO')}
-        <span style={{ fontSize: 11, fontWeight: 700, color: isPositive ? '#10b981' : '#f43f5e' }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: isPositive ? '#06B6D4' : '#f43f5e' }}>
           {isPositive ? '↑' : '↓'} {Math.abs(deltaPct).toFixed(1)}%
         </span>
       </div>
@@ -51,7 +51,7 @@ export default function ConversionsBarChart({ rawOrders }) {
               style={{
                 width: '100%', maxWidth: 22,
                 height: `${Math.max((d.count / maxCount) * 80, d.count > 0 ? 6 : 2)}px`,
-                background: i === days.length - 1 ? 'var(--primary)' : 'linear-gradient(180deg, var(--primary) 0%, rgba(99,102,241,0.4) 100%)',
+                background: i === days.length - 1 ? 'var(--primary)' : 'linear-gradient(180deg, var(--primary) 0%, rgba(212,160,23,0.4) 100%)',
                 borderRadius: 4,
                 transition: 'height 0.6s ease-out',
               }}

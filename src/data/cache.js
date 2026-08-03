@@ -5,9 +5,15 @@ localforage.config({
   storeName: 'crm_cache'
 });
 
+const getWorkspaceKey = (key) => {
+  const wsId = localStorage.getItem('onyx_active_workspace') || 'main';
+  return `${wsId}_${key}`;
+};
+
 export const saveToCache = async (key, data) => {
   try {
-    await localforage.setItem(key, data);
+    const wsKey = getWorkspaceKey(key);
+    await localforage.setItem(wsKey, data);
     return true;
   } catch (err) {
     console.error('Error guardando en caché:', err);
@@ -17,7 +23,8 @@ export const saveToCache = async (key, data) => {
 
 export const loadFromCache = async (key) => {
   try {
-    const value = await localforage.getItem(key);
+    const wsKey = getWorkspaceKey(key);
+    const value = await localforage.getItem(wsKey);
     return value;
   } catch (err) {
     console.error('Error leyendo de caché:', err);
@@ -27,7 +34,12 @@ export const loadFromCache = async (key) => {
 
 export const clearCache = async () => {
   try {
-    await localforage.clear();
+    // Instead of clear() which wipes all workspaces, iterate and remove only keys for active workspace
+    const wsId = localStorage.getItem('onyx_active_workspace') || 'main';
+    const prefix = `${wsId}_`;
+    const keys = await localforage.keys();
+    const toRemove = keys.filter(k => k.startsWith(prefix));
+    await Promise.all(toRemove.map(k => localforage.removeItem(k)));
   } catch (err) {
     console.error('Error limpiando caché:', err);
   }
@@ -35,10 +47,12 @@ export const clearCache = async () => {
 
 export const clearStaleCache = async () => {
   try {
-    // Only clear products cache (can be large and stale)
-    await localforage.removeItem('tiendanube_products');
-    await localforage.removeItem('last_sync');
+    const wsKeyProducts = getWorkspaceKey('tiendanube_products');
+    const wsKeySync = getWorkspaceKey('last_sync');
+    await localforage.removeItem(wsKeyProducts);
+    await localforage.removeItem(wsKeySync);
   } catch (err) {
     console.error('Error limpiando caché stale:', err);
   }
 };
+

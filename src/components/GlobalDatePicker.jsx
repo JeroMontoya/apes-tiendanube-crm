@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar } from 'lucide-react';
+import { Calendar, ChevronDown, CalendarRange, Sparkles } from 'lucide-react';
 
 const PRESETS = [
   { id: 'today', label: 'Hoy', metaPreset: 'today' },
@@ -70,9 +70,18 @@ export function calculateDates(preset) {
   return { start: getGMT5Date(start), end: getGMT5Date(end) };
 }
 
+const formatNice = (iso) => {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  return date.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
 export default function GlobalDatePicker({ dateRange, setDateRange }) {
   const showCustom = dateRange.preset === 'custom';
-  
+  const [hovered, setHovered] = useState(null);
+  const activePreset = PRESETS.find(p => p.id === dateRange.preset);
+
   const handlePresetClick = (presetId, metaPreset) => {
     if (presetId === 'custom') {
       setDateRange({ ...dateRange, preset: 'custom', metaPreset: 'custom' });
@@ -88,76 +97,71 @@ export default function GlobalDatePicker({ dateRange, setDateRange }) {
   };
 
   return (
-    <div className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '24px', padding: '16px 24px', borderRadius: 'var(--radius-lg)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginRight: '16px' }}>
-        <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--primary-container)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Calendar size={16} color="var(--primary)" />
+    <div className="period-banner">
+      <div className="period-banner-glow" />
+      <div className="period-banner-inner">
+        {/* Brand / range summary */}
+        <div className="period-brand">
+          <div className="period-brand-icon">
+            <Calendar size={16} />
+            <span className="period-brand-spark"><Sparkles size={9} /></span>
+          </div>
+          <div className="period-brand-text">
+            <span className="period-brand-title">
+              {activePreset ? activePreset.label : 'Rango personalizado'}
+            </span>
+            <span className="period-brand-range">
+              <CalendarRange size={11} />
+              {formatNice(dateRange.startDate)} — {formatNice(dateRange.endDate)}
+            </span>
+          </div>
         </div>
-        <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--on-surface)' }}>Visión General</span>
+
+        {/* Preset pills */}
+        <div className="period-pills" role="tablist" aria-label="Periodo de análisis">
+          {PRESETS.map(preset => {
+            const isActive = dateRange.preset === preset.id;
+            return (
+              <button
+                key={preset.id}
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => handlePresetClick(preset.id, preset.metaPreset)}
+                onMouseEnter={() => setHovered(preset.id)}
+                onMouseLeave={() => setHovered(null)}
+                className={`period-pill${isActive ? ' active' : ''}`}
+                style={{ '--hovered': hovered === preset.id ? '1' : '0' }}
+              >
+                {isActive && <span className="period-pill-dot" />}
+                {preset.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Custom range */}
+        {showCustom && (
+          <div className="period-custom">
+            <div className="period-custom-field">
+              <span>Desde</span>
+              <input
+                type="date"
+                value={dateRange.startDate}
+                onChange={(e) => handleCustomDateChange('startDate', e.target.value)}
+              />
+            </div>
+            <div className="period-custom-arrow"><ChevronDown size={14} /></div>
+            <div className="period-custom-field">
+              <span>Hasta</span>
+              <input
+                type="date"
+                value={dateRange.endDate}
+                onChange={(e) => handleCustomDateChange('endDate', e.target.value)}
+              />
+            </div>
+          </div>
+        )}
       </div>
-
-      {PRESETS.map(preset => {
-        const isActive = dateRange.preset === preset.id;
-        return (
-          <button
-            key={preset.id}
-            onClick={() => handlePresetClick(preset.id, preset.metaPreset)}
-            style={{
-              padding: '6px 16px',
-              borderRadius: '9999px',
-              border: isActive ? '1px solid var(--primary)' : '1px solid var(--border-subtle)',
-              background: isActive ? 'var(--primary)' : 'var(--surface-container-low)',
-              color: isActive ? '#ffffff' : 'var(--on-surface-variant)',
-              cursor: 'pointer',
-              fontSize: '13px',
-              fontWeight: isActive ? '700' : '500',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              boxShadow: isActive ? '0 4px 12px rgba(45, 139, 78, 0.2)' : 'none',
-            }}
-            onMouseEnter={e => {
-              if (!isActive) {
-                e.currentTarget.style.background = 'var(--surface-container-high)';
-                e.currentTarget.style.color = 'var(--on-surface)';
-              } else {
-                e.currentTarget.style.transform = 'translateY(-1px)';
-              }
-            }}
-            onMouseLeave={e => {
-              if (!isActive) {
-                e.currentTarget.style.background = 'var(--surface-container-low)';
-                e.currentTarget.style.color = 'var(--on-surface-variant)';
-              } else {
-                e.currentTarget.style.transform = 'translateY(0)';
-              }
-            }}
-          >
-            {preset.label}
-          </button>
-        );
-      })}
-
-      {showCustom && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--surface-container-low)', padding: '4px 16px', borderRadius: '9999px', border: '1px solid var(--border-subtle)' }}>
-            <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--on-surface-variant)' }}>Desde</span>
-            <input 
-              type="date" 
-              value={dateRange.startDate}
-              onChange={(e) => handleCustomDateChange('startDate', e.target.value)}
-              style={{ background: 'transparent', border: 'none', color: 'var(--on-surface)', outline: 'none', fontSize: '13px', fontFamily: 'inherit', fontWeight: '500' }}
-            />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--surface-container-low)', padding: '4px 16px', borderRadius: '9999px', border: '1px solid var(--border-subtle)' }}>
-            <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--on-surface-variant)' }}>Hasta</span>
-            <input 
-              type="date" 
-              value={dateRange.endDate}
-              onChange={(e) => handleCustomDateChange('endDate', e.target.value)}
-              style={{ background: 'transparent', border: 'none', color: 'var(--on-surface)', outline: 'none', fontSize: '13px', fontFamily: 'inherit', fontWeight: '500' }}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

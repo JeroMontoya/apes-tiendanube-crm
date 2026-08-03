@@ -119,9 +119,9 @@ export default function AIChatAgent({ clients, metaInsights, googleAdsData, tikt
   const chatHistoryRef = useRef([]);
 
   const COLORS = {
-    bg: '#0a0a0f', surface: '#12121a', card: '#1a1a24', border: '#2a2a3a',
-    text: '#e4e4e7', muted: '#71717a', primary: '#6366f1', accent: '#22d3ee',
-    success: '#10b981', warning: 'var(--primary-container)', danger: '#ef4444',
+    bg: '#090B0F', surface: '#11141A', card: '#1A1E2B', border: '#2a2a3a',
+    text: '#E2E8F0', muted: '#475569', primary: '#6366f1', accent: '#22d3ee',
+    success: '#06B6D4', warning: 'var(--primary-container)', danger: '#E11D48',
   };
 
   useEffect(() => {
@@ -290,7 +290,7 @@ export default function AIChatAgent({ clients, metaInsights, googleAdsData, tikt
 function formatMessage(text) {
   if (!text) return '';
   return text
-    .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#e4e4e7">$1</strong>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#E2E8F0">$1</strong>')
     .replace(/`(.*?)`/g, '<code style="background:rgba(99,102,241,0.15);padding:2px 6px;border-radius:4px;font-size:13px">$1</code>')
     .replace(/\n/g, '<br/>');
 }

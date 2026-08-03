@@ -8,9 +8,9 @@ import {
 } from 'lucide-react';
 
 const C = {
-  primary: '#6366F1', success: '#10B981', warning: 'var(--primary-container)',
-  danger: '#EF4444', info: '#0EA5E9', purple: '#8B5CF6',
-  teal: '#14B8A6', pink: '#EC4899', orange: '#F97316',
+  primary: '#6366F1', success: '#06B6D4', warning: 'var(--primary-container)',
+  danger: '#E11D48', info: '#0EA5E9', purple: '#8B5CF6',
+  teal: '#14B8A6', pink: '#8B5CF6', orange: '#F97316',
 };
 
 const MOVEMENT_TYPES = [
@@ -57,7 +57,7 @@ function StockBar({ current, min }) {
 function StockBadge({ stock, min }) {
   const isZero = stock === 0;
   const isLow = stock > 0 && stock <= (min || 5);
-  const bg = isZero ? 'rgba(239,68,68,0.15)' : isLow ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)';
+  const bg = isZero ? 'rgba(239,68,68,0.15)' : isLow ? 'rgba(6, 182, 212,0.15)' : 'rgba(16,185,129,0.15)';
   const color = isZero ? C.danger : isLow ? C.warning : C.success;
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 6, background: bg, color, fontSize: 12, fontWeight: 700, minWidth: 40, justifyContent: 'center' }}>
@@ -364,7 +364,7 @@ export default function LogisticsCenter({ session }) {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg, #10B981, #0EA5E9)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg, #06B6D4, #0EA5E9)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Warehouse size={28} color="#fff" />
           </div>
           <div>

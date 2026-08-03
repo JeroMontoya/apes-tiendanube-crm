@@ -1,10 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { Info, ArrowUpRight } from 'lucide-react';
+import { Info } from 'lucide-react';
 import MetricTooltip from './MetricTooltip';
 
-const ACCENT = '#3b82f6';
-const ACCENT_LIGHT = 'rgba(59,130,246,0.4)';
+const ACCENT = '#6366f1';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
@@ -15,18 +14,26 @@ const CustomTooltip = ({ active, payload, label }) => {
     }}>
       <p style={{ margin: 0, fontSize: 11, color: 'var(--on-surface-variant)', marginBottom: 4 }}>{label}</p>
       <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: ACCENT }}>
-        value : {payload[0].value?.toLocaleString('es-CO')}
+        Usuarios: {payload[0].value?.toLocaleString('es-CO')}
       </p>
     </div>
   );
 };
 
+const RANGE_OPTIONS = [
+  { value: 7, label: '7 días' },
+  { value: 14, label: '14 días' },
+  { value: 30, label: '30 días' },
+];
+
 export default function UsersChartWidget({ rawOrders }) {
+  const [days, setDays] = useState(7);
+
   const data = useMemo(() => {
     const orders = rawOrders || [];
     const byDay = {};
     const now = new Date();
-    for (let i = 6; i >= 0; i--) {
+    for (let i = days - 1; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(d.getDate() - i);
       const key = d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
@@ -41,17 +48,18 @@ export default function UsersChartWidget({ rawOrders }) {
       }
     });
     return Object.entries(byDay).map(([date, usersSet]) => ({ date, value: usersSet.size }));
-  }, [rawOrders]);
+  }, [rawOrders, days]);
 
   const total = data[data.length - 1]?.value || 0;
+  const rangeLabel = RANGE_OPTIONS.find(r => r.value === days)?.label || `${days} días`;
 
   return (
-    <div className="glass-card bento-span-5" style={{ display: 'flex', flexDirection: 'column', minHeight: 320 }}>
+    <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', minHeight: 320, height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
           <h3 style={{ fontSize: 13, fontWeight: 500, margin: 0, color: 'var(--on-surface-variant)', display: 'flex', alignItems: 'center', gap: 6 }}>
-            Usuarios a lo largo del tiempo
-            <MetricTooltip text="Evolución de usuarios únicos en los últimos 7 días.">
+            Usuarios ({rangeLabel})
+            <MetricTooltip text={`Evolución de usuarios únicos en los últimos ${days} días.`}>
               <Info size={12} color="var(--on-surface-variant)" style={{ opacity: 0.6 }} />
             </MetricTooltip>
           </h3>
@@ -61,12 +69,17 @@ export default function UsersChartWidget({ rawOrders }) {
             </span>
           </div>
         </div>
-        <select style={{
-          background: `${ACCENT}12`, border: `1px solid ${ACCENT}33`,
-          color: ACCENT, padding: '5px 10px', borderRadius: 6, fontSize: 12, cursor: 'pointer', outline: 'none'
-        }}>
-          <option value="7d">7 días</option>
-          <option value="30d">30 días</option>
+        <select
+          value={days}
+          onChange={(e) => setDays(Number(e.target.value))}
+          style={{
+            background: `${ACCENT}12`, border: `1px solid ${ACCENT}33`,
+            color: ACCENT, padding: '5px 10px', borderRadius: 6, fontSize: 12, cursor: 'pointer', outline: 'none'
+          }}
+        >
+          {RANGE_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
         </select>
       </div>
 
@@ -80,7 +93,8 @@ export default function UsersChartWidget({ rawOrders }) {
               </linearGradient>
             </defs>
             <XAxis dataKey="date" axisLine={false} tickLine={false}
-              tick={{ fontSize: 11, fill: 'var(--on-surface-variant)' }} dy={8} />
+              tick={{ fontSize: 11, fill: 'var(--on-surface-variant)' }} dy={8}
+              interval={days > 14 ? Math.floor(days / 7) - 1 : 0} />
             <YAxis axisLine={false} tickLine={false}
               tick={{ fontSize: 11, fill: 'var(--on-surface-variant)' }}
               tickFormatter={(val) => val >= 1000 ? `${val/1000}K` : val} />

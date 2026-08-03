@@ -92,7 +92,7 @@ export default function ExportPanel({ clients, n8nWebhookUrl }) {
           </button>
         </div>
 
-        <div className="glass-card export-card" style={{ borderTop: '3px solid #D4A843' }}>
+        <div className="glass-card export-card" style={{ borderTop: '3px solid #818cf8' }}>
           <div className="export-icon">📧</div>
           <h4>Klaviyo / Mailchimp</h4>
           <p>Exporta solo correos válidos de la selección para campañas de email marketing directas.</p>
@@ -104,7 +104,7 @@ export default function ExportPanel({ clients, n8nWebhookUrl }) {
       </div>
 
       {showToast && (
-        <div style={{ position: 'fixed', bottom: 24, right: 24, padding: '12px 20px', borderRadius: 12, background: 'rgba(24,24,27,0.92)', backdropFilter: 'blur(24px)', border: '1px solid rgba(52,211,153,0.2)', color: '#34D399', fontSize: 13, fontWeight: 600, zIndex: 2000, boxShadow: '0 8px 32px rgba(0,0,0,0.3)', animation: 'toastV2In 0.4s cubic-bezier(0.16,1,0.3,1)' }}>
+        <div style={{ position: 'fixed', bottom: 24, right: 24, padding: '12px 20px', borderRadius: 12, background: 'rgba(24,24,27,0.92)', backdropFilter: 'blur(24px)', border: '1px solid rgba(52,211,153,0.2)', color: '#22d3ee', fontSize: 13, fontWeight: 600, zIndex: 2000, boxShadow: '0 8px 32px rgba(0,0,0,0.3)', animation: 'toastV2In 0.4s cubic-bezier(0.16,1,0.3,1)' }}>
           {toastMsg}
         </div>
       )}

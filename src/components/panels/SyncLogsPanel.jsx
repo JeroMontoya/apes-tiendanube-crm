@@ -66,7 +66,7 @@ const styles = {
     width: 10,
     height: 10,
     borderRadius: '50%',
-    background: isOk ? '#10b981' : '#ef4444',
+    background: isOk ? '#06B6D4' : '#E11D48',
     boxShadow: `0 0 8px ${isOk ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`,
   }),
   statusLabel: {
@@ -101,14 +101,14 @@ const styles = {
     fontSize: 11,
     fontWeight: 500,
     background: isSuccess ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-    color: isSuccess ? '#10b981' : '#ef4444',
+    color: isSuccess ? '#06B6D4' : '#E11D48',
   }),
   mono: {
     fontFamily: 'JetBrains Mono, monospace',
     fontSize: 12,
   },
   errorText: {
-    color: '#ef4444',
+    color: '#E11D48',
     fontSize: 12,
   },
   loadingState: {
@@ -120,7 +120,7 @@ const styles = {
   errorState: {
     padding: 40,
     textAlign: 'center',
-    color: '#ef4444',
+    color: '#E11D48',
     background: 'rgba(239, 68, 68, 0.05)',
     borderRadius: 'var(--radius-md)',
     border: '1px solid rgba(239, 68, 68, 0.2)',

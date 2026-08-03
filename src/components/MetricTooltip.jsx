@@ -62,7 +62,7 @@ export default function MetricTooltip({ text, children, width = 260 }) {
             backdropFilter: 'blur(20px) saturate(180%)',
             border: '1px solid var(--outline)',
             boxShadow: '0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px var(--surface-container-low)',
-            color: '#E4E4E7',
+            color: '#E2E8F0',
             fontSize: 12,
             fontWeight: 500,
             lineHeight: 1.6,

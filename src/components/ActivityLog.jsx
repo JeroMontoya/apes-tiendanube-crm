@@ -3,15 +3,15 @@ import { useTeam } from '../contexts/TeamContext';
 import { Clock, Package, Users, ArrowUpCircle, ArrowDownCircle, Edit3, Trash2, UserPlus, UserMinus, ShoppingCart, TrendingUp, Filter } from 'lucide-react';
 
 const ACTION_CONFIG = {
-  stock_increased: { icon: ArrowUpCircle, color: '#10b981', label: 'Stock +', template: (a) => `${a.target_name}: ${a.details?.delta > 0 ? '+' : ''}${a.details?.delta} unidades` },
-  stock_decreased: { icon: ArrowDownCircle, color: '#ef4444', label: 'Stock -', template: (a) => `${a.target_name}: ${a.details?.delta} unidades` },
-  stock_updated: { icon: Edit3, color: '#3b82f6', label: 'Stock Editado', template: (a) => `${a.target_name}: ${a.details?.old} → ${a.details?.new}` },
+  stock_increased: { icon: ArrowUpCircle, color: '#06B6D4', label: 'Stock +', template: (a) => `${a.target_name}: ${a.details?.delta > 0 ? '+' : ''}${a.details?.delta} unidades` },
+  stock_decreased: { icon: ArrowDownCircle, color: '#E11D48', label: 'Stock -', template: (a) => `${a.target_name}: ${a.details?.delta} unidades` },
+  stock_updated: { icon: Edit3, color: '#6366f1', label: 'Stock Editado', template: (a) => `${a.target_name}: ${a.details?.old} → ${a.details?.new}` },
   status_changed: { icon: Package, color: 'var(--primary-container)', label: 'Estado', template: (a) => `${a.target_name}: ${a.details?.newStatus}` },
   member_created: { icon: UserPlus, color: '#8b5cf6', label: 'Miembro', template: (a) => `Nuevo miembro: ${a.target_name} (${a.details?.role})` },
-  member_updated: { icon: Edit3, color: '#3b82f6', label: 'Miembro', template: (a) => `Actualizado: ${a.target_name}` },
-  member_deactivated: { icon: UserMinus, color: '#ef4444', label: 'Miembro', template: (a) => `Desactivado: ${a.target_name}` },
+  member_updated: { icon: Edit3, color: '#6366f1', label: 'Miembro', template: (a) => `Actualizado: ${a.target_name}` },
+  member_deactivated: { icon: UserMinus, color: '#E11D48', label: 'Miembro', template: (a) => `Desactivado: ${a.target_name}` },
   pqr_created: { icon: Package, color: 'var(--primary-container)', label: 'PQR', template: (a) => `PQR: ${a.target_name}` },
-  pqr_updated: { icon: Edit3, color: '#3b82f6', label: 'PQR', template: (a) => `PQR actualizado: ${a.target_name}` },
+  pqr_updated: { icon: Edit3, color: '#6366f1', label: 'PQR', template: (a) => `PQR actualizado: ${a.target_name}` },
 };
 
 export default function ActivityLog({ compact = false }) {

@@ -5,10 +5,11 @@ import {
   RefreshCw, Info, ArrowUpRight, ArrowDownRight
 } from 'lucide-react';
 import MetricTooltip from './MetricTooltip';
+import CountUp from './CountUp';
 
 const GOLD = 'var(--primary)';
 const GOLD_LIGHT = 'var(--primary-glow)';
-const GOLD_DIM = '#a89f88';
+const GOLD_DIM = '#8B9BB4';
 
 function formatCurrency(value) {
   return new Intl.NumberFormat('es-CO', {
@@ -54,11 +55,14 @@ function Sparkline({ data, color, width = 60, height = 24 }) {
   );
 }
 
-function calcDelta(current, previous) {
+function calcDelta(current, previous, isCurrency = false) {
   if (previous === null || previous === undefined) return null;
-  if (previous === 0) return { percent: current > 0 ? 100 : 0, isPositive: current >= 0 };
+  if (previous === 0) {
+    const pct = current > 0 ? 100 : 0;
+    return { text: `${pct > 0 ? '+' : ''}${pct}%`, percent: pct, isPositive: current >= 0 };
+  }
   const pct = ((current - previous) / previous) * 100;
-  return { percent: Math.abs(pct).toFixed(1), isPositive: pct >= 0 };
+  return { text: `${pct > 0 ? '+' : ''}${pct.toFixed(1)}%`, percent: pct.toFixed(1), isPositive: pct >= 0 };
 }
 
 function formatDateRangeStr(start, end) {
@@ -68,13 +72,44 @@ function formatDateRangeStr(start, end) {
   return `${s} - ${e}`;
 }
 
+function formatMonthName(date) {
+  return date.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
+}
+
+function parseLocalDate(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function parseLocalEndDate(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d, 23, 59, 59, 999);
+}
+
+function getPrevPeriod(preset, start, end) {
+  if (preset === 'this_month' || preset === 'last_month') {
+    const y = start.getFullYear();
+    const m = start.getMonth();
+    const prevY = m === 0 ? y - 1 : y;
+    const prevM = m === 0 ? 11 : m - 1;
+    return {
+      prevStart: new Date(prevY, prevM, 1),
+      prevEnd: new Date(prevY, prevM + 1, 0, 23, 59, 59, 999)
+    };
+  }
+  const diffTime = end.getTime() - start.getTime();
+  const prevEnd = new Date(start.getTime() - 1); // 1 ms before start
+  const prevStart = new Date(prevEnd.getTime() - diffTime);
+  return { prevStart, prevEnd };
+}
+
 const CARD_COLORS = {
-  revenue:       '#10b981',
-  total:         '#3b82f6',
+  revenue:       '#06B6D4',
+  total:         '#6366f1',
   roas:          '#8b5cf6',
-  growth:        '#f59e0b',
+  growth:        '#06b6d4',
   avgTicket:     '#06b6d4',
-  activeClients: '#ec4899',
+  activeClients: '#8B5CF6',
   cpa:           '#f43f5e',
   retention:     '#14b8a6',
 };
@@ -118,14 +153,14 @@ export default function StatsCards({ clients, rawOrders = [], dateRange, metaIns
     const cpa = totalOrders > 0 ? (metaSpend / totalOrders) : 0;
 
     // 2. Previous Period Calculation
-    const end = dateRange?.endDate ? new Date(dateRange.endDate) : new Date();
-    const start = dateRange?.startDate ? new Date(dateRange.startDate) : new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
-    const diffTime = end.getTime() - start.getTime();
+    const end = dateRange?.endDate ? parseLocalEndDate(dateRange.endDate) : new Date();
+    const start = dateRange?.startDate ? parseLocalDate(dateRange.startDate) : new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
     
-    const prevEnd = new Date(start.getTime() - 24 * 60 * 60 * 1000); // 1 day before start
-    const prevStart = new Date(prevEnd.getTime() - diffTime);
+    const { prevStart, prevEnd } = getPrevPeriod(dateRange?.preset, start, end);
     
-    const prevDateStr = formatDateRangeStr(prevStart, prevEnd);
+    const isMonthPreset = dateRange?.preset === 'this_month' || dateRange?.preset === 'last_month';
+    const prevDateStr = isMonthPreset ? formatMonthName(prevStart) : formatDateRangeStr(prevStart, prevEnd);
+    const currentDateStr = isMonthPreset ? formatMonthName(start) : formatDateRangeStr(start, end);
 
     // Filter rawOrders for previous period
     const prevOrders = rawOrders.filter(o => {
@@ -152,7 +187,7 @@ export default function StatsCards({ clients, rawOrders = [], dateRange, metaIns
     // Growth metric
     const growthValue = revenue - prevRevenue;
 
-    // No previous Meta spend available without complex API call - deltas will show ---
+    // No previous period Meta spend available — deltas will show "Sin datos previos"
     const prevRoas = null;
     const prevCpa = null;
 
@@ -180,39 +215,91 @@ export default function StatsCards({ clients, rawOrders = [], dateRange, metaIns
     const revSpark = buildHistoricSpark('revenue');
     const orderSpark = buildHistoricSpark('orders');
 
+    const makeFormatter = (opts) => (v) => {
+      if (opts.isCurrency) {
+        const formatted = formatCurrency(Math.abs(v));
+        return `${v > 0 && opts.showPlus ? '+' : (v < 0 ? '-' : '')}${formatted}`;
+      }
+      if (opts.suffix === 'x') return `${v.toFixed(opts.decimals || 0)}x`;
+      if (opts.suffix === '%') return `${opts.showPlus && v > 0 ? '+' : ''}${v.toFixed(opts.decimals || 0)}%`;
+      return Math.round(v).toLocaleString('es-CO');
+    };
+
+    const growthPct = prevRevenue > 0 ? ((revenue - prevRevenue) / prevRevenue) * 100 : (revenue > 0 ? 100 : 0);
+
     return {
       prevDateStr,
+      currentDateStr,
       data: {
-        revenue: { value: formatCurrency(revenue), sparkData: revSpark, delta: calcDelta(revenue, prevRevenue) },
-        growth: { value: formatCurrency(growthValue), sparkData: revSpark, delta: calcDelta(growthValue, 0) },
-        roas: { value: roas > 0 ? `${roas.toFixed(2)}x` : '---', sparkData: revSpark, delta: calcDelta(roas, prevRoas) },
-        cpa: { value: cpa > 0 ? formatCurrency(cpa) : '---', sparkData: orderSpark, delta: calcDelta(cpa, prevCpa) },
-        total: { value: totalOrders.toLocaleString('es-CO'), sparkData: orderSpark, delta: calcDelta(totalOrders, prevTotalOrders) },
-        avgTicket: { value: formatCurrency(avgTicket), sparkData: revSpark, delta: calcDelta(avgTicket, prevAvgTicket) },
-        activeClients: { value: activeClients.toLocaleString('es-CO'), sparkData: orderSpark, delta: calcDelta(activeClients, prevActiveClients) },
-        retention: { value: `${retention.toFixed(1)}%`, sparkData: orderSpark, delta: calcDelta(retention, prevRetention) }
+        revenue: { value: formatCurrency(revenue), rawValue: revenue, sparkData: revSpark, delta: calcDelta(revenue, prevRevenue), formatter: makeFormatter({ isCurrency: true }) },
+        growth: {
+          value: `${growthValue >= 0 ? '+' : '-'} ${formatCurrency(Math.abs(growthValue))}`,
+          rawValue: growthValue,
+          sparkData: revSpark,
+          delta: calcDelta(revenue, prevRevenue),
+          formatter: (v) => `${v >= 0 ? '+' : '-'} ${formatCurrency(Math.abs(v))}`,
+          isGrowth: true
+        },
+        roas: { value: roas > 0 ? `${roas.toFixed(2)}x` : '---', rawValue: roas, sparkData: revSpark, delta: calcDelta(roas, prevRoas), formatter: makeFormatter({ suffix: 'x', decimals: 2 }) },
+        cpa: { value: cpa > 0 ? formatCurrency(cpa) : '---', rawValue: cpa, sparkData: orderSpark, delta: calcDelta(cpa, prevCpa), formatter: makeFormatter({ isCurrency: true }) },
+        total: { value: totalOrders.toLocaleString('es-CO'), rawValue: totalOrders, sparkData: orderSpark, delta: calcDelta(totalOrders, prevTotalOrders), formatter: makeFormatter({}) },
+        avgTicket: { value: formatCurrency(avgTicket), rawValue: avgTicket, sparkData: revSpark, delta: calcDelta(avgTicket, prevAvgTicket), formatter: makeFormatter({ isCurrency: true }) },
+        activeClients: { value: activeClients.toLocaleString('es-CO'), rawValue: activeClients, sparkData: orderSpark, delta: calcDelta(activeClients, prevActiveClients), formatter: makeFormatter({}) },
+        retention: { value: `${retention.toFixed(1)}%`, rawValue: retention, sparkData: orderSpark, delta: calcDelta(retention, prevRetention), formatter: makeFormatter({ suffix: '%', decimals: 1 }) }
       }
     };
   }, [clients, rawOrders, dateRange, metaInsights]);
 
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(4, 1fr)',
-      gap: 14,
-      marginBottom: 24,
-    }}>
+    <div style={{ marginBottom: 24 }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 8,
+        marginBottom: 14, paddingBottom: 10,
+        borderBottom: '1px solid var(--outline)',
+      }}>
+        <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--on-surface)' }}>
+          {stats.currentDateStr}
+        </span>
+        <span style={{
+          fontSize: 11, fontWeight: 700, color: 'var(--on-surface-variant)',
+          background: 'var(--surface-container)', padding: '2px 8px', borderRadius: 12,
+        }}>
+          vs {stats.prevDateStr}
+        </span>
+      </div>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: 14,
+      }}>
       {CARD_CONFIG.map((cfg) => {
         const isHovered = hoveredCard === cfg.key;
         const Icon = cfg.icon;
-        const cardColor = CARD_COLORS[cfg.key] || GOLD;
-        const isMetaLoading = metaInsightsLoading && (cfg.key === 'roas' || cfg.key === 'cpa' || cfg.key === 'growth');
+        const cardColor = CARD_COLORS[cfg.key] || '#06B6D4';
+        const isMetaLoading = metaInsightsLoading && (cfg.key === 'roas' || cfg.key === 'cpa');
         const dataItem = stats.data[cfg.key];
         let delta = dataItem.delta;
         if (cfg.key === 'cpa' && delta) {
           delta = { ...delta, isPositive: !delta.isPositive };
         }
-        const deltaColor = delta?.isPositive ? '#10b981' : '#f43f5e';
+        const deltaColor = delta?.isPositive ? '#06B6D4' : '#f43f5e';
+
+        let statusLabel = null;
+        let statusColor = 'var(--on-surface-variant)';
+        if (delta && delta.percent !== undefined) {
+           const val = parseFloat(delta.percent);
+           if (!isNaN(val)) {
+              if (delta.isPositive) {
+                 if (val >= 15) { statusLabel = "Excelente"; statusColor = "#10b981"; }
+                 else if (val > 2) { statusLabel = "Bueno"; statusColor = "#10b981"; }
+                 else { statusLabel = "Estable"; }
+              } else {
+                 if (val >= 15) { statusLabel = "Crítico"; statusColor = "#ef4444"; }
+                 else if (val > 2) { statusLabel = "Malo"; statusColor = "#f43f5e"; }
+                 else { statusLabel = "Estable"; }
+              }
+           }
+        }
         
         return (
           <div
@@ -232,9 +319,12 @@ export default function StatsCards({ clients, rawOrders = [], dateRange, metaIns
               position: 'relative',
               overflow: 'hidden',
               ...(isHovered ? {
-                boxShadow: `0 8px 32px ${cardColor}15`,
-                transform: 'translateY(-2px)',
-              } : {}),
+                boxShadow: `0 8px 32px ${cardColor}22`,
+                transform: 'translateY(-2px)'
+              } : {
+                boxShadow: 'var(--shadow-sm)',
+                transform: 'none'
+              })
             }}
             onMouseEnter={() => setHoveredCard(cfg.key)}
             onMouseLeave={() => setHoveredCard(null)}
@@ -270,7 +360,20 @@ export default function StatsCards({ clients, rawOrders = [], dateRange, metaIns
                   fontSize: 26, fontWeight: 700, color: 'var(--on-surface)',
                   letterSpacing: '-0.5px', lineHeight: 1.2, marginTop: 2
                 }}>
-                  {isMetaLoading ? '---' : dataItem.value}
+{isMetaLoading && dataItem.rawValue <= 0 ? '---' : (
+                    dataItem.isGrowth ? (
+                      <span style={{ color: dataItem.rawValue >= 0 ? '#10b981' : '#f43f5e' }}>
+                        {dataItem.value}
+                      </span>
+                    ) : dataItem.rawValue > 0 && dataItem.value !== '---' ? (
+                      <CountUp
+                        to={dataItem.rawValue}
+                        duration={1.8}
+                        separator=","
+                        formatter={dataItem.formatter}
+                      />
+                    ) : dataItem.value
+                  )}
                 </div>
               </div>
             </div>
@@ -280,15 +383,25 @@ export default function StatsCards({ clients, rawOrders = [], dateRange, metaIns
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingBottom: 4 }}>
                 {!isMetaLoading && delta ? (
                   <>
-                    <span style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 2,
-                      fontSize: 11, fontWeight: 700, color: deltaColor,
-                      background: `${deltaColor}15`,
-                      padding: '2px 8px', borderRadius: 20,
-                    }}>
-                      {delta.isPositive ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
-                      {delta.percent}%
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 2,
+                        fontSize: 11, fontWeight: 700, color: deltaColor,
+                        background: `${deltaColor}15`,
+                        padding: '2px 8px', borderRadius: 20,
+                      }}>
+                        {delta.isPositive ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+                        {delta.text || `${delta.percent}%`}
+                      </span>
+                      {statusLabel && (
+                        <span style={{
+                          fontSize: 9, fontWeight: 800, color: statusColor, textTransform: 'uppercase',
+                          background: `${statusColor}15`, padding: '2px 6px', borderRadius: 4,
+                        }}>
+                          {statusLabel}
+                        </span>
+                      )}
+                    </div>
                     <span style={{
                       fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 500
                     }}>
@@ -308,6 +421,7 @@ export default function StatsCards({ clients, rawOrders = [], dateRange, metaIns
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

@@ -48,14 +48,14 @@ export default function MetaAdsPanel({ workspace, onRefreshMeta, clients, metaIn
     const totalSpend = allCampaigns.reduce((s, c) => s + c.spend, 0);
     const totalConversions = allCampaigns.reduce((s, c) => s + (c.conversions || c.results || 0), 0);
     const totalRevenue = allCampaigns.reduce((s, c) => s + (c.revenue || 0), 0);
-    const realROAS = totalSpend > 0 ? totalRevenue / totalSpend : 0;
-    const realCPA = totalConversions > 0 ? totalSpend / totalConversions : 0;
+    const reportedROAS = totalSpend > 0 ? totalRevenue / totalSpend : 0;
+    const reportedCPA = totalConversions > 0 ? totalSpend / totalConversions : 0;
     const metaSpend = metaList.reduce((s, c) => s + (c.spend || 0), 0);
     const metaRevenue = metaList.reduce((s, c) => s + (c.revenue || 0), 0);
     const metaConversions = metaList.reduce((s, c) => s + (c.results || 0), 0);
-    const metaROAS = metaSpend > 0 ? metaRevenue / metaSpend : 0;
-    const metaCPA = metaConversions > 0 ? metaSpend / metaConversions : 0;
-    return { allCampaigns, totalSpend, totalConversions, totalRevenue, realROAS, realCPA, metaSpend, metaRevenue, metaConversions, metaROAS, metaCPA };
+    const metaReportedROAS = metaSpend > 0 ? metaRevenue / metaSpend : 0;
+    const metaReportedCPA = metaConversions > 0 ? metaSpend / metaConversions : 0;
+    return { allCampaigns, totalSpend, totalConversions, totalRevenue, reportedROAS, reportedCPA, metaSpend, metaRevenue, metaConversions, metaReportedROAS, metaReportedCPA };
   }, [metaInsights, allGoogleAdsData, allTiktokData]);
 
   const showToast = (msg, type = 'success') => {
@@ -161,11 +161,11 @@ export default function MetaAdsPanel({ workspace, onRefreshMeta, clients, metaIn
     return (
       <span style={{
         display: 'inline-flex', alignItems: 'center', gap: 6,
-        background: isActive ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)',
-        color: isActive ? '#10b981' : 'var(--primary-container)',
+        background: isActive ? 'rgba(16,185,129,0.1)' : 'rgba(6, 182, 212,0.1)',
+        color: isActive ? '#06B6D4' : 'var(--primary-container)',
         padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700
       }}>
-        <span style={{ width: 6, height: 6, borderRadius: '50%', background: isActive ? '#10b981' : 'var(--primary-container)' }} />
+        <span style={{ width: 6, height: 6, borderRadius: '50%', background: isActive ? '#06B6D4' : 'var(--primary-container)' }} />
         {isActive ? 'Activo' : 'Pausado'}
       </span>
     );
@@ -432,13 +432,14 @@ export default function MetaAdsPanel({ workspace, onRefreshMeta, clients, metaIn
           {/* Hero ROAS Gauge */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
             <div style={{ background: 'var(--surface-container)', borderRadius: 16, padding: 24, textAlign: 'center', border: '1px solid var(--border-subtle)' }}>
-              <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginBottom: 8, fontWeight: 600 }}>ROAS REAL (TODAS LAS PLATAFORMAS)</div>
-              <div style={{ fontSize: 48, fontWeight: 900, color: attribution.realROAS >= 4 ? '#10b981' : attribution.realROAS >= 2 ? 'var(--primary-container)' : '#ef4444' }}>
-                {attribution.realROAS.toFixed(2)}x
+              <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginBottom: 8, fontWeight: 600 }} title="Autoreportado por Meta, Google y TikTok. No conciliado con la facturación real de Tiendanube.">ROAS REPORTADO (TODAS LAS PLATAFORMAS)</div>
+              <div style={{ fontSize: 48, fontWeight: 900, color: attribution.reportedROAS >= 4 ? '#06B6D4' : attribution.reportedROAS >= 2 ? 'var(--primary-container)' : '#E11D48' }}>
+                {attribution.reportedROAS.toFixed(2)}x
               </div>
               <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginTop: 4 }}>
-                {attribution.realROAS >= 4 ? 'Excelente' : attribution.realROAS >= 2 ? 'Bueno' : 'Necesita Optimización'}
+                {attribution.reportedROAS >= 4 ? 'Excelente' : attribution.reportedROAS >= 2 ? 'Bueno' : 'Necesita Optimización'}
               </div>
+              <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', marginTop: 6, opacity: 0.7 }}>⚠ Autoreportado por cada plataforma — no conciliado con Tiendanube</div>
             </div>
             <div style={{ background: 'var(--surface-container)', borderRadius: 16, padding: 24, textAlign: 'center', border: '1px solid var(--border-subtle)' }}>
               <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginBottom: 8, fontWeight: 600 }}>INVERSIÓN TOTAL</div>
@@ -450,9 +451,9 @@ export default function MetaAdsPanel({ workspace, onRefreshMeta, clients, metaIn
               </div>
             </div>
             <div style={{ background: 'var(--surface-container)', borderRadius: 16, padding: 24, textAlign: 'center', border: '1px solid var(--border-subtle)' }}>
-              <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginBottom: 8, fontWeight: 600 }}>CPA REAL</div>
+              <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginBottom: 8, fontWeight: 600 }} title="Autoreportado por las plataformas. No conciliado con la facturación real de Tiendanube.">CPA REPORTADO</div>
               <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--on-surface)' }}>
-                ${attribution.realCPA.toLocaleString('es-CO')}
+                ${attribution.reportedCPA.toLocaleString('es-CO')}
               </div>
               <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginTop: 4 }}>
                 por conversión
@@ -465,22 +466,26 @@ export default function MetaAdsPanel({ workspace, onRefreshMeta, clients, metaIn
             <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 20 }}>📘</span> Meta Ads — Atribución Detallada
             </h3>
+            <p style={{ margin: '0 0 16px', fontSize: 11, color: 'var(--on-surface-variant)', opacity: 0.8 }}>
+              ⚠ Revenue y conversiones son lo que Meta reporta como atribuido a tus anuncios (ventana 7d clic / 1d vista).
+              No están conciliados contra las órdenes reales de Tiendanube. No usar como base para decisiones de presupuesto.
+            </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 20 }}>
               <div style={{ background: 'rgba(99,102,241,0.08)', borderRadius: 12, padding: 16, textAlign: 'center' }}>
                 <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 600 }}>INVERSIÓN</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: '#6366f1' }}>${attribution.metaSpend.toLocaleString('es-CO')}</div>
               </div>
               <div style={{ background: 'rgba(16,185,129,0.08)', borderRadius: 12, padding: 16, textAlign: 'center' }}>
-                <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 600 }}>REVENUE</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: '#10b981' }}>${attribution.metaRevenue.toLocaleString('es-CO')}</div>
+                <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 600 }}>REVENUE (AUTOREPORTADO)</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: '#06B6D4' }}>${attribution.metaRevenue.toLocaleString('es-CO')}</div>
               </div>
-              <div style={{ background: 'rgba(245,158,11,0.08)', borderRadius: 12, padding: 16, textAlign: 'center' }}>
-                <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 600 }}>ROAS</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: attribution.metaROAS >= 3 ? '#10b981' : 'var(--primary-container)' }}>{attribution.metaROAS.toFixed(2)}x</div>
+              <div style={{ background: 'rgba(6, 182, 212,0.08)', borderRadius: 12, padding: 16, textAlign: 'center' }}>
+                <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 600 }}>ROAS (AUTOREPORTADO)</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: attribution.metaReportedROAS >= 3 ? '#06B6D4' : 'var(--primary-container)' }}>{attribution.metaReportedROAS.toFixed(2)}x</div>
               </div>
               <div style={{ background: 'rgba(239,68,68,0.08)', borderRadius: 12, padding: 16, textAlign: 'center' }}>
-                <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 600 }}>CPA</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: '#ef4444' }}>${attribution.metaCPA.toLocaleString('es-CO')}</div>
+                <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 600 }}>CPA (AUTOREPORTADO)</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: '#E11D48' }}>${attribution.metaReportedCPA.toLocaleString('es-CO')}</div>
               </div>
             </div>
             {attribution.allCampaigns.filter(c => c.platform === 'Meta').length > 0 && (
@@ -498,8 +503,8 @@ export default function MetaAdsPanel({ workspace, onRefreshMeta, clients, metaIn
                     <tr key={i} style={{ borderBottom: '1px solid var(--surface-container-low)' }}>
                       <td style={{ padding: '10px 12px', fontSize: 13, fontWeight: 600 }}>{c.name}</td>
                       <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right' }}>${c.spend.toLocaleString('es-CO')}</td>
-                      <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right', color: '#10b981' }}>${(c.revenue || 0).toLocaleString('es-CO')}</td>
-                      <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right', fontWeight: 700, color: (c.roas || 0) >= 3 ? '#10b981' : 'var(--primary-container)' }}>{(c.roas || 0).toFixed(2)}x</td>
+                      <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right', color: '#06B6D4' }}>${(c.revenue || 0).toLocaleString('es-CO')}</td>
+                      <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right', fontWeight: 700, color: (c.roas || 0) >= 3 ? '#06B6D4' : 'var(--primary-container)' }}>{(c.roas || 0).toFixed(2)}x</td>
                     </tr>
                   ))}
                 </tbody>
@@ -533,7 +538,7 @@ export default function MetaAdsPanel({ workspace, onRefreshMeta, clients, metaIn
                         <td style={{ padding: '10px 12px', fontSize: 13, fontWeight: 700 }}>{platform === 'Meta' ? '📘' : platform === 'Google' ? '🔍' : '🎵'} {platform}</td>
                         <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right' }}>${platSpend.toLocaleString('es-CO')}</td>
                         <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right' }}>{platConv}</td>
-                        <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right', fontWeight: 700, color: platROAS >= 3 ? '#10b981' : 'var(--primary-container)' }}>{platROAS.toFixed(2)}x</td>
+                        <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right', fontWeight: 700, color: platROAS >= 3 ? '#06B6D4' : 'var(--primary-container)' }}>{platROAS.toFixed(2)}x</td>
                         <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'right' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
                             <div style={{ width: 60, height: 6, background: 'var(--border-medium)', borderRadius: 3, overflow: 'hidden' }}>

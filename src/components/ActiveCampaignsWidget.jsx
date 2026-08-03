@@ -125,7 +125,7 @@ const ActiveCampaignsWidget = ({ workspace, onRefreshMeta }) => {
                   {camp.name}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 500 }}>
-                  <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: isActive(camp) ? '#10b981' : 'var(--primary-container)', boxShadow: isActive(camp) ? '0 0 8px rgba(16,185,129,0.5)' : 'none' }} />
+                  <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: isActive(camp) ? '#06B6D4' : 'var(--primary-container)', boxShadow: isActive(camp) ? '0 0 8px rgba(16,185,129,0.5)' : 'none' }} />
                   {isActive(camp) ? 'Entregando' : 'Pausada'} • {camp.daily_budget ? formatter.format(parseInt(camp.daily_budget) / 100) + '/día' : 'CBO'}
                 </div>
               </div>
@@ -136,7 +136,7 @@ const ActiveCampaignsWidget = ({ workspace, onRefreshMeta }) => {
                   disabled={togglingId === camp.id}
                   style={{
                     width: 44, height: 24, borderRadius: 12, position: 'relative', cursor: togglingId === camp.id ? 'wait' : 'pointer',
-                    background: isActive(camp) ? 'linear-gradient(90deg, #10b981, #34d399)' : 'var(--surface-container-high)',
+                    background: isActive(camp) ? 'linear-gradient(90deg, #06B6D4, #22d3ee)' : 'var(--surface-container-high)',
                     border: 'none', transition: 'background 0.3s',
                     opacity: togglingId === camp.id ? 0.5 : 1,
                     boxShadow: isActive(camp) ? '0 2px 8px rgba(16,185,129,0.3)' : 'none'

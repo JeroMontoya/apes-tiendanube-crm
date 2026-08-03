@@ -21,29 +21,46 @@ function playNotificationSound(urgency = 'info') {
     if (!audioContext) {
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
-    // Create a subtle notification sound using Web Audio API
+    const t = audioContext.currentTime;
+    
+    // Modern UI Sound Design: Softer attack, organic decay, subtle frequencies
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
     
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
     
-    // Different tones for different urgencies
-    const frequencies = {
-      urgent: [880, 660],
-      warning: [660, 550],
-      info: [523, 440],
-    };
+    // Choose waveforms that sound smoother
+    oscillator.type = 'sine';
     
-    const freq = frequencies[urgency] || frequencies.info;
-    oscillator.frequency.setValueAtTime(freq[0], audioContext.currentTime);
-    oscillator.frequency.setValueAtTime(freq[1], audioContext.currentTime + 0.1);
+    let freqs, duration;
     
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+    if (urgency === 'urgent') {
+      freqs = [880, 1108.73]; // A5 -> C#6 (alert)
+      duration = 0.4;
+      oscillator.type = 'triangle';
+    } else if (urgency === 'warning') {
+      freqs = [659.25, 523.25]; // E5 -> C5 (descending warning)
+      duration = 0.3;
+    } else {
+      // Info: Modern "Pop/Marimba" (Ascending C5 -> E5)
+      freqs = [523.25, 659.25];
+      duration = 0.25;
+    }
     
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.3);
+    // Pitch envelope
+    oscillator.frequency.setValueAtTime(freqs[0], t);
+    if (freqs[1]) {
+      oscillator.frequency.exponentialRampToValueAtTime(freqs[1], t + 0.08);
+    }
+    
+    // Amplitude envelope (fast attack, exponential release for "pop" feel)
+    gainNode.gain.setValueAtTime(0, t);
+    gainNode.gain.linearRampToValueAtTime(0.15, t + 0.02); // Quick fade in to avoid clicks
+    gainNode.gain.exponentialRampToValueAtTime(0.001, t + duration); // Smooth release
+    
+    oscillator.start(t);
+    oscillator.stop(t + duration);
   } catch (e) {
     // Silently fail if audio context is not available
   }

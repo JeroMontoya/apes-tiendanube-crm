@@ -35,19 +35,19 @@ const MATERIALS_TYPES = [
 ];
 
 const STATUS_FLOW = [
-  { key: 'pending', label: 'Pendiente', icon: ClipboardList, color: '#94a3b8', bg: 'rgba(148,163,184,0.1)' },
-  { key: 'cutting', label: 'Corte', icon: Scissors, color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.1)' },
-  { key: 'sewing', label: 'Costura', icon: Shirt, color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
+  { key: 'pending', label: 'Pendiente', icon: ClipboardList, color: '#8B9BB4', bg: 'rgba(148,163,184,0.1)' },
+  { key: 'cutting', label: 'Corte', icon: Scissors, color: 'var(--primary-container)', bg: 'rgba(6, 182, 212,0.1)' },
+  { key: 'sewing', label: 'Costura', icon: Shirt, color: '#6366f1', bg: 'rgba(99, 102, 241,0.1)' },
   { key: 'printing', label: 'Estampado', icon: Printer, color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
   { key: 'quality', label: 'Control', icon: CheckCircle, color: '#06b6d4', bg: 'rgba(6,182,212,0.1)' },
-  { key: 'ready', label: 'Listo', icon: Sparkles, color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
+  { key: 'ready', label: 'Listo', icon: Sparkles, color: '#06B6D4', bg: 'rgba(16,185,129,0.1)' },
   { key: 'shipped', label: 'Despachado', icon: Truck, color: '#6366f1', bg: 'rgba(99,102,241,0.1)' },
 ];
 
 const PRIORITY_MAP = {
-  urgente: { label: 'Urgente', color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
-  alta: { label: 'Alta', color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.1)' },
-  normal: { label: 'Normal', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
+  urgente: { label: 'Urgente', color: '#E11D48', bg: 'rgba(239,68,68,0.1)' },
+  alta: { label: 'Alta', color: 'var(--primary-container)', bg: 'rgba(6, 182, 212,0.1)' },
+  normal: { label: 'Normal', color: '#6366f1', bg: 'rgba(99, 102, 241,0.1)' },
   baja: { label: 'Baja', color: '#64748b', bg: 'rgba(100,116,139,0.1)' },
 };
 
@@ -100,11 +100,7 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
 
   const getAPI = async () => {
     if (!storeId) return null;
-    // Try system_config first (shared), then fall back to user workspace
-    const { data: sysConfig } = await supabase.from('system_config').select('tiendanube_access_token').eq('id', 'main').single();
-    const token = sysConfig?.tiendanube_access_token;
-    if (token) return new TiendanubeAPI(storeId, token);
-    // Fallback to user workspace
+    // Fetch from user workspace
     if (!session) return null;
     const { data } = await supabase.from('workspaces').select('tiendanube_access_token').eq('user_id', session.user.id).single();
     if (!data?.tiendanube_access_token) return null;
@@ -372,7 +368,7 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
               width: 42, height: 42, borderRadius: 12,
               background: 'linear-gradient(135deg, var(--primary-container), #f97316)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 4px 16px rgba(245,158,11,0.3)',
+              boxShadow: '0 4px 16px rgba(6, 182, 212,0.3)',
             }}>
               <Hammer size={22} color="#fff" />
             </div>
@@ -397,7 +393,7 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
               background: 'linear-gradient(135deg, var(--primary-container), #f97316)',
               color: 'var(--on-surface)', fontWeight: 700, fontSize: 13, cursor: 'pointer',
               display: 'flex', alignItems: 'center', gap: 8,
-              boxShadow: '0 4px 16px rgba(245,158,11,0.3)',
+              boxShadow: '0 4px 16px rgba(6, 182, 212,0.3)',
             }}>
               <Plus size={16} /> Nuevo Lote
             </button>
@@ -405,10 +401,10 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
           {activeTab === 'materials' && (
             <button onClick={() => setShowNewMaterial(true)} style={{
               padding: '10px 20px', borderRadius: 10, border: 'none',
-              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
               color: 'var(--on-surface)', fontWeight: 700, fontSize: 13, cursor: 'pointer',
               display: 'flex', alignItems: 'center', gap: 8,
-              boxShadow: '0 4px 16px rgba(59,130,246,0.3)',
+              boxShadow: '0 4px 16px rgba(99, 102, 241,0.3)',
             }}>
               <Plus size={16} /> Nuevo Material
             </button>
@@ -420,9 +416,9 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
       <div className="responsive-grid-xs" style={{ marginBottom: 20 }}>
         {[
           { label: 'Lotes Activos', value: stats.active, color: 'var(--primary-container)', icon: Hammer },
-          { label: 'Completados', value: stats.completed, color: '#10b981', icon: CheckCircle },
-          { label: 'Urgentes', value: stats.urgent, color: '#ef4444', icon: Flag },
-          { label: 'Unidades Totales', value: stats.totalUnits, color: '#3b82f6', icon: Hash },
+          { label: 'Completados', value: stats.completed, color: '#06B6D4', icon: CheckCircle },
+          { label: 'Urgentes', value: stats.urgent, color: '#E11D48', icon: Flag },
+          { label: 'Unidades Totales', value: stats.totalUnits, color: '#6366f1', icon: Hash },
           { label: 'Materiales', value: materials.length, color: '#8b5cf6', icon: Layers },
           { label: 'Stock Bajo', value: stats.lowMaterials, color: '#06b6d4', icon: AlertTriangle },
         ].map(s => (
@@ -669,7 +665,7 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
                                         <span style={{ color: 'var(--on-surface)' }}>{v.color || '—'}</span>
                                         <span style={{ color: 'var(--on-surface-variant)' }}>{v.size || '—'}</span>
                                         <span style={{ fontFamily: "'JetBrains Mono', monospace", color: 'var(--on-surface-variant)' }}>
-                                          {currentStock} → <span style={{ color: '#10b981', fontWeight: 700 }}>{afterStock}</span>
+                                          {currentStock} → <span style={{ color: '#06B6D4', fontWeight: 700 }}>{afterStock}</span>
                                         </span>
                                       </div>
                                     );
@@ -693,22 +689,22 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
                                     {size.produced || 0}<span style={{ fontSize: 12, fontWeight: 500, color: 'var(--on-surface-variant)' }}>/{size.quantity}</span>
                                   </div>
                                   <div style={{ width: '100%', height: 4, borderRadius: 2, background: 'var(--glass-border)', overflow: 'hidden', margin: '8px 0' }}>
-                                    <div style={{ height: '100%', borderRadius: 2, width: `${sizeProgress}%`, background: hasDefect ? 'linear-gradient(90deg, #10b981, #ef4444)' : `linear-gradient(90deg, ${statusInfo.color}, ${statusInfo.color}80)`, transition: 'width 0.3s' }} />
+                                    <div style={{ height: '100%', borderRadius: 2, width: `${sizeProgress}%`, background: hasDefect ? 'linear-gradient(90deg, #06B6D4, #E11D48)' : `linear-gradient(90deg, ${statusInfo.color}, ${statusInfo.color}80)`, transition: 'width 0.3s' }} />
                                   </div>
                                   {hasDefect && (
-                                    <div style={{ fontSize: 10, color: '#ef4444', fontWeight: 600 }}>⚠ {size.defect} defecto{size.defect !== 1 ? 's' : ''}</div>
+                                    <div style={{ fontSize: 10, color: '#E11D48', fontWeight: 600 }}>⚠ {size.defect} defecto{size.defect !== 1 ? 's' : ''}</div>
                                   )}
                                   <div style={{ display: 'flex', gap: 4, marginTop: 8, justifyContent: 'center' }}>
                                     <button onClick={() => updateSizeProduced(size.id, Math.min((size.produced || 0) + 1, size.quantity), size.defect)}
-                                      style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.1)', color: '#10b981', cursor: 'pointer', fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                      style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.1)', color: '#06B6D4', cursor: 'pointer', fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                       +
                                     </button>
                                     <button onClick={() => updateSizeProduced(size.id, Math.max((size.produced || 0) - 1, 0), size.defect)}
-                                      style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.1)', color: '#ef4444', cursor: 'pointer', fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                      style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.1)', color: '#E11D48', cursor: 'pointer', fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                       −
                                     </button>
                                     <button onClick={() => setDefectModal({ sizeId: size.id, sizeName: size.size, produced: size.produced || 0, defect: size.defect || 0 })}
-                                      style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.1)', color: 'var(--primary-container)', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                      style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid rgba(6, 182, 212,0.3)', background: 'rgba(6, 182, 212,0.1)', color: 'var(--primary-container)', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                       ⚠
                                     </button>
                                   </div>
@@ -725,7 +721,7 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
                             {batch.started_at && <span>Iniciado: {new Date(batch.started_at).toLocaleDateString('es-CO')}</span>}
                           </div>
                           <div style={{ display: 'flex', gap: 8 }}>
-                            <button onClick={() => setConfirmDelete({ id: batch.id, name: batch.product_name })} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.08)', color: '#ef4444', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <button onClick={() => setConfirmDelete({ id: batch.id, name: batch.product_name })} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.08)', color: '#E11D48', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                               <Trash2 size={12} /> Eliminar
                             </button>
                           </div>
@@ -779,7 +775,7 @@ export default function WorkshopPage({ products, onRefresh, isRefreshing, onUpda
                 <button onClick={() => setConfirmDelete(null)} style={{ flex: 1, padding: '10px 16px', borderRadius: 10, border: '1px solid var(--border-medium)', background: 'var(--border-subtle)', color: 'var(--on-surface)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
                   Cancelar
                 </button>
-                <button onClick={() => deleteBatch(confirmDelete.id)} style={{ flex: 1, padding: '10px 16px', borderRadius: 10, border: 'none', background: 'rgba(239,68,68,0.15)', color: '#ef4444', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                <button onClick={() => deleteBatch(confirmDelete.id)} style={{ flex: 1, padding: '10px 16px', borderRadius: 10, border: 'none', background: 'rgba(239,68,68,0.15)', color: '#E11D48', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
                   <Trash2 size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Eliminar
                 </button>
               </div>
@@ -876,7 +872,7 @@ function NewBatchModal({ onClose, onCreate, products }) {
       category: form.category,
       material: form.material,
       color: variants[0]?.color || '',
-      colorHex: '#3b82f6',
+      colorHex: '#6366f1',
       priority: form.priority,
       dueDate: form.dueDate,
       notes: form.notes,
@@ -941,7 +937,7 @@ function NewBatchModal({ onClose, onCreate, products }) {
                       background: 'var(--surface-container-low)', border: '1px solid var(--glass-border)',
                       display: 'flex', alignItems: 'center', gap: 12, transition: 'all 0.15s',
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(245,158,11,0.06)'; e.currentTarget.style.borderColor = 'rgba(245,158,11,0.2)'; }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(6, 182, 212,0.06)'; e.currentTarget.style.borderColor = 'rgba(6, 182, 212,0.2)'; }}
                     onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface-container-low)'; e.currentTarget.style.borderColor = 'var(--glass-border)'; }}
                     >
                       {img ? (
@@ -969,7 +965,7 @@ function NewBatchModal({ onClose, onCreate, products }) {
               {/* Product info */}
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12,
-                background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)', marginBottom: 16,
+                background: 'rgba(6, 182, 212,0.06)', border: '1px solid rgba(6, 182, 212,0.15)', marginBottom: 16,
               }}>
                 {selectedProduct.images?.[0]?.src && (
                   <img src={selectedProduct.images[0].src} alt="" style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover' }} />
@@ -999,8 +995,8 @@ function NewBatchModal({ onClose, onCreate, products }) {
                   return (
                     <div key={v.id} style={{
                       padding: '10px 6px', borderRadius: 10, textAlign: 'center',
-                      background: qty > 0 ? 'rgba(245,158,11,0.08)' : 'var(--surface-container-low)',
-                      border: qty > 0 ? '1.5px solid rgba(245,158,11,0.2)' : '1.5px solid var(--glass-border)',
+                      background: qty > 0 ? 'rgba(6, 182, 212,0.08)' : 'var(--surface-container-low)',
+                      border: qty > 0 ? '1.5px solid rgba(6, 182, 212,0.2)' : '1.5px solid var(--glass-border)',
                       transition: 'all 0.15s',
                     }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: qty > 0 ? 'var(--primary-container)' : 'var(--on-surface)', marginBottom: 2 }}>
@@ -1013,7 +1009,7 @@ function NewBatchModal({ onClose, onCreate, products }) {
                         fontSize: 9, fontWeight: 600, padding: '1px 4px', borderRadius: 4,
                         display: 'inline-block', marginBottom: 6,
                         background: isUnlimited ? 'rgba(6,182,212,0.1)' : isLow ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)',
-                        color: isUnlimited ? '#06b6d4' : isLow ? '#ef4444' : '#10b981',
+                        color: isUnlimited ? '#06b6d4' : isLow ? '#E11D48' : '#06B6D4',
                       }}>
                         {isUnlimited ? '∞' : v.stock}
                       </div>
@@ -1075,7 +1071,7 @@ function NewBatchModal({ onClose, onCreate, products }) {
                 color: 'var(--on-surface)', fontWeight: 700, fontSize: 14,
                 cursor: totalUnits > 0 ? 'pointer' : 'not-allowed',
                 opacity: totalUnits > 0 ? 1 : 0.5,
-                marginTop: 20, boxShadow: totalUnits > 0 ? '0 4px 16px rgba(245,158,11,0.3)' : 'none',
+                marginTop: 20, boxShadow: totalUnits > 0 ? '0 4px 16px rgba(6, 182, 212,0.3)' : 'none',
               }}>
                 <Sparkles size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />
                 Crear Lote ({totalUnits} unidades)
@@ -1113,7 +1109,7 @@ function MaterialsPanel({ materials, onUpdateStock, loadData }) {
               padding: '16px', borderRadius: 12,
               background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)',
               border: `1px solid ${isLow ? 'rgba(239,68,68,0.2)' : 'var(--glass-border)'}`,
-              borderLeft: `3px solid ${isLow ? '#ef4444' : '#8b5cf6'}`,
+              borderLeft: `3px solid ${isLow ? '#E11D48' : '#8b5cf6'}`,
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
                 <div>
@@ -1122,17 +1118,17 @@ function MaterialsPanel({ materials, onUpdateStock, loadData }) {
                     {mat.category} · {mat.color || '—'} · ${mat.cost_per_unit}/{mat.unit}
                   </div>
                 </div>
-                {isLow && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: '#ef444415', color: '#ef4444' }}>STOCK BAJO</span>}
+                {isLow && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: '#E11D4815', color: '#E11D48' }}>STOCK BAJO</span>}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: isLow ? '#ef4444' : '#10b981', fontFamily: "'JetBrains Mono', monospace" }}>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: isLow ? '#E11D48' : '#06B6D4', fontFamily: "'JetBrains Mono', monospace" }}>
                     {editingId === mat.id ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                         <input type="number" value={editValue} onChange={e => setEditValue(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter') { onUpdateStock(mat.id, parseFloat(editValue) || 0); setEditingId(null); } }}
                           autoFocus style={{ width: 70, padding: '2px 6px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', background: 'var(--outline)', color: 'var(--on-surface)', fontSize: 16, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace" }} />
-                        <button onClick={() => { onUpdateStock(mat.id, parseFloat(editValue) || 0); setEditingId(null); }} style={{ background: 'none', border: 'none', color: '#10b981', cursor: 'pointer' }}><CheckCircle size={14} /></button>
+                        <button onClick={() => { onUpdateStock(mat.id, parseFloat(editValue) || 0); setEditingId(null); }} style={{ background: 'none', border: 'none', color: '#06B6D4', cursor: 'pointer' }}><CheckCircle size={14} /></button>
                       </div>
                     ) : (
                       <span onClick={() => { setEditingId(mat.id); setEditValue(String(mat.stock_quantity)); }} style={{ cursor: 'pointer' }}>
@@ -1143,7 +1139,7 @@ function MaterialsPanel({ materials, onUpdateStock, loadData }) {
                   <div style={{ fontSize: 10, color: 'var(--on-surface-variant)' }}>Mín: {mat.min_stock} {mat.unit}</div>
                 </div>
                 <div style={{ width: 60, height: 4, borderRadius: 2, background: 'var(--glass-border)', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', borderRadius: 2, width: `${Math.min((mat.stock_quantity / Math.max(mat.min_stock * 3, 1)) * 100, 100)}%`, background: isLow ? '#ef4444' : '#10b981', transition: 'width 0.3s' }} />
+                  <div style={{ height: '100%', borderRadius: 2, width: `${Math.min((mat.stock_quantity / Math.max(mat.min_stock * 3, 1)) * 100, 100)}%`, background: isLow ? '#E11D48' : '#06B6D4', transition: 'width 0.3s' }} />
                 </div>
               </div>
             </div>
@@ -1202,7 +1198,7 @@ function NewMaterialModal({ onClose, onCreate }) {
           </div>
           <button onClick={() => { if (!form.name.trim()) return; onCreate(form); }}
             disabled={!form.name.trim()}
-            style={{ width: '100%', padding: '12px 20px', borderRadius: 12, border: 'none', background: form.name.trim() ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'var(--border-subtle)', color: 'var(--on-surface)', fontWeight: 700, fontSize: 14, cursor: form.name.trim() ? 'pointer' : 'not-allowed', opacity: form.name.trim() ? 1 : 0.5, marginTop: 16 }}>
+            style={{ width: '100%', padding: '12px 20px', borderRadius: 12, border: 'none', background: form.name.trim() ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'var(--border-subtle)', color: 'var(--on-surface)', fontWeight: 700, fontSize: 14, cursor: form.name.trim() ? 'pointer' : 'not-allowed', opacity: form.name.trim() ? 1 : 0.5, marginTop: 16 }}>
             Crear Material
           </button>
         </div>

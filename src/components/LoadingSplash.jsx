@@ -3,11 +3,11 @@ import { Sparkles, BarChart2, Zap, Target, Brain, Shield, TrendingUp, ArrowRight
 
 const FEATURES = [
   { icon: Sparkles, label: 'IA Generativa', color: '#8b5cf6', delay: 0 },
-  { icon: BarChart2, label: 'Analytics Unificado', color: '#3b82f6', delay: 120 },
+  { icon: BarChart2, label: 'Analytics Unificado', color: '#6366f1', delay: 120 },
   { icon: Zap, label: 'Meta Ads Sync', color: '#1877F2', delay: 240 },
   { icon: Target, label: 'Metas Inteligentes', color: '#f43f5e', delay: 360 },
   { icon: Brain, label: 'Predicción Churn', color: '#06b6d4', delay: 480 },
-  { icon: TrendingUp, label: 'ROAS Tracking', color: '#10b981', delay: 600 },
+  { icon: TrendingUp, label: 'ROAS Tracking', color: '#06B6D4', delay: 600 },
   { icon: Shield, label: 'Seguridad Enterprise', color: 'var(--primary-container)', delay: 720 },
 ];
 

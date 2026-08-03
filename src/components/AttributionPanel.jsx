@@ -82,14 +82,14 @@ function getRealROAS(revenue, spend) {
 }
 
 function getStatusBadge(roas) {
-  if (roas > 4) return { label: 'Excelente', color: '#10b981' };
+  if (roas > 4) return { label: 'Excelente', color: '#06B6D4' };
   if (roas >= 2) return { label: 'Bueno', color: 'var(--primary-container)' };
-  return { label: 'Necesita Optimización', color: '#ef4444' };
+  return { label: 'Necesita Optimización', color: '#E11D48' };
 }
 
 const styles = {
   container: {
-    backgroundColor: '#0f1117',
+    backgroundColor: '#090B0F',
     minHeight: '100vh',
     color: '#e2e8f0',
     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
@@ -126,7 +126,7 @@ const styles = {
   },
   subtitle: {
     fontSize: '13px',
-    color: '#94a3b8',
+    color: '#8B9BB4',
     margin: 0
   },
   refreshBtn: {
@@ -190,7 +190,7 @@ const styles = {
   },
   gaugeLabel: {
     fontSize: '11px',
-    color: '#94a3b8',
+    color: '#8B9BB4',
     marginTop: '4px',
     textTransform: 'uppercase',
     letterSpacing: '1px'
@@ -211,7 +211,7 @@ const styles = {
   },
   heroDesc: {
     fontSize: '13px',
-    color: '#94a3b8',
+    color: '#8B9BB4',
     lineHeight: 1.6,
     maxWidth: '400px'
   },
@@ -245,7 +245,7 @@ const styles = {
   },
   summaryCardLabel: {
     fontSize: '12px',
-    color: '#94a3b8',
+    color: '#8B9BB4',
     textTransform: 'uppercase',
     letterSpacing: '0.5px'
   },
@@ -278,7 +278,7 @@ const styles = {
   },
   tabInactive: {
     background: 'transparent',
-    color: '#94a3b8'
+    color: '#8B9BB4'
   },
   tableContainer: {
     background: '#1a1d27',
@@ -296,7 +296,7 @@ const styles = {
     textAlign: 'left',
     fontSize: '11px',
     fontWeight: 600,
-    color: '#94a3b8',
+    color: '#8B9BB4',
     textTransform: 'uppercase',
     letterSpacing: '0.5px',
     borderBottom: '1px solid var(--glass-border)',
@@ -365,7 +365,7 @@ const styles = {
   }),
   funnelLabel: {
     fontSize: '12px',
-    color: '#94a3b8',
+    color: '#8B9BB4',
     marginTop: '8px',
     textAlign: 'center'
   },
@@ -426,7 +426,7 @@ const styles = {
   },
   campaignMetric: {
     fontSize: '11px',
-    color: '#94a3b8',
+    color: '#8B9BB4',
     marginTop: '2px'
   },
   rankBadge: (color) => ({
@@ -464,7 +464,7 @@ const styles = {
     opacity: 0.6
   },
   searchInput: {
-    background: '#0f1117',
+    background: '#090B0F',
     border: '1px solid var(--border-medium)',
     borderRadius: '8px',
     padding: '8px 12px 8px 36px',
@@ -609,7 +609,7 @@ export default function AttributionPanel({ clients = [], metaInsights = { campai
     { label: 'Impressions', value: totalImpressions, color: '#6366f1' },
     { label: 'Clicks', value: totalClicks, color: '#8b5cf6' },
     { label: 'Leads', value: totalLeads, color: '#a78bfa' },
-    { label: 'Deals', value: totalDeals, color: '#10b981' },
+    { label: 'Deals', value: totalDeals, color: '#06B6D4' },
     { label: 'Revenue', value: totalRevenue, color: 'var(--primary-container)', isCurrency: true }
   ];
 
@@ -680,14 +680,14 @@ export default function AttributionPanel({ clients = [], metaInsights = { campai
 
   const summaryCards = [
     { label: 'Total Inversión', value: getCurrency(totalSpend), icon: <DollarSign size={18} />, color: '#6366f1', bg: 'rgba(99,102,241,0.15)' },
-    { label: 'Revenue Atribuido', value: getCurrency(totalRevenue), icon: <TrendingUp size={18} />, color: '#10b981', bg: 'rgba(16,185,129,0.15)' },
+    { label: 'Revenue Atribuido', value: getCurrency(totalRevenue), icon: <TrendingUp size={18} />, color: '#06B6D4', bg: 'rgba(16,185,129,0.15)' },
     { label: 'ROAS Real', value: `${overallRoas.toFixed(2)}x`, icon: <Target size={18} />, color: overallStatus.color, bg: `${overallStatus.color}22` },
     { label: 'Total Leads', value: totalLeads.toLocaleString(), icon: <Users size={18} />, color: '#a78bfa', bg: 'rgba(167,139,250,0.15)' },
-    { label: 'Deals Cerrados', value: totalDeals.toLocaleString(), icon: <Award size={18} />, color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.15)' },
-    { label: 'CPA Real', value: getCurrency(overallCpa), icon: <AlertTriangle size={18} />, color: '#ef4444', bg: 'rgba(239,68,68,0.15)' }
+    { label: 'Deals Cerrados', value: totalDeals.toLocaleString(), icon: <Award size={18} />, color: 'var(--primary-container)', bg: 'rgba(6, 182, 212,0.15)' },
+    { label: 'CPA Real', value: getCurrency(overallCpa), icon: <AlertTriangle size={18} />, color: '#E11D48', bg: 'rgba(239,68,68,0.15)' }
   ];
 
-  const rankColors = ['var(--primary-container)', '#94a3b8', '#cd7f32', '#6366f1', '#10b981'];
+  const rankColors = ['var(--primary-container)', '#8B9BB4', '#818cf8', '#6366f1', '#06B6D4'];
   const rankLabels = ['Oro', 'Plata', 'Bronce', '4to', '5to'];
 
   return (
@@ -703,7 +703,7 @@ export default function AttributionPanel({ clients = [], metaInsights = { campai
           </div>
         </div>
         {dateRange.startDate && dateRange.endDate && (
-          <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+          <div style={{ fontSize: '12px', color: '#8B9BB4' }}>
             {dateRange.startDate} — {dateRange.endDate}
           </div>
         )}
@@ -867,8 +867,8 @@ export default function AttributionPanel({ clients = [], metaInsights = { campai
                                    campaign.platform === 'Google' ? 'rgba(16,185,129,0.15)' :
                                    'rgba(239,68,68,0.15)',
                         color: campaign.platform === 'Meta' ? '#6366f1' :
-                               campaign.platform === 'Google' ? '#10b981' :
-                               '#ef4444'
+                               campaign.platform === 'Google' ? '#06B6D4' :
+                               '#E11D48'
                       }}>
                         {campaign.platform}
                       </span>
@@ -877,7 +877,7 @@ export default function AttributionPanel({ clients = [], metaInsights = { campai
                   <td style={styles.td}>{getCurrency(campaign.spend)}</td>
                   <td style={styles.td}>{campaign.leads}</td>
                   <td style={styles.td}>{campaign.deals}</td>
-                  <td style={{ ...styles.td, fontWeight: 600, color: campaign.attributedRevenue > 0 ? '#10b981' : '#64748b' }}>
+                  <td style={{ ...styles.td, fontWeight: 600, color: campaign.attributedRevenue > 0 ? '#06B6D4' : '#64748b' }}>
                     {getCurrency(campaign.attributedRevenue)}
                   </td>
                   <td style={styles.td}>
@@ -929,7 +929,7 @@ export default function AttributionPanel({ clients = [], metaInsights = { campai
                   <div style={{ fontSize: '16px', fontWeight: 700, color: rankColors[i] }}>
                     {campaign.realRoas.toFixed(2)}x
                   </div>
-                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                  <div style={{ fontSize: '11px', color: '#8B9BB4' }}>
                     {getCurrency(campaign.attributedRevenue)} revenue
                   </div>
                 </div>
@@ -940,18 +940,18 @@ export default function AttributionPanel({ clients = [], metaInsights = { campai
 
         <div style={styles.campaignsPanel}>
           <div style={styles.campaignsPanelHeader}>
-            <AlertTriangle size={18} color="#ef4444" />
+            <AlertTriangle size={18} color="#E11D48" />
             <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600 }}>Campañas Underperforming</h3>
           </div>
           {underperforming.length === 0 ? (
-            <div style={{ ...styles.emptyState, color: '#10b981' }}>
+            <div style={{ ...styles.emptyState, color: '#06B6D4' }}>
               <Award size={32} style={{ margin: '0 auto 12px', display: 'block', opacity: 0.5 }} />
               Todas las campañas tienen ROAS ≥ 1
             </div>
           ) : (
             underperforming.map((campaign, i) => (
               <div key={i} style={styles.campaignItem}>
-                <div style={{ ...styles.rankBadge('#ef4444') }}>
+                <div style={{ ...styles.rankBadge('#E11D48') }}>
                   <TrendingDown size={14} />
                 </div>
                 <div style={{ flex: 1 }}>

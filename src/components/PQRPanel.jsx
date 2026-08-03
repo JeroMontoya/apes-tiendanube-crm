@@ -20,8 +20,8 @@ const RETURN_REASONS = [
 
 const TRACKER_STEPS = [
   { id: 'sent_to_us', label: 'Recibido', icon: Inbox, color: 'var(--primary-container)', gradient: 'linear-gradient(135deg, var(--primary-container), #f97316)' },
-  { id: 'in_warehouse', label: 'En Bodega', icon: Warehouse, color: '#3b82f6', gradient: 'linear-gradient(135deg, #3b82f6, #6366f1)' },
-  { id: 'sent_to_client', label: 'Resuelto', icon: CheckCircle2, color: '#10b981', gradient: 'linear-gradient(135deg, #10b981, #059669)' }
+  { id: 'in_warehouse', label: 'En Bodega', icon: Warehouse, color: '#6366f1', gradient: 'linear-gradient(135deg, #6366f1, #6366f1)' },
+  { id: 'sent_to_client', label: 'Resuelto', icon: CheckCircle2, color: '#06B6D4', gradient: 'linear-gradient(135deg, #06B6D4, #0891b2)' }
 ];
 
 function getWhatsAppUrl(phone, name, orderNum) {
@@ -66,8 +66,8 @@ const S = {
     transition: 'all 0.25s cubic-bezier(0.16,1,0.3,1)'
   },
   btnPrimary: {
-    background: 'linear-gradient(135deg, #3b82f6, #6366f1)', color: 'var(--on-surface)',
-    boxShadow: '0 4px 16px rgba(59,130,246,0.35)'
+    background: 'linear-gradient(135deg, #6366f1, #6366f1)', color: 'var(--on-surface)',
+    boxShadow: '0 4px 16px rgba(99, 102, 241,0.35)'
   },
   btnSecondary: {
     background: 'var(--glass-border)', color: 'var(--on-surface)',
@@ -78,15 +78,15 @@ const S = {
     border: '1px solid transparent'
   },
   btnDanger: {
-    background: 'rgba(239,68,68,0.12)', color: '#ef4444',
+    background: 'rgba(239,68,68,0.12)', color: '#E11D48',
     border: '1px solid rgba(239,68,68,0.2)'
   },
   btnOutline: {
     background: 'transparent', color: 'var(--primary)',
-    border: '1px solid rgba(59,130,246,0.3)'
+    border: '1px solid rgba(99, 102, 241,0.3)'
   },
   btnSuccess: {
-    background: 'linear-gradient(135deg, #10b981, #059669)', color: 'var(--on-surface)',
+    background: 'linear-gradient(135deg, #06B6D4, #0891b2)', color: 'var(--on-surface)',
     boxShadow: '0 4px 16px rgba(16,185,129,0.3)'
   }
 };
@@ -469,9 +469,9 @@ export default function PQRPanel({ session, rawOrders = [] }) {
 
   const getStatus = (id) => {
     const map = {
-      sent_to_us: { label: 'Pendiente', color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.1)', icon: Clock },
-      in_warehouse: { label: 'En Bodega', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)', icon: Warehouse },
-      sent_to_client: { label: 'Resuelto', color: '#10b981', bg: 'rgba(16,185,129,0.1)', icon: CheckCircle2 }
+      sent_to_us: { label: 'Pendiente', color: 'var(--primary-container)', bg: 'rgba(6, 182, 212,0.1)', icon: Clock },
+      in_warehouse: { label: 'En Bodega', color: '#6366f1', bg: 'rgba(99, 102, 241,0.1)', icon: Warehouse },
+      sent_to_client: { label: 'Resuelto', color: '#06B6D4', bg: 'rgba(16,185,129,0.1)', icon: CheckCircle2 }
     };
     return map[id] || map.sent_to_us;
   };
@@ -531,7 +531,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
   const renderTrashList = () => (
     <>
       <div style={{ padding: '10px 20px', background: 'rgba(239,68,68,0.04)', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 10, fontWeight: 700, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <span style={{ fontSize: 10, fontWeight: 700, color: '#E11D48', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
           {trashCases.length} caso(s) en papelera
         </span>
         <span style={{ fontSize: 9, color: 'var(--on-surface-variant)' }}>Se eliminan después de 30 días</span>
@@ -553,17 +553,17 @@ export default function PQRPanel({ session, rawOrders = [] }) {
                 </span>
               </div>
               <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                <span style={{ fontSize: 9, color: daysLeft <= 7 ? '#ef4444' : 'var(--on-surface-variant)', fontWeight: daysLeft <= 7 ? 700 : 400 }}>
+                <span style={{ fontSize: 9, color: daysLeft <= 7 ? '#E11D48' : 'var(--on-surface-variant)', fontWeight: daysLeft <= 7 ? 700 : 400 }}>
                   {daysLeft}d restantes
                 </span>
                 <button onClick={() => handleRestore(pqr.id)} title="Restaurar caso"
-                  style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid rgba(59,130,246,0.3)', background: 'rgba(59,130,246,0.08)', color: '#3b82f6', cursor: 'pointer', fontSize: 10, fontWeight: 700, fontFamily: 'Inter, sans-serif', display: 'flex', alignItems: 'center', gap: 4, transition: 'all 0.2s' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.18)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.08)'; }}>
+                  style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid rgba(99, 102, 241,0.3)', background: 'rgba(99, 102, 241,0.08)', color: '#6366f1', cursor: 'pointer', fontSize: 10, fontWeight: 700, fontFamily: 'Inter, sans-serif', display: 'flex', alignItems: 'center', gap: 4, transition: 'all 0.2s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(99, 102, 241,0.18)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(99, 102, 241,0.08)'; }}>
                   <RotateCcw size={10} /> Restaurar
                 </button>
                 <button onClick={() => handlePermanentDelete(pqr.id)} title="Eliminar permanentemente"
-                  style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.08)', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }}
+                  style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.08)', color: '#E11D48', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.2)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; }}>
                   <Trash2 size={11} />
@@ -590,11 +590,11 @@ export default function PQRPanel({ session, rawOrders = [] }) {
       <div className="pqr-left-panel">
 
         {/* Header */}
-        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border-subtle)', background: 'linear-gradient(180deg, rgba(59,130,246,0.04) 0%, transparent 100%)' }}>
+        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border-subtle)', background: 'linear-gradient(180deg, rgba(99, 102, 241,0.04) 0%, transparent 100%)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div>
               <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 34, height: 34, borderRadius: 'var(--radius-sm)', background: 'linear-gradient(135deg, #3b82f6, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(59,130,246,0.35)' }}>
+                <div style={{ width: 34, height: 34, borderRadius: 'var(--radius-sm)', background: 'linear-gradient(135deg, #6366f1, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(99, 102, 241,0.35)' }}>
                   <HeadsetIcon size={16} color="#fff" />
                 </div>
                 Soporte
@@ -617,8 +617,8 @@ export default function PQRPanel({ session, rawOrders = [] }) {
           <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
             {[
               { l: 'Pendientes', v: stats.pending, c: 'var(--primary-container)', emoji: '⏳' },
-              { l: 'Bodega', v: stats.warehouse, c: '#3b82f6', emoji: '📦' },
-              { l: 'Resueltos', v: stats.resolved, c: '#10b981', emoji: '✅' }
+              { l: 'Bodega', v: stats.warehouse, c: '#6366f1', emoji: '📦' },
+              { l: 'Resueltos', v: stats.resolved, c: '#06B6D4', emoji: '✅' }
             ].map((s, i) => (
               <div key={i} onClick={() => setFilterStatus(filterStatus === (['sent_to_us', 'in_warehouse', 'sent_to_client'][i]) ? 'all' : ['sent_to_us', 'in_warehouse', 'sent_to_client'][i])}
                 style={{ flex: 1, padding: '8px 6px', borderRadius: 10, background: `${s.c}08`, border: `1px solid ${s.c}18`, textAlign: 'center', cursor: 'pointer', transition: 'all 0.2s', opacity: filterStatus !== 'all' && filterStatus !== ['sent_to_us', 'in_warehouse', 'sent_to_client'][i] ? 0.4 : 1 }}
@@ -657,7 +657,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
               </button>
             ))}
             <button onClick={() => { setShowTrash(true); fetchTrash(); }}
-              style={{ padding: '4px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 10, fontWeight: showTrash ? 700 : 500, fontFamily: 'Inter, sans-serif', background: showTrash ? '#ef4444' : 'var(--surface-container)', color: showTrash ? '#fff' : 'var(--on-surface)', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 4 }}>
+              style={{ padding: '4px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 10, fontWeight: showTrash ? 700 : 500, fontFamily: 'Inter, sans-serif', background: showTrash ? '#E11D48' : 'var(--surface-container)', color: showTrash ? '#fff' : 'var(--on-surface)', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 4 }}>
               <Trash2 size={10} /> Papelera
             </button>
           </div>
@@ -788,7 +788,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
                     }}
                     onFocus={() => { if (orderSearch.length >= 1) { setShowDropdown(true); updateDropdownPos(); } }}
                     onClick={e => e.stopPropagation()}
-                    style={{ ...S.input, paddingLeft: 36, fontSize: 13, padding: '11px 14px 11px 38px', borderColor: hasData ? '#10b981' : 'var(--border-subtle)', boxShadow: hasData ? '0 0 0 2px rgba(16,185,129,0.15)' : 'none' }}
+                    style={{ ...S.input, paddingLeft: 36, fontSize: 13, padding: '11px 14px 11px 38px', borderColor: hasData ? '#06B6D4' : 'var(--border-subtle)', boxShadow: hasData ? '0 0 0 2px rgba(16,185,129,0.15)' : 'none' }}
                   />
                 </div>
                 {rawOrders.length === 0 && (
@@ -805,7 +805,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
                     <CheckCircle2 size={16} color="#fff" />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#10b981' }}>Datos cargados desde Tiendanube</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#06B6D4' }}>Datos cargados desde Tiendanube</div>
                     <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', display: 'flex', gap: 12, marginTop: 3, flexWrap: 'wrap' }}>
                       {formData.customer_name && <span>👤 {formData.customer_name}</span>}
                       {formData.customer_email && <span>📧 {formData.customer_email}</span>}
@@ -913,7 +913,7 @@ export default function PQRPanel({ session, rawOrders = [] }) {
               <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                 <button onClick={handleClose} title="Cerrar detalle"
                   style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid var(--border-subtle)', background: 'var(--surface-container-high)', color: 'var(--on-surface-variant)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', flexShrink: 0 }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--error-container)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; e.currentTarget.style.color = '#ef4444'; }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--error-container)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; e.currentTarget.style.color = '#E11D48'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface-container-high)'; e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.color = 'var(--on-surface-variant)'; }}>
                   <X size={15} />
                 </button>
@@ -1005,8 +1005,8 @@ export default function PQRPanel({ session, rawOrders = [] }) {
                     </div>
 
                     {/* Guía 2: Devolución del Cliente */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: selectedCase.return_tracking ? 'rgba(245,158,11,0.06)' : 'rgba(255,255,255,0.02)', border: `1px solid ${selectedCase.return_tracking ? 'rgba(245,158,11,0.2)' : 'var(--border-subtle)'}`, transition: 'all 0.2s' }}>
-                      <div style={{ width: 28, height: 28, borderRadius: 7, background: selectedCase.return_tracking ? 'rgba(245,158,11,0.12)' : 'var(--surface-container-high)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: selectedCase.return_tracking ? 'rgba(6, 182, 212,0.06)' : 'rgba(255,255,255,0.02)', border: `1px solid ${selectedCase.return_tracking ? 'rgba(6, 182, 212,0.2)' : 'var(--border-subtle)'}`, transition: 'all 0.2s' }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 7, background: selectedCase.return_tracking ? 'rgba(6, 182, 212,0.12)' : 'var(--surface-container-high)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <RotateCcw size={13} color={selectedCase.return_tracking ? 'var(--primary-container)' : 'var(--on-surface-variant)'} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
@@ -1022,12 +1022,12 @@ export default function PQRPanel({ session, rawOrders = [] }) {
                     {/* Guía 3: Reenvío / Retorno */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: selectedCase.resend_tracking ? 'rgba(16,185,129,0.06)' : 'rgba(255,255,255,0.02)', border: `1px solid ${selectedCase.resend_tracking ? 'rgba(16,185,129,0.2)' : 'var(--border-subtle)'}`, transition: 'all 0.2s' }}>
                       <div style={{ width: 28, height: 28, borderRadius: 7, background: selectedCase.resend_tracking ? 'rgba(16,185,129,0.12)' : 'var(--surface-container-high)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <Package size={13} color={selectedCase.resend_tracking ? '#10b981' : 'var(--on-surface-variant)'} />
+                        <Package size={13} color={selectedCase.resend_tracking ? '#06B6D4' : 'var(--on-surface-variant)'} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Reenvío al Cliente</div>
                         {selectedCase.resend_tracking ? (
-                          <div style={{ fontSize: 12, fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#10b981', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedCase.resend_tracking}</div>
+                          <div style={{ fontSize: 12, fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#06B6D4', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedCase.resend_tracking}</div>
                         ) : (
                           <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', opacity: 0.4, marginTop: 2, fontStyle: 'italic' }}>Pendiente de reenvío</div>
                         )}
@@ -1052,9 +1052,9 @@ export default function PQRPanel({ session, rawOrders = [] }) {
               {/* Manual Email Button */}
               {selectedCase.customer_email && (
                 <button onClick={handleSendEmail}
-                  style={{ ...S.glassCard, padding: '12px 18px', background: 'rgba(59,130,246,0.04)', border: '1px dashed rgba(59,130,246,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, width: '100%', fontFamily: 'Inter, sans-serif', transition: 'all 0.2s' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.08)'; e.currentTarget.style.borderColor = 'rgba(59,130,246,0.35)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.04)'; e.currentTarget.style.borderColor = 'rgba(59,130,246,0.2)'; }}
+                  style={{ ...S.glassCard, padding: '12px 18px', background: 'rgba(99, 102, 241,0.04)', border: '1px dashed rgba(99, 102, 241,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, width: '100%', fontFamily: 'Inter, sans-serif', transition: 'all 0.2s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(99, 102, 241,0.08)'; e.currentTarget.style.borderColor = 'rgba(99, 102, 241,0.35)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(99, 102, 241,0.04)'; e.currentTarget.style.borderColor = 'rgba(99, 102, 241,0.2)'; }}
                 >
                   <Mail size={16} color="var(--primary)" />
                   <div style={{ textAlign: 'left', flex: 1 }}>

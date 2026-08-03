@@ -11,10 +11,10 @@ import {
 const PIPELINE_COLUMNS = [
   { id: 'seleccionado',     label: 'Seleccionados',      color: '#6366f1', icon: Target,         desc: 'Audiencia elegida para esta campaña' },
   { id: 'contactado',       label: 'Contactados',        color: 'var(--primary-container)', icon: Megaphone,      desc: 'Mensaje/email/ad enviado' },
-  { id: 'interactuo',       label: 'Interactuaron',      color: '#3b82f6', icon: MousePointer,   desc: 'Abrieron, clickearon o respondieron' },
+  { id: 'interactuo',       label: 'Interactuaron',      color: '#6366f1', icon: MousePointer,   desc: 'Abrieron, clickearon o respondieron' },
   { id: 'respondio',        label: 'Respondieron',       color: '#8b5cf6', icon: MessageSquare,  desc: 'Contacto directo o respuesta' },
   { id: 'compro',           label: 'Compraron',          color: '#22c55e', icon: CreditCard,     desc: 'Conversión exitosa' },
-  { id: 'no_interesado',    label: 'No Interesados',     color: '#ef4444', icon: XCircle,        desc: 'Sin respuesta o rechazaron' },
+  { id: 'no_interesado',    label: 'No Interesados',     color: '#E11D48', icon: XCircle,        desc: 'Sin respuesta o rechazaron' },
 ];
 
 const PURCHASE_FILTERS = [
@@ -25,7 +25,7 @@ const PURCHASE_FILTERS = [
   { label: '5+ compras', min: 5, max: Infinity,  emoji: '🔴' },
 ];
 
-const CAMPAIGN_COLORS = ['#6366f1', 'var(--primary-container)', '#22c55e', '#ec4899', '#8b5cf6', '#14b8a6', '#f43f5e'];
+const CAMPAIGN_COLORS = ['#6366f1', 'var(--primary-container)', '#22c55e', '#8B5CF6', '#8b5cf6', '#14b8a6', '#f43f5e'];
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 function formatCurrency(amount) {
@@ -447,7 +447,7 @@ export default function CampaignPipeline({ unifiedClients = [] }) {
                       {activeCampaignId !== camp.id && (
                         <button 
                           onClick={(e) => { e.stopPropagation(); handleDeleteCampaign(camp.id); }}
-                          style={{ background: 'transparent', border: 'none', color: '#ef4444', opacity: 0.6, cursor: 'pointer', padding: 4 }}
+                          style={{ background: 'transparent', border: 'none', color: '#E11D48', opacity: 0.6, cursor: 'pointer', padding: 4 }}
                           title="Eliminar Campaña"
                         >
                           <Trash2 size={14} />
@@ -520,7 +520,7 @@ export default function CampaignPipeline({ unifiedClients = [] }) {
         </div>
         <div className="glass-card" style={{ padding: '18px 20px', textAlign: 'center' }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 6 }}>Engagement</div>
-          <div style={{ fontSize: 28, fontWeight: 800, color: '#3b82f6' }}>{funnelMetrics.engagementRate}%</div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: '#6366f1' }}>{funnelMetrics.engagementRate}%</div>
           <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 4 }}>
             <MousePointer size={12} /> interacción total
           </div>
@@ -626,7 +626,7 @@ export default function CampaignPipeline({ unifiedClients = [] }) {
               {purchaseFilter && (
                 <button
                   onClick={() => setPurchaseFilter(null)}
-                  style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid #ef444444', background: 'transparent', color: '#ef4444', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}
+                  style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid #E11D4844', background: 'transparent', color: '#E11D48', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}
                 >
                   <X size={12} /> Limpiar
                 </button>
@@ -808,7 +808,7 @@ export default function CampaignPipeline({ unifiedClients = [] }) {
                             onClick={() => { if (window.confirm(`¿Eliminar a ${lead.name || 'este contacto'} de la campaña?`)) deleteLead(lead.id); }}
                             style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--on-surface-variant)', cursor: 'pointer' }}
                           >
-                            <Trash2 size={14} color="#ef4444" />
+                            <Trash2 size={14} color="#E11D48" />
                           </button>
                         </div>
                       </div>

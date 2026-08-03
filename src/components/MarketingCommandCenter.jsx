@@ -33,7 +33,7 @@ const TABS = [
 ];
 
 const S = {
-  container: { padding: '24px', animation: 'fadeIn 0.5s ease', minHeight: '100vh', background: 'var(--surface-lowest, #0f1117)' },
+  container: { padding: '24px', animation: 'fadeIn 0.5s ease', minHeight: '100vh', background: 'var(--surface-lowest, #090B0F)' },
   tabBar: { 
     display: 'flex', gap: 6, marginBottom: 24, padding: '4px',
     background: 'var(--surface-container, #1a1d27)', borderRadius: 12, overflowX: 'auto' 
@@ -87,7 +87,7 @@ export default function MarketingCommandCenter({
     <div style={S.container}>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: 12, color: 'var(--on-surface)' }}>
-          <Layers size={24} color="#3b82f6" /> Centro de Marketing Unificado
+          <Layers size={24} color="#6366f1" /> Centro de Marketing Unificado
         </h1>
         <p style={{ margin: '4px 0 0', color: 'var(--on-surface-variant)', fontSize: 13 }}>
           Gobernanza completa de adquisición, retención y posicionamiento.

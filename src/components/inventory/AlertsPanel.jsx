@@ -5,9 +5,9 @@ import {
 } from 'lucide-react';
 
 const SEVERITY_CONFIG = {
-  critical: { label: 'Crítica', color: '#ef4444', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.3)', icon: XCircle },
-  high: { label: 'Alta', color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.3)', icon: AlertTriangle },
-  medium: { label: 'Media', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)', border: 'rgba(59,130,246,0.3)', icon: Bell },
+  critical: { label: 'Crítica', color: '#E11D48', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.3)', icon: XCircle },
+  high: { label: 'Alta', color: 'var(--primary-container)', bg: 'rgba(6, 182, 212,0.1)', border: 'rgba(6, 182, 212,0.3)', icon: AlertTriangle },
+  medium: { label: 'Media', color: '#6366f1', bg: 'rgba(99, 102, 241,0.1)', border: 'rgba(99, 102, 241,0.3)', icon: Bell },
   low: { label: 'Baja', color: '#64748b', bg: 'rgba(100,116,139,0.1)', border: 'rgba(100,116,139,0.3)', icon: Bell },
 };
 
@@ -78,7 +78,7 @@ export default function AlertsPanel({ alerts, onAcknowledge, onCheck, loading })
           border: `1px solid ${unacknowledgedCount > 0 ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)'}`,
           display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: '180px',
         }}>
-          <Bell size={18} color={unacknowledgedCount > 0 ? '#ef4444' : '#10b981'} />
+          <Bell size={18} color={unacknowledgedCount > 0 ? '#E11D48' : '#06B6D4'} />
           <div>
             <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--on-surface)' }}>{unacknowledgedCount}</div>
             <div style={{ fontSize: '10px', color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Pendientes</div>
@@ -91,9 +91,9 @@ export default function AlertsPanel({ alerts, onAcknowledge, onCheck, loading })
             border: '1px solid rgba(239,68,68,0.4)',
             display: 'flex', alignItems: 'center', gap: '10px',
           }}>
-            <XCircle size={18} color="#ef4444" />
+            <XCircle size={18} color="#E11D48" />
             <div>
-              <div style={{ fontSize: '20px', fontWeight: '800', color: '#ef4444' }}>{criticalCount}</div>
+              <div style={{ fontSize: '20px', fontWeight: '800', color: '#E11D48' }}>{criticalCount}</div>
               <div style={{ fontSize: '10px', color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Críticas</div>
             </div>
           </div>
@@ -103,7 +103,7 @@ export default function AlertsPanel({ alerts, onAcknowledge, onCheck, loading })
           disabled={loading}
           style={{
             padding: '10px 18px', borderRadius: '10px', border: 'none',
-            background: '#3b82f6', color: 'var(--on-surface)', fontSize: '12px', fontWeight: '700',
+            background: '#6366f1', color: 'var(--on-surface)', fontSize: '12px', fontWeight: '700',
             cursor: loading ? 'wait' : 'pointer', fontFamily: 'inherit',
             display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto',
           }}
@@ -136,9 +136,9 @@ export default function AlertsPanel({ alerts, onAcknowledge, onCheck, loading })
           onClick={() => setShowAcknowledged(!showAcknowledged)}
           style={{
             ...inputStyle,
-            background: showAcknowledged ? 'rgba(59,130,246,0.1)' : 'var(--surface)',
-            color: showAcknowledged ? '#3b82f6' : 'var(--on-surface-variant)',
-            border: `1px solid ${showAcknowledged ? 'rgba(59,130,246,0.3)' : 'var(--border-subtle)'}`,
+            background: showAcknowledged ? 'rgba(99, 102, 241,0.1)' : 'var(--surface)',
+            color: showAcknowledged ? '#6366f1' : 'var(--on-surface-variant)',
+            border: `1px solid ${showAcknowledged ? 'rgba(99, 102, 241,0.3)' : 'var(--border-subtle)'}`,
           }}
         >
           {showAcknowledged ? 'Ocultar' : 'Mostrar'} atendidas
@@ -152,7 +152,7 @@ export default function AlertsPanel({ alerts, onAcknowledge, onCheck, loading })
         </div>
       ) : filteredAlerts.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '50px', color: 'var(--on-surface-variant)' }}>
-          <CheckCircle size={40} style={{ opacity: 0.3, color: '#10b981', marginBottom: '10px' }} />
+          <CheckCircle size={40} style={{ opacity: 0.3, color: '#06B6D4', marginBottom: '10px' }} />
           <p style={{ margin: 0, fontSize: '15px', fontWeight: '600' }}>Sin alertas</p>
           <p style={{ margin: '4px 0 0', fontSize: '12px', opacity: 0.7 }}>
             {severityFilter !== 'all' || typeFilter !== 'all'
@@ -218,7 +218,7 @@ export default function AlertsPanel({ alerts, onAcknowledge, onCheck, loading })
                       padding: '6px 12px', borderRadius: '8px',
                       border: '1px solid rgba(16,185,129,0.3)',
                       background: 'rgba(16,185,129,0.1)',
-                      color: '#10b981', fontSize: '11px', fontWeight: '600',
+                      color: '#06B6D4', fontSize: '11px', fontWeight: '600',
                       cursor: 'pointer', fontFamily: 'inherit',
                       display: 'flex', alignItems: 'center', gap: '4px',
                       whiteSpace: 'nowrap', flexShrink: 0,

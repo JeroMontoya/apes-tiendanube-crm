@@ -1,97 +1,74 @@
 import React, { useMemo } from 'react';
+import { Gauge } from 'lucide-react';
 
-const ACCENT = '#6366f1';
-const ACCENT_LIGHT = 'rgba(99,102,241,0.5)';
+/**
+ * Puntuación de rendimiento (0-100), compuesta por señales reales ya
+ * disponibles en el dashboard — no es un número decorativo:
+ *  - Retención de clientes (peso 40%)
+ *  - ROAS normalizado contra una meta de 3x (peso 35%)
+ *  - Tendencia de pedidos de la semana, sube o baja (peso 25%)
+ */
+export default function PerformanceScoreGauge({ clients, metaInsights }) {
+  const { score, label, retention, roasScore, trendScore } = useMemo(() => {
+    const arr = clients || [];
+    const withPurchases = arr.filter(c => (c.purchaseCount ?? 0) >= 1).length;
+    const vipCount = arr.filter(c => (c.purchaseCount ?? 0) >= 2).length;
+    const retentionPct = withPurchases > 0 ? (vipCount / withPurchases) * 100 : 0;
 
-// Scoring thresholds - e-commerce benchmarks (COP)
-const THRESHOLDS = {
-  baseScore: 50,
-  revenue: [
-    { min: 100000, points: 10 },
-    { min: 500000, points: 10 },
-  ],
-  orders: [
-    { min: 20, points: 5 },
-    { min: 100, points: 5 },
-  ],
-  repeatRate: [
-    { min: 0.2, points: 5 },
-    { min: 0.4, points: 5 },
-  ],
-  conversionRate: [
-    { min: 0.02, points: 4 },
-    { min: 0.04, points: 4 },
-  ],
-};
+    const revenue = arr.reduce((sum, c) => sum + (c.totalSpent ?? 0), 0);
+    const spend = metaInsights?.global ? parseFloat(metaInsights.global.spend || 0) : 0;
+    const roas = spend > 0 ? revenue / spend : 0;
+    const roasNorm = Math.min((roas / 3) * 100, 100); // 3x = meta = 100 pts
 
-export default function PerformanceScoreGauge({ clients, metaInsights, ga4Insights }) {
-  const score = useMemo(() => {
-    let s = THRESHOLDS.baseScore;
-    const c = clients || [];
-    if (c.length > 0) {
-      const revenue = c.reduce((sum, cl) => sum + (cl.totalSpent ?? 0), 0);
-      const orders = c.reduce((sum, cl) => sum + (cl.purchaseCount ?? 0), 0);
-      const repeat = c.filter(cl => (cl.purchaseCount ?? 0) > 1).length;
-      const repeatRate = repeat / c.length;
-      
-      THRESHOLDS.revenue.forEach(t => { if (revenue > t.min) s += t.points; });
-      THRESHOLDS.orders.forEach(t => { if (orders > t.min) s += t.points; });
-      THRESHOLDS.repeatRate.forEach(t => { if (repeatRate > t.min) s += t.points; });
+    let allPurchases = [];
+    arr.forEach(c => { if (c.purchases) allPurchases.push(...c.purchases); });
+    allPurchases.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    let trendNorm = 50;
+    if (allPurchases.length >= 2) {
+      const mid = Math.floor(allPurchases.length / 2);
+      const firstHalf = allPurchases.slice(0, mid).length;
+      const secondHalf = allPurchases.slice(mid).length;
+      const growth = firstHalf > 0 ? ((secondHalf - firstHalf) / firstHalf) * 100 : 0;
+      trendNorm = Math.max(0, Math.min(100, 50 + growth));
     }
-    if (ga4Insights?.ecommerce?.totalPurchases > 0 && ga4Insights?.global?.sessions > 0) {
-      const conversionRate = ga4Insights.ecommerce.totalPurchases / ga4Insights.global.sessions;
-      THRESHOLDS.conversionRate.forEach(t => { if (conversionRate > t.min) s += t.points; });
-    }
-    return Math.min(100, Math.max(0, s));
-  }, [clients, metaInsights, ga4Insights]);
 
-  const label = score >= 80 ? 'Rendimiento excelente' : score >= 60 ? 'Rendimiento bueno' : score >= 40 ? 'Rendimiento promedio' : 'Necesita mejoras';
+    const composite = Math.round(retentionPct * 0.4 + roasNorm * 0.35 + trendNorm * 0.25);
+    const finalScore = Math.max(0, Math.min(100, composite));
 
-  // SVG circle gauge
-  const size = 140;
-  const strokeWidth = 10;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (score / 100) * circumference;
+    let lbl = 'Necesita atención';
+    if (finalScore >= 85) lbl = 'Rendimiento excelente';
+    else if (finalScore >= 65) lbl = 'Buen rendimiento';
+    else if (finalScore >= 45) lbl = 'Rendimiento moderado';
+
+    return { score: finalScore, label: lbl, retention: retentionPct, roasScore: roasNorm, trendScore: trendNorm };
+  }, [clients, metaInsights]);
+
+  const circumference = 283;
+  const color = score >= 85 ? '#06B6D4' : score >= 65 ? 'var(--primary)' : score >= 45 ? '#f59e0b' : '#f43f5e';
 
   return (
-    <div className="glass-card bento-span-2" style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      minHeight: 320, textAlign: 'center', gap: 16,
-    }}>
-      <h3 style={{ fontSize: 13, fontWeight: 500, margin: 0, color: 'var(--on-surface-variant)' }}>
-        ¿Qué tan bien va tu tienda?
-      </h3>
-
-      <div style={{ position: 'relative', width: size, height: size }}>
-        {/* Background ring */}
-        <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx={size/2} cy={size/2} r={radius}
-            fill="none" stroke={`${ACCENT}14`} strokeWidth={strokeWidth} />
-          <circle cx={size/2} cy={size/2} r={radius}
-            fill="none" stroke={ACCENT} strokeWidth={strokeWidth}
-            strokeLinecap="round"
+    <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 12, textAlign: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, alignSelf: 'flex-start', color: 'var(--on-surface-variant)', fontSize: 13, fontWeight: 600 }}>
+        <Gauge size={15} /> Puntuación de rendimiento
+      </div>
+      <div style={{ position: 'relative', width: 140, height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <svg width="140" height="140" viewBox="0 0 100 100" style={{ position: 'absolute', transform: 'rotate(-90deg)' }}>
+          <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="7" />
+          <circle
+            cx="50" cy="50" r="45" fill="none" stroke={color} strokeWidth="7" strokeLinecap="round"
             strokeDasharray={circumference}
-            strokeDashoffset={offset}
-            style={{
-              transition: 'stroke-dashoffset 1.5s cubic-bezier(0.16, 1, 0.3, 1)',
-              filter: `drop-shadow(0 0 8px ${ACCENT}66)`,
-            }}
+            strokeDashoffset={circumference - (circumference * score) / 100}
+            style={{ transition: 'stroke-dashoffset 1s ease-out' }}
           />
         </svg>
-        {/* Score text */}
-        <div style={{
-          position: 'absolute', top: '50%', left: '50%',
-          transform: 'translate(-50%, -50%)',
-          display: 'flex', flexDirection: 'column', alignItems: 'center',
-        }}>
-          <span style={{ fontSize: 36, fontWeight: 800, color: ACCENT, lineHeight: 1 }}>{score}</span>
-          <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--on-surface-variant)' }}>/{'\u200B'}100</span>
+        <div>
+          <div style={{ fontSize: 30, fontWeight: 800, color: 'var(--on-surface)', lineHeight: 1 }}>{score}</div>
+          <div style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>/100</div>
         </div>
       </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-        <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--on-surface)' }}>{label}</span>
+      <div style={{ fontSize: 13, fontWeight: 700, color }}>{label}</div>
+      <div style={{ fontSize: 10, color: 'var(--on-surface-variant)' }} title="Retención de clientes, ROAS vs meta de 3x, y tendencia de pedidos">
+        Basado en retención, ROAS y tendencia
       </div>
     </div>
   );

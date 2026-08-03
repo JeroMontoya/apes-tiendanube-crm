@@ -187,7 +187,7 @@ const AdSetDrawer = ({ api, isOpen, onClose, adSet, campaignId, onSaved }) => {
               </div>
               <div style={{ width: 140 }}>
                  <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--on-surface-variant)', marginBottom: 8, display: 'block' }}>Estado</label>
-                 <select value={status} onChange={e => setStatus(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--outline-variant)', background: 'var(--surface-container-lowest)', color: status === 'ACTIVE' ? '#10b981' : 'var(--primary-container)', outline: 'none', fontWeight: 600 }}>
+                 <select value={status} onChange={e => setStatus(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--outline-variant)', background: 'var(--surface-container-lowest)', color: status === 'ACTIVE' ? '#06B6D4' : 'var(--primary-container)', outline: 'none', fontWeight: 600 }}>
                     <option value="ACTIVE">● Activo</option>
                     <option value="PAUSED">● Pausado</option>
                  </select>
@@ -341,7 +341,7 @@ const AdSetDrawer = ({ api, isOpen, onClose, adSet, campaignId, onSaved }) => {
                   >
                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                         <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--on-surface)' }}>Ubicaciones Advantage+</div>
-                        <div style={{ background: 'rgba(16,185,129,0.2)', color: '#10b981', padding: '2px 8px', borderRadius: 12, fontSize: 11, fontWeight: 700 }}>Recomendado</div>
+                        <div style={{ background: 'rgba(16,185,129,0.2)', color: '#06B6D4', padding: '2px 8px', borderRadius: 12, fontSize: 11, fontWeight: 700 }}>Recomendado</div>
                      </div>
                      <div style={{ fontSize: 12, color: 'var(--on-surface-variant)' }}>Maximiza tu presupuesto y ayuda a mostrar tus anuncios a más personas.</div>
                   </div>

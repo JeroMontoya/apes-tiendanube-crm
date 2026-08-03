@@ -8,8 +8,8 @@ import {
 
 // ─── Paleta de colores para gráficos ─────────────────────────────────
 const CHART_COLORS = [
-  '#4F46E5', '#0EA5E9', '#10B981', 'var(--primary-container)', '#EF4444',
-  '#8B5CF6', '#EC4899', '#14B8A6', '#6B7280'
+  '#4F46E5', '#0EA5E9', '#06B6D4', 'var(--primary-container)', '#E11D48',
+  '#8B5CF6', '#8B5CF6', '#14B8A6', '#6B7280'
 ];
 
 // ─── Mapeo de canales a nombres amigables en español ─────────────────
@@ -501,7 +501,7 @@ export default function GA4Panel({ ga4Insights }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center', padding: '48px 24px' }}>
         <div style={{
           width: 64, height: 64, borderRadius: 20,
-          background: 'rgba(245, 158, 11, 0.1)', display: 'flex',
+          background: 'rgba(6, 182, 212, 0.1)', display: 'flex',
           alignItems: 'center', justifyContent: 'center'
         }}>
           <BarChart3 size={32} color="var(--primary-container)" />
@@ -509,7 +509,7 @@ export default function GA4Panel({ ga4Insights }) {
         <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--on-surface)', margin: 0 }}>Google Analytics 4</h2>
         <div style={{
           maxWidth: 500, textAlign: 'center', padding: '20px 24px', borderRadius: 14,
-          background: 'rgba(245, 158, 11, 0.05)', border: '1px solid rgba(245, 158, 11, 0.15)'
+          background: 'rgba(6, 182, 212, 0.05)', border: '1px solid rgba(6, 182, 212, 0.15)'
         }}>
           <p style={{ fontSize: 14, color: 'var(--on-surface)', margin: '0 0 12px', fontWeight: 600 }}>
             Google Analytics no está configurado
@@ -519,15 +519,15 @@ export default function GA4Panel({ ga4Insights }) {
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, textAlign: 'left', fontSize: 13, color: 'var(--on-surface-variant)' }}>
             <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-              <span style={{ background: 'rgba(245,158,11,0.2)', color: 'var(--primary-container)', borderRadius: 6, padding: '2px 8px', fontWeight: 700, flexShrink: 0 }}>1</span>
+              <span style={{ background: 'rgba(6, 182, 212,0.2)', color: 'var(--primary-container)', borderRadius: 6, padding: '2px 8px', fontWeight: 700, flexShrink: 0 }}>1</span>
               <span>Andá a <strong>Ajustes</strong> → sección <strong>Google Analytics 4</strong></span>
             </div>
             <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-              <span style={{ background: 'rgba(245,158,11,0.2)', color: 'var(--primary-container)', borderRadius: 6, padding: '2px 8px', fontWeight: 700, flexShrink: 0 }}>2</span>
+              <span style={{ background: 'rgba(6, 182, 212,0.2)', color: 'var(--primary-container)', borderRadius: 6, padding: '2px 8px', fontWeight: 700, flexShrink: 0 }}>2</span>
               <span>Ingresá tu <strong>Property ID</strong> (GA4 → Administrador → Detalles del Stream)</span>
             </div>
             <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-              <span style={{ background: 'rgba(245,158,11,0.2)', color: 'var(--primary-container)', borderRadius: 6, padding: '2px 8px', fontWeight: 700, flexShrink: 0 }}>3</span>
+              <span style={{ background: 'rgba(6, 182, 212,0.2)', color: 'var(--primary-container)', borderRadius: 6, padding: '2px 8px', fontWeight: 700, flexShrink: 0 }}>3</span>
               <span>Marcá "Reutilizar credenciales de Merchant Center" si usás el mismo Service Account</span>
             </div>
           </div>
@@ -613,14 +613,14 @@ export default function GA4Panel({ ga4Insights }) {
           value={formatPercent(global.bounceRate)}
           hint="% de personas que se van sin hacer nada"
           iconBg={Number(global.bounceRate) > 70 ? 'rgba(239, 68, 68, 0.12)' : 'rgba(16, 185, 129, 0.12)'}
-          iconColor={Number(global.bounceRate) > 70 ? '#EF4444' : '#10B981'}
+          iconColor={Number(global.bounceRate) > 70 ? '#E11D48' : '#06B6D4'}
         />
         <MetricCard
           icon={Clock}
           label="Tiempo Promedio de Sesión"
           value={formatDuration(global.averageSessionDuration)}
           hint="Cuánto tiempo se quedan en tu tienda"
-          iconBg="rgba(245, 158, 11, 0.12)"
+          iconBg="rgba(6, 182, 212, 0.12)"
           iconColor="var(--primary-container)"
         />
       </div>
@@ -679,22 +679,22 @@ export default function GA4Panel({ ga4Insights }) {
           </h3>
 
           <div style={styles.ovpGrid}>
-            <div style={{ ...styles.ovpCard, borderColor: '#10B981' }}>
+            <div style={{ ...styles.ovpCard, borderColor: '#06B6D4' }}>
               <p style={styles.ovpLabel}>
-                <CheckCircle size={14} style={{ verticalAlign: 'middle', marginRight: '4px', color: '#10B981' }} />
+                <CheckCircle size={14} style={{ verticalAlign: 'middle', marginRight: '4px', color: '#06B6D4' }} />
                 Tráfico Gratuito (Orgánico)
               </p>
-              <p style={{ ...styles.ovpValue, color: '#10B981' }}>
+              <p style={{ ...styles.ovpValue, color: '#06B6D4' }}>
                 {organicPct.toFixed(0)}%
               </p>
               <p style={styles.ovpSub}>{formatNumber(organicSessions)} visitas gratis</p>
             </div>
-            <div style={{ ...styles.ovpCard, borderColor: '#EF4444' }}>
+            <div style={{ ...styles.ovpCard, borderColor: '#E11D48' }}>
               <p style={styles.ovpLabel}>
-                <Target size={14} style={{ verticalAlign: 'middle', marginRight: '4px', color: '#EF4444' }} />
+                <Target size={14} style={{ verticalAlign: 'middle', marginRight: '4px', color: '#E11D48' }} />
                 Tráfico Pago (Publicidad)
               </p>
-              <p style={{ ...styles.ovpValue, color: '#EF4444' }}>
+              <p style={{ ...styles.ovpValue, color: '#E11D48' }}>
                 {paidPct.toFixed(0)}%
               </p>
               <p style={styles.ovpSub}>{formatNumber(paidSessions)} visitas pagas</p>
@@ -706,7 +706,7 @@ export default function GA4Panel({ ga4Insights }) {
             <div
               style={{
                 width: `${organicPct}%`,
-                background: 'linear-gradient(90deg, #10B981, #34D399)',
+                background: 'linear-gradient(90deg, #06B6D4, #22d3ee)',
                 transition: 'width 0.6s ease',
                 borderRadius: organicPct >= 100 ? '6px' : '6px 0 0 6px',
               }}
@@ -714,15 +714,15 @@ export default function GA4Panel({ ga4Insights }) {
             <div
               style={{
                 width: `${paidPct}%`,
-                background: 'linear-gradient(90deg, #F87171, #EF4444)',
+                background: 'linear-gradient(90deg, #F87171, #E11D48)',
                 transition: 'width 0.6s ease',
                 borderRadius: paidPct >= 100 ? '6px' : '0 6px 6px 0',
               }}
             />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
-            <span style={{ fontSize: '11px', color: '#10B981', fontWeight: 600 }}>Gratis</span>
-            <span style={{ fontSize: '11px', color: '#EF4444', fontWeight: 600 }}>Pago</span>
+            <span style={{ fontSize: '11px', color: '#06B6D4', fontWeight: 600 }}>Gratis</span>
+            <span style={{ fontSize: '11px', color: '#E11D48', fontWeight: 600 }}>Pago</span>
           </div>
         </div>
       )}
@@ -781,7 +781,7 @@ export default function GA4Panel({ ga4Insights }) {
               label="Ingresos Totales"
               value={`$${formatNumber(Math.round(ecommerce.totalRevenue))}`}
               hint="Revenue bruto del período"
-              iconBg="rgba(245, 158, 11, 0.12)"
+              iconBg="rgba(6, 182, 212, 0.12)"
               iconColor="var(--primary-container)"
             />
             <MetricCard
@@ -790,7 +790,7 @@ export default function GA4Panel({ ga4Insights }) {
               value={formatNumber(ecommerce.totalPurchases)}
               hint="Transacciones completadas"
               iconBg="rgba(16, 185, 129, 0.12)"
-              iconColor="#10B981"
+              iconColor="#06B6D4"
             />
             <MetricCard
               icon={TrendingUp}
@@ -846,17 +846,17 @@ export default function GA4Panel({ ga4Insights }) {
 
           {advice.map((item, i) => {
             let IconComp = Lightbulb;
-            let bgColor = 'rgba(245, 158, 11, 0.12)';
+            let bgColor = 'rgba(6, 182, 212, 0.12)';
             let fgColor = 'var(--primary-container)';
 
             if (item.type === 'warning') {
               IconComp = AlertTriangle;
               bgColor = 'rgba(239, 68, 68, 0.12)';
-              fgColor = '#EF4444';
+              fgColor = '#E11D48';
             } else if (item.type === 'success') {
               IconComp = CheckCircle;
               bgColor = 'rgba(16, 185, 129, 0.12)';
-              fgColor = '#10B981';
+              fgColor = '#06B6D4';
             }
 
             return (

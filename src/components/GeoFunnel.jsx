@@ -29,7 +29,10 @@ export default function GeoFunnel({ clients, onSelectClient, dateRange }) {
       const purchases = (c.purchases || []).filter(p => {
         if (!p.date) return false;
         const d = typeof p.date === 'string' ? p.date.substring(0, 10) : '';
-        return d >= startDate && d <= endDate;
+        if (!startDate && !endDate) return true;
+        if (startDate && d < startDate) return false;
+        if (endDate && d > endDate) return false;
+        return true;
       });
       
       purchases.forEach(p => {
@@ -86,7 +89,7 @@ export default function GeoFunnel({ clients, onSelectClient, dateRange }) {
 
   const data = viewMode === 'province' ? provinceData : cityData;
 
-  const GRADIENT_COLORS = ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#f43f5e', '#06b6d4', '#ec4899', '#14b8a6', '#ef4444', '#6366f1'];
+  const GRADIENT_COLORS = ['#06b6d4', '#06B6D4', '#6366f1', '#8b5cf6', '#f43f5e', '#06b6d4', '#8B5CF6', '#14b8a6', '#E11D48', '#6366f1'];
 
   const formatCurrency = (v) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v);
 

@@ -103,7 +103,7 @@ export default function AnalyticsPanel({ clients }) {
   }, [clients]);
 
   // Colors
-  const COLORS = ['#2D8B4E', '#1E6FBA', '#D4A843', '#8B5CF6', '#FF6B6B', '#A8B2BC'];
+  const COLORS = ['#06B6D4', '#6366f1', '#818cf8', '#8B5CF6', '#E11D48', '#8B9BB4'];
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -173,7 +173,7 @@ export default function AnalyticsPanel({ clients }) {
               <XAxis type="number" stroke="var(--outline)" tickFormatter={(v) => `$${v/1000}k`} fontSize={12} />
               <YAxis dataKey="name" type="category" stroke="var(--on-surface-variant)" width={100} fontSize={11} tick={{fill: 'var(--on-surface-variant)'}} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="spent" fill="#1E6FBA" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="spent" fill="#6366f1" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -186,7 +186,7 @@ export default function AnalyticsPanel({ clients }) {
               <XAxis type="number" stroke="var(--outline)" fontSize={12} />
               <YAxis dataKey="name" type="category" stroke="var(--on-surface-variant)" width={100} fontSize={11} tick={{fill: 'var(--on-surface-variant)'}} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="volume" fill="#2D8B4E" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="volume" fill="#06B6D4" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -234,7 +234,7 @@ export default function AnalyticsPanel({ clients }) {
               <XAxis dataKey="city" stroke="var(--outline)" fontSize={11} tick={{fill: 'var(--on-surface-variant)'}} />
               <YAxis stroke="var(--outline)" fontSize={11} tickFormatter={(v) => `$${v/1000}k`} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="total" fill="#D4A843" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="total" fill="#818cf8" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -269,7 +269,7 @@ export default function AnalyticsPanel({ clients }) {
                     {act.coupon ? (
                       <span style={s.badge}>🏷️ {act.coupon}</span>
                     ) : act.hasDiscount ? (
-                      <span style={{...s.badge, background: 'var(--error-container)', color: 'var(--on-error-container)', border: '1px solid #FBCFE8'}}>🔥 Promoción</span>
+                      <span style={{...s.badge, background: 'var(--error-container)', color: 'var(--on-error-container)', border: '1px solid #c084fc'}}>🔥 Promoción</span>
                     ) : (
                       <span style={{...s.badge, background: 'var(--surface-container)', color: '#4B5563', border: '1px solid var(--border-subtle)'}}>📦 Normal</span>
                     )}

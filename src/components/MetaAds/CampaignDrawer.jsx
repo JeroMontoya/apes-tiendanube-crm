@@ -164,7 +164,7 @@ const CampaignDrawer = ({ api, isOpen, onClose, campaign, onSaved }) => {
               </div>
               <div style={{ width: 140 }}>
                  <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--on-surface-variant)', marginBottom: 8, display: 'block' }}>Estado</label>
-                 <select value={status} onChange={e => setStatus(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--outline-variant)', background: 'var(--surface-container-lowest)', color: status === 'ACTIVE' ? '#10b981' : 'var(--primary-container)', outline: 'none', fontWeight: 600 }}>
+                 <select value={status} onChange={e => setStatus(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--outline-variant)', background: 'var(--surface-container-lowest)', color: status === 'ACTIVE' ? '#06B6D4' : 'var(--primary-container)', outline: 'none', fontWeight: 600 }}>
                     <option value="ACTIVE">● Activa</option>
                     <option value="PAUSED">● Pausada</option>
                  </select>

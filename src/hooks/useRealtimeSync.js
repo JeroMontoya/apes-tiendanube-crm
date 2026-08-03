@@ -56,7 +56,7 @@ export function useRealtimeSync({ onConfigChange, onOrderChange, onProductChange
       } catch {
         // RPC might not exist - check with a simple query
         try {
-          await supabase.from('system_config').select('id').limit(1);
+          await supabase.from('workspaces').select('id').limit(1);
           setConnected(true);
         } catch {
           setConnected(false);

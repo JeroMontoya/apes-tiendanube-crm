@@ -5,10 +5,10 @@ import {
 } from 'lucide-react';
 
 const ADJUSTMENT_TYPES = [
-  { id: 'receive', label: 'Recepción', color: '#10b981', icon: Package, desc: 'Ingreso de mercadería' },
-  { id: 'dispatch', label: 'Despacho', color: '#ef4444', icon: Truck, desc: 'Envío a cliente' },
+  { id: 'receive', label: 'Recepción', color: '#06B6D4', icon: Package, desc: 'Ingreso de mercadería' },
+  { id: 'dispatch', label: 'Despacho', color: '#E11D48', icon: Truck, desc: 'Envío a cliente' },
   { id: 'return', label: 'Devolución', color: 'var(--primary-container)', icon: RotateCcw, desc: 'Devolución de cliente' },
-  { id: 'adjustment', label: 'Ajuste', color: '#3b82f6', icon: ArrowUpDown, desc: 'Corrección manual' },
+  { id: 'adjustment', label: 'Ajuste', color: '#6366f1', icon: ArrowUpDown, desc: 'Corrección manual' },
   { id: 'production_in', label: 'Producción', color: '#06b6d4', icon: Factory, desc: 'Ingreso de taller' },
 ];
 
@@ -316,7 +316,7 @@ export default function StockAdjuster({ products, locations, onAdjust, onClose }
                 <div style={{
                   padding: '4px 10px', borderRadius: '6px',
                   background: isPositive ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                  color: isPositive ? '#10b981' : '#ef4444',
+                  color: isPositive ? '#06B6D4' : '#E11D48',
                   fontSize: '13px', fontWeight: '700',
                   fontFamily: "'JetBrains Mono', monospace",
                 }}>
@@ -334,7 +334,7 @@ export default function StockAdjuster({ products, locations, onAdjust, onClose }
             {confirming ? (
               <button onClick={handleConfirm} disabled={saving} style={{
                 padding: '12px 24px', borderRadius: '10px', border: 'none',
-                background: '#10b981', color: 'var(--on-surface)', fontSize: '13px', fontWeight: '700',
+                background: '#06B6D4', color: 'var(--on-surface)', fontSize: '13px', fontWeight: '700',
                 cursor: saving ? 'wait' : 'pointer', fontFamily: 'inherit',
                 display: 'flex', alignItems: 'center', gap: '8px',
               }}>
@@ -347,7 +347,7 @@ export default function StockAdjuster({ products, locations, onAdjust, onClose }
                 disabled={!selectedProduct || quantity <= 0}
                 style={{
                   padding: '12px 24px', borderRadius: '10px', border: 'none',
-                  background: '#3b82f6', color: 'var(--on-surface)', fontSize: '13px', fontWeight: '700',
+                  background: '#6366f1', color: 'var(--on-surface)', fontSize: '13px', fontWeight: '700',
                   cursor: !selectedProduct || quantity <= 0 ? 'default' : 'pointer',
                   fontFamily: 'inherit', opacity: !selectedProduct || quantity <= 0 ? 0.5 : 1,
                 }}

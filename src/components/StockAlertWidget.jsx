@@ -136,7 +136,7 @@ export default function StockAlertWidget({ clients, products, onRefresh, isRefre
       borderRadius: 16,
       overflow: 'hidden',
       transition: 'border-color 0.2s',
-      borderColor: open ? (outOfStock.length > 0 ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)') : 'var(--glass-border)'
+      borderColor: open ? (outOfStock.length > 0 ? 'rgba(239,68,68,0.2)' : 'rgba(6, 182, 212,0.2)') : 'var(--glass-border)'
     }}>
       {/* Header */}
       <button
@@ -160,7 +160,7 @@ export default function StockAlertWidget({ clients, products, onRefresh, isRefre
           width: 36, height: 36, borderRadius: 10,
           background: 'linear-gradient(135deg, var(--primary-container), #f97316)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: open ? '0 2px 12px rgba(245,158,11,0.3)' : '0 2px 8px rgba(245,158,11,0.15)',
+          boxShadow: open ? '0 2px 12px rgba(6, 182, 212,0.3)' : '0 2px 8px rgba(6, 182, 212,0.15)',
           transition: 'box-shadow 0.2s', flexShrink: 0
         }}>
           <Package size={17} color="#fff" />
@@ -187,7 +187,7 @@ export default function StockAlertWidget({ clients, products, onRefresh, isRefre
               <span style={{
                 display: 'inline-flex', alignItems: 'center', gap: 4,
                 padding: '3px 8px', borderRadius: 20, fontSize: 10, fontWeight: 700,
-                background: 'rgba(239,68,68,0.1)', color: '#ef4444',
+                background: 'rgba(239,68,68,0.1)', color: '#E11D48',
                 border: '1px solid rgba(239,68,68,0.15)'
               }}>
                 <PackageX size={9} /> {outOfStock.length}
@@ -197,8 +197,8 @@ export default function StockAlertWidget({ clients, products, onRefresh, isRefre
               <span style={{
                 display: 'inline-flex', alignItems: 'center', gap: 4,
                 padding: '3px 8px', borderRadius: 20, fontSize: 10, fontWeight: 700,
-                background: 'rgba(245,158,11,0.1)', color: 'var(--primary-container)',
-                border: '1px solid rgba(245,158,11,0.15)'
+                background: 'rgba(6, 182, 212,0.1)', color: 'var(--primary-container)',
+                border: '1px solid rgba(6, 182, 212,0.15)'
               }}>
                 <AlertTriangle size={9} /> {lowStock.length}
               </span>
@@ -249,7 +249,7 @@ export default function StockAlertWidget({ clients, products, onRefresh, isRefre
                   cursor: isRefreshing ? 'wait' : 'pointer',
                   transition: 'all 0.2s'
                 }}
-                onMouseEnter={e => { if (!isRefreshing) { e.currentTarget.style.background = 'rgba(59,130,246,0.1)'; e.currentTarget.style.borderColor = 'rgba(59,130,246,0.3)'; e.currentTarget.style.color = '#60a5fa'; }}}
+                onMouseEnter={e => { if (!isRefreshing) { e.currentTarget.style.background = 'rgba(99, 102, 241,0.1)'; e.currentTarget.style.borderColor = 'rgba(99, 102, 241,0.3)'; e.currentTarget.style.color = '#818cf8'; }}}
                 onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface-container)'; e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.color = 'var(--on-surface-variant)'; }}
               >
                 <RefreshCw size={11} style={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }} />
@@ -276,9 +276,9 @@ export default function StockAlertWidget({ clients, products, onRefresh, isRefre
             ) : totalAlerts === 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 16px' }}>
                 <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(16,185,129,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
-                  <CheckCircle size={18} color="#10b981" />
+                  <CheckCircle size={18} color="#06B6D4" />
                 </div>
-                <p style={{ fontSize: 13, fontWeight: 600, color: '#10b981', margin: 0 }}>Todo bien</p>
+                <p style={{ fontSize: 13, fontWeight: 600, color: '#06B6D4', margin: 0 }}>Todo bien</p>
                 <p style={{ fontSize: 11, color: 'var(--on-surface-variant)', margin: '4px 0 0', opacity: 0.6 }}>{totalProducts} productos con stock suficiente</p>
               </div>
             ) : (
@@ -286,10 +286,10 @@ export default function StockAlertWidget({ clients, products, onRefresh, isRefre
                 {/* ── Summary Stats ── */}
                 <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
                   {[
-                    { count: outOfStock.length, label: 'Sin stock', color: '#ef4444', bg: 'rgba(239,68,68,0.08)', icon: <PackageX size={13} /> },
+                    { count: outOfStock.length, label: 'Sin stock', color: '#E11D48', bg: 'rgba(239,68,68,0.08)', icon: <PackageX size={13} /> },
                     { count: lowStock.filter(i => i.status === 'high_value').length, label: 'Alto valor', color: '#a78bfa', bg: 'rgba(139,92,246,0.08)', icon: <DollarSign size={13} /> },
-                    { count: lowStock.filter(i => i.status !== 'high_value').length, label: 'Stock bajo', color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.08)', icon: <AlertTriangle size={13} /> },
-                    { count: inStockCount, label: 'Con stock', color: '#10b981', bg: 'rgba(16,185,129,0.08)', icon: <CheckCircle size={13} /> },
+                    { count: lowStock.filter(i => i.status !== 'high_value').length, label: 'Stock bajo', color: 'var(--primary-container)', bg: 'rgba(6, 182, 212,0.08)', icon: <AlertTriangle size={13} /> },
+                    { count: inStockCount, label: 'Con stock', color: '#06B6D4', bg: 'rgba(16,185,129,0.08)', icon: <CheckCircle size={13} /> },
                   ].map((s, i) => (
                     <div key={i} style={{
                       flex: 1, padding: '8px 6px', borderRadius: 8,
@@ -378,10 +378,10 @@ export default function StockAlertWidget({ clients, products, onRefresh, isRefre
                       const isCritical = item.status === 'critical';
                       const stockPct = isOut ? 0 : Math.min((item.stock / 5) * 100, 100);
 
-                      const borderColor = isOut ? 'rgba(239,68,68,0.12)' : (isHighValue ? 'rgba(139,92,246,0.12)' : (isCritical ? 'rgba(239,68,68,0.12)' : 'rgba(245,158,11,0.12)'));
-                      const iconBg = isOut ? 'rgba(239,68,68,0.1)' : (isHighValue ? 'rgba(139,92,246,0.1)' : (isCritical ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)'));
-                      const iconColor = isOut ? '#ef4444' : (isHighValue ? '#a78bfa' : (isCritical ? '#ef4444' : 'var(--primary-container)'));
-                      const barBg = isOut ? '#ef4444' : (isHighValue ? 'linear-gradient(90deg, #8b5cf6, #a78bfa)' : (isCritical ? 'linear-gradient(90deg, #ef4444, #f87171)' : 'linear-gradient(90deg, var(--primary-container), #fbbf24)'));
+                      const borderColor = isOut ? 'rgba(239,68,68,0.12)' : (isHighValue ? 'rgba(139,92,246,0.12)' : (isCritical ? 'rgba(239,68,68,0.12)' : 'rgba(6, 182, 212,0.12)'));
+                      const iconBg = isOut ? 'rgba(239,68,68,0.1)' : (isHighValue ? 'rgba(139,92,246,0.1)' : (isCritical ? 'rgba(239,68,68,0.1)' : 'rgba(6, 182, 212,0.1)'));
+                      const iconColor = isOut ? '#E11D48' : (isHighValue ? '#a78bfa' : (isCritical ? '#E11D48' : 'var(--primary-container)'));
+                      const barBg = isOut ? '#E11D48' : (isHighValue ? 'linear-gradient(90deg, #8b5cf6, #a78bfa)' : (isCritical ? 'linear-gradient(90deg, #E11D48, #f87171)' : 'linear-gradient(90deg, var(--primary-container), #fbbf24)'));
 
                       return (
                         <div key={item.id}
@@ -423,7 +423,7 @@ export default function StockAlertWidget({ clients, products, onRefresh, isRefre
                               <span style={{
                                 fontSize: 8, fontWeight: 700, textTransform: 'uppercase',
                                 padding: '2px 6px', borderRadius: 4,
-                                background: 'rgba(245,158,11,0.15)', color: 'var(--primary-container)',
+                                background: 'rgba(6, 182, 212,0.15)', color: 'var(--primary-container)',
                                 letterSpacing: '0.5px',
                               }}>
                                 Reponer
@@ -432,7 +432,7 @@ export default function StockAlertWidget({ clients, products, onRefresh, isRefre
                             <span style={{
                               fontSize: 10, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace",
                               padding: '3px 8px', borderRadius: 6,
-                              background: isOut ? 'rgba(239,68,68,0.1)' : (isHighValue ? 'rgba(139,92,246,0.1)' : (isCritical ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)')),
+                              background: isOut ? 'rgba(239,68,68,0.1)' : (isHighValue ? 'rgba(139,92,246,0.1)' : (isCritical ? 'rgba(239,68,68,0.1)' : 'rgba(6, 182, 212,0.1)')),
                               color: iconColor
                             }}>
                               {isOut ? '0' : item.stock} uds

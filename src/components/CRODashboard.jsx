@@ -55,7 +55,7 @@ const s = {
   row: { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' },
 };
 
-export default function CRODashboard({ session }) {
+export default function CRODashboard({ session, ga4Insights }) {
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [analysis, setAnalysis] = useState(null);
@@ -298,6 +298,96 @@ export default function CRODashboard({ session }) {
           <div style={s.kpiLabel}>Ingresos acumulados</div>
         </div>
       </div>
+
+      {/* GA4 Insights Panel */}
+      {ga4Insights && (
+        <div style={{ ...s.card, marginTop: 16, marginBottom: 16, borderColor: '#06B6D4' }}>
+          <div style={{ ...s.cardHeader, borderColor: '#06B6D4' }}>
+            <span style={{ ...s.cardTitle, color: '#06B6D4' }}>
+              <Activity size={14} /> GA4 Web Analytics — Eventos & Funnel (30 días)
+            </span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+            
+            {/* Ecommerce Events */}
+            {ga4Insights.events?.length > 0 && (
+              <div style={{ background: 'var(--surface)', borderRadius: 8, padding: 12, border: '1px solid var(--border-subtle)' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#059669', marginBottom: 8, textTransform: 'uppercase' }}>Eventos E-com</div>
+                {ga4Insights.events
+                  .filter(e => ['purchase', 'add_to_cart', 'view_item', 'begin_checkout', 'add_payment_info', 'view_cart'].includes(e.eventName))
+                  .map((ev, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: i < 5 ? '1px solid var(--border-subtle)' : 'none', fontSize: 12 }}>
+                      <span style={{ color: 'var(--on-surface-variant)' }}>{ev.eventName}</span>
+                      <span style={{ fontWeight: 700, color: 'var(--on-surface)', fontFamily: 'JetBrains Mono, monospace' }}>{ev.eventCount?.toLocaleString('es-CO')}</span>
+                    </div>
+                  ))}
+              </div>
+            )}
+
+            {/* Funnel: add_to_cart -> begin_checkout -> add_payment_info -> purchase */}
+            {ga4Insights.events?.length > 0 && (() => {
+              const getCount = (name) => ga4Insights.events.find(e => e.eventName === name)?.eventCount || 0;
+              const atc = getCount('add_to_cart');
+              const bc = getCount('begin_checkout');
+              const api = getCount('add_payment_info');
+              const pur = getCount('purchase');
+              const vw = getCount('view_item');
+              return atc || bc || api || pur || vw ? (
+                <div style={{ background: 'var(--surface)', borderRadius: 8, padding: 12, border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#06B6D4', marginBottom: 10, textTransform: 'uppercase' }}>Funnel Checkout</div>
+                  {[
+                    { label: 'view_item', val: vw, color: '#6366f1' },
+                    { label: 'add_to_cart', val: atc, color: '#06B6D4' },
+                    { label: 'begin_checkout', val: bc, color: '#f59e0b' },
+                    { label: 'add_payment_info', val: api, color: '#8b5cf6' },
+                    { label: 'purchase', val: pur, color: '#059669' },
+                  ].map((step, i) => (
+                    <div key={step.label} style={{ marginBottom: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 2 }}>
+                        <span style={{ color: step.color, fontWeight: 600 }}>{step.label}</span>
+                        <span style={{ fontFamily: 'JetBrains Mono, monospace', color: 'var(--on-surface)' }}>{step.val?.toLocaleString('es-CO') || 0}</span>
+                      </div>
+                      <div style={{ height: 6, background: 'var(--surface-container)', borderRadius: 3, overflow: 'hidden' }}>
+                        <div style={{ 
+                          width: atc > 0 ? `${(step.val / (i === 0 ? vw : atc)) * 100}%` : '0%', 
+                          height: '100%', 
+                          background: step.color,
+                          transition: 'width 0.3s ease'
+                        }} />
+                      </div>
+                    </div>
+                  ))}
+                  {atc && pur && (
+                    <div style={{ marginTop: 8, fontSize: 11, color: 'var(--on-surface-variant)' }}>
+                      Cart→Purchase: {((pur/atc)*100).toFixed(1)}% | Checkout→Purchase: {bc ? ((pur/bc)*100).toFixed(1)+'%' : 'N/A'}
+                    </div>
+                  )}
+                </div>
+              ) : null;
+            })()}
+
+            {/* Revenue & AOV from GA4 */}
+            {ga4Insights.ecommerce && (
+              <div style={{ background: 'var(--surface)', borderRadius: 8, padding: 12, border: '1px solid var(--border-subtle)' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#059669', marginBottom: 10, textTransform: 'uppercase' }}>Revenue GA4</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
+                  <span style={{ color: 'var(--on-surface-variant)' }}>Revenue Total</span>
+                  <span style={{ fontWeight: 700, color: 'var(--success)', fontFamily: 'JetBrains Mono, monospace' }}>${(ga4Insights.ecommerce.totalRevenue || 0).toLocaleString('es-CO', {minimumFractionDigits: 2})}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
+                  <span style={{ color: 'var(--on-surface-variant)' }}>Pedidos</span>
+                  <span style={{ fontWeight: 700, color: 'var(--on-surface)', fontFamily: 'JetBrains Mono, monospace' }}>{(ga4Insights.ecommerce.totalPurchases || 0).toLocaleString('es-CO')}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
+                  <span style={{ color: 'var(--on-surface-variant)' }}>AOV</span>
+                  <span style={{ fontWeight: 700, color: 'var(--on-surface)', fontFamily: 'JetBrains Mono, monospace' }}>${(ga4Insights.ecommerce.averageOrderValue || 0).toLocaleString('es-CO', {minimumFractionDigits: 2})}</span>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
 
       {analysis && (
         <div style={{ marginBottom: 20 }}>

@@ -11,12 +11,12 @@ import {
 } from 'lucide-react';
 
 const MOVEMENT_TYPES = [
-  { id: 'receive', label: 'Recepción', icon: '⬇️', color: '#10b981', desc: 'Ingreso de mercadería' },
-  { id: 'dispatch', label: 'Despacho', icon: '🚚', color: '#3b82f6', desc: 'Envío a cliente' },
+  { id: 'receive', label: 'Recepción', icon: '⬇️', color: '#06B6D4', desc: 'Ingreso de mercadería' },
+  { id: 'dispatch', label: 'Despacho', icon: '🚚', color: '#6366f1', desc: 'Envío a cliente' },
   { id: 'transfer', label: 'Transferencia', icon: '↔️', color: '#8b5cf6', desc: 'Entre ubicaciones' },
   { id: 'production_in', label: 'Producción', icon: '🔄', color: 'var(--primary-container)', desc: 'Ingreso de taller' },
   { id: 'return', label: 'Devolución', icon: '🔄', color: 'var(--primary-container)', desc: 'Cliente devuelve' },
-  { id: 'adjustment', label: 'Ajuste', icon: '⚠️', color: '#ef4444', desc: 'Corrección manual' },
+  { id: 'adjustment', label: 'Ajuste', icon: '⚠️', color: '#E11D48', desc: 'Corrección manual' },
 ];
 
 const LOCATIONS = [
@@ -234,7 +234,7 @@ export default function StockTransfer({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h1 style={{ margin: '0 0 8px', fontSize: '28px', fontWeight: '800', color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(139,92,246,0.3)' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(139,92,246,0.3)' }}>
               <ArrowLeftRight size={26} color="#fff" />
             </div>
             Centro de Transferencias
@@ -247,7 +247,7 @@ export default function StockTransfer({
           <button style={{ padding: '10px 18px', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--surface)', color: 'var(--on-surface)', cursor: 'pointer', fontSize: '13px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Download size={14} /> Exportar
           </button>
-          <button onClick={() => { setActiveTab('create'); setShowProductPicker(false); resetForm(); }} style={{ padding: '10px 18px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)', color: 'var(--on-surface)', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button onClick={() => { setActiveTab('create'); setShowProductPicker(false); resetForm(); }} style={{ padding: '10px 18px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', color: 'var(--on-surface)', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Plus size={14} /> Nueva Transferencia
           </button>
         </div>
@@ -256,8 +256,8 @@ export default function StockTransfer({
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '20px' }}>
         <StatCard label="Pendientes" value={stats.pending} color='#8b5cf6' icon={<Package size={18} />} />
-        <StatCard label="En Tránsito" value={stats.in_transit} color='#3b82f6' icon={<Truck size={18} />} />
-        <StatCard label="Completadas" value={stats.completed} color='#10b981' icon={<CheckCircle size={18} />} />
+        <StatCard label="En Tránsito" value={stats.in_transit} color='#6366f1' icon={<Truck size={18} />} />
+        <StatCard label="Completadas" value={stats.completed} color='#06B6D4' icon={<CheckCircle size={18} />} />
         <StatCard label="Total Items" value={stats.totalItems} color='var(--primary-container)' icon={<Package size={18} />} />
       </div>
 
@@ -277,7 +277,7 @@ export default function StockTransfer({
               padding: t.key === 'create' ? '10px 18px' : '12px 16px',
               borderRadius: '10px',
               border: 'none',
-              background: activeTab === t.key ? 'linear-gradient(135deg, #8b5cf6, #3b82f6)' : 'transparent',
+              background: activeTab === t.key ? 'linear-gradient(135deg, #8b5cf6, #6366f1)' : 'transparent',
               color: activeTab === t.key ? '#fff' : 'var(--on-surface-variant)',
               fontWeight: activeTab === t.key ? '700' : '500',
               fontSize: '13px',
@@ -443,7 +443,7 @@ function TransferForm({ form, locations, availableProducts, onFormChange, onAddI
                   <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--on-surface-variant)', marginBottom: '4px', display: 'block' }}>Costo Unit.</label>
                   <input type="number" step="0.01" value={item.unitCost || 0} onChange={e => onItemChange(index, 'unitCost', parseFloat(e.target.value) || 0)} style={{ width: '100%', height: '36px', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'var(--surface)', color: 'var(--on-surface)', padding: '0 10px', fontFamily: 'inherit', fontSize: '12px', outline: 'none', fontWeight: '600' }} />
                 </div>
-                <button type="button" onClick={() => onRemoveItem(index)} style={{ width: '36px', height: '36px', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '700' }}>×</button>
+                <button type="button" onClick={() => onRemoveItem(index)} style={{ width: '36px', height: '36px', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', color: '#E11D48', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '700' }}>×</button>
               </div>
             ))}
           </div>
@@ -474,7 +474,7 @@ function TransferForm({ form, locations, availableProducts, onFormChange, onAddI
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)' }}>
         <button type="button" onClick={onCancel} style={{ padding: '12px 24px', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'transparent', color: 'var(--on-surface)', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Cancelar</button>
-        <button type="submit" disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', height: '44px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)', color: 'var(--on-surface)', fontSize: '14px', fontWeight: '700', cursor: loading ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
+        <button type="submit" disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', height: '44px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', color: 'var(--on-surface)', fontSize: '14px', fontWeight: '700', cursor: loading ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
           {loading ? <span style={{ width: '18px', height: '18px', border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /> : 'Guardar Transferencia'}
         </button>
       </div>
@@ -484,7 +484,7 @@ function TransferForm({ form, locations, availableProducts, onFormChange, onAddI
 
 // ═══ TransferList ═══
 function TransferList({ transfers, activeTab, locations, onComplete, onCancel, onEdit, search, setSearch, filterFrom, setFilterFrom, filterTo, setFilterTo, filterStatus, setFilterStatus }) {
-  const statusColors = { pending: '#8b5cf6', in_transit: '#3b82f6', completed: '#10b981', cancelled: '#ef4444' };
+  const statusColors = { pending: '#8b5cf6', in_transit: '#6366f1', completed: '#06B6D4', cancelled: '#E11D48' };
   const statusLabels = { pending: 'Pendiente', in_transit: 'En Tránsito', completed: 'Completada', cancelled: 'Cancelada' };
 
   return (
@@ -557,8 +557,8 @@ function TransferList({ transfers, activeTab, locations, onComplete, onCancel, o
                     <button onClick={() => onEdit(transfer)} style={{ padding: '6px', borderRadius: '6px', border: 'none', background: 'transparent', color: 'var(--on-surface-variant)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Editar"><Edit3 size={14} /></button>
                     {transfer.status === 'pending' && (
                       <>
-                        <button onClick={() => onComplete(transfer)} style={{ padding: '6px', borderRadius: '6px', border: 'none', background: 'rgba(16,185,129,0.1)', color: '#10b981', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Marcar completada"><CheckCircle size={14} /></button>
-                        <button onClick={() => onCancel(transfer)} style={{ padding: '6px', borderRadius: '6px', border: 'none', background: 'rgba(239,68,68,0.1)', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Cancelar"><XCircle size={14} /></button>
+                        <button onClick={() => onComplete(transfer)} style={{ padding: '6px', borderRadius: '6px', border: 'none', background: 'rgba(16,185,129,0.1)', color: '#06B6D4', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Marcar completada"><CheckCircle size={14} /></button>
+                        <button onClick={() => onCancel(transfer)} style={{ padding: '6px', borderRadius: '6px', border: 'none', background: 'rgba(239,68,68,0.1)', color: '#E11D48', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Cancelar"><XCircle size={14} /></button>
                       </>
                     )}
                   </div>
@@ -602,7 +602,7 @@ function ProductPickerModal({ products, fromLocation, onSelect, onClose }) {
       <div style={{ width: '600px', maxHeight: '85vh', overflow: 'auto', borderRadius: '20px', background: 'var(--surface)', border: '1px solid var(--glass-border)', boxShadow: '0 24px 80px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>
         <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Plus size={18} color="#fff" /></div>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Plus size={18} color="#fff" /></div>
             <div><h3 style={{ margin: '0 0 4px', fontSize: '16px', fontWeight: '700', color: 'var(--on-surface)' }}>Seleccionar Producto</h3><p style={{ margin: 0, fontSize: '11px', color: 'var(--on-surface-variant)' }}>Ubicación: {LOCATIONS.find(l => l.id === fromLocation)?.name}</p></div>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--on-surface-variant)', cursor: 'pointer' }}><X size={18} /></button>
@@ -630,7 +630,7 @@ function ProductPickerModal({ products, fromLocation, onSelect, onClose }) {
                     </div>
                   </div>
                   <div style={{ textAlign: 'right', minWidth: '100px' }}>
-                    <div style={{ fontSize: '13px', fontWeight: '700', fontFamily: "'JetBrains Mono', monospace", color: '#10b981' }}>{item.currentStock} und.</div>
+                    <div style={{ fontSize: '13px', fontWeight: '700', fontFamily: "'JetBrains Mono', monospace", color: '#06B6D4' }}>{item.currentStock} und.</div>
                     <div style={{ fontSize: '10px', color: 'var(--on-surface-variant)' }}>Disponibles</div>
                   </div>
                 </button>
@@ -645,7 +645,7 @@ function ProductPickerModal({ products, fromLocation, onSelect, onClose }) {
 
 // ═══ Helpers ═══
 function getColorHex(name) {
-  const map = { negro: '#1a1a2e', black: '#1a1a2e', azul: '#3b82f6', blue: '#3b82f6', rojo: '#ef4444', red: '#ef4444', blanco: '#f1f5f9', white: '#f1f5f9', verde: '#10b981', green: '#10b981', amarillo: 'var(--primary-container)', yellow: 'var(--primary-container)', rosa: '#ec4899', pink: '#ec4899', morado: '#8b5cf6', purple: '#8b5cf6', gris: '#64748b', gray: '#64748b', grey: '#64748b', naranja: '#f97316', orange: '#f97316' };
+  const map = { negro: '#1a1a2e', black: '#1a1a2e', azul: '#6366f1', blue: '#6366f1', rojo: '#E11D48', red: '#E11D48', blanco: '#f1f5f9', white: '#f1f5f9', verde: '#06B6D4', green: '#06B6D4', amarillo: 'var(--primary-container)', yellow: 'var(--primary-container)', rosa: '#8B5CF6', pink: '#8B5CF6', morado: '#8b5cf6', purple: '#8b5cf6', gris: '#64748b', gray: '#64748b', grey: '#64748b', naranja: '#f97316', orange: '#f97316' };
   return map[name?.toLowerCase().trim()] || null;
 }
 

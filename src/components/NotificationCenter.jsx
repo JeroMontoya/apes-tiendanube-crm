@@ -3,9 +3,9 @@ import { Bell, X, Clock, Zap, Calendar, ChevronRight, Flame, AlertTriangle, Spar
 import { getUpcomingEvents } from '../utils/colombianEvents';
 
 const URGENCY = {
-  CRITICAL: { color: '#ef4444', bg: 'rgba(239,68,68,0.12)', label: '🔥 URGENTE', glow: 'rgba(239,68,68,0.3)' },
-  WARNING:  { color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.12)', label: '⚠️ PRÓXIMO', glow: 'rgba(245,158,11,0.3)' },
-  INFO:     { color: '#3b82f6', bg: 'rgba(59,130,246,0.10)', label: '📅 PLANIFICAR', glow: 'rgba(59,130,246,0.2)' },
+  CRITICAL: { color: '#E11D48', bg: 'rgba(239,68,68,0.12)', label: '🔥 URGENTE', glow: 'rgba(239,68,68,0.3)' },
+  WARNING:  { color: 'var(--primary-container)', bg: 'rgba(6, 182, 212,0.12)', label: '⚠️ PRÓXIMO', glow: 'rgba(6, 182, 212,0.3)' },
+  INFO:     { color: '#6366f1', bg: 'rgba(99, 102, 241,0.10)', label: '📅 PLANIFICAR', glow: 'rgba(99, 102, 241,0.2)' },
 };
 
 function getUrgency(daysUntil) {
@@ -121,7 +121,7 @@ export default function NotificationCenter() {
               width: criticalEvents.length > 0 ? 22 : 18,
               height: criticalEvents.length > 0 ? 22 : 18,
               borderRadius: '50%',
-              background: criticalEvents.length > 0 ? '#ef4444' : 'var(--primary-container)',
+              background: criticalEvents.length > 0 ? '#E11D48' : 'var(--primary-container)',
               color: 'var(--on-surface)',
               fontSize: 11,
               fontWeight: 700,

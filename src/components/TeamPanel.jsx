@@ -11,8 +11,8 @@ import {
 const ROLES = [
   { value: 'admin', label: 'Administrador', color: '#8b5cf6', icon: Crown, desc: 'Acceso total al sistema' },
   { value: 'taller', label: 'Taller', color: 'var(--primary-container)', icon: Wrench, desc: 'Producción, stock y materiales' },
-  { value: 'ventas', label: 'Ventas', color: '#10b981', icon: DollarSign, desc: 'Clientes, pipeline y ventas' },
-  { value: 'atencion_cliente', label: 'Atención', color: '#3b82f6', icon: Headphones, desc: 'Clientes y soporte' },
+  { value: 'ventas', label: 'Ventas', color: '#06B6D4', icon: DollarSign, desc: 'Clientes, pipeline y ventas' },
+  { value: 'atencion_cliente', label: 'Atención', color: '#6366f1', icon: Headphones, desc: 'Clientes y soporte' },
 ];
 
 const catOrder = ['views', 'taller', 'inventario', 'materiales', 'clientes', 'pqr', 'sistema'];
@@ -35,9 +35,9 @@ function timeAgo(dateStr) {
 }
 
 const ACTION_ICONS = {
-  member_created: { icon: UserPlus, color: '#10b981', label: 'Creó miembro' },
-  member_updated: { icon: Edit3, color: '#3b82f6', label: 'Editó miembro' },
-  member_deactivated: { icon: Trash2, color: '#ef4444', label: 'Eliminó miembro' },
+  member_created: { icon: UserPlus, color: '#06B6D4', label: 'Creó miembro' },
+  member_updated: { icon: Edit3, color: '#6366f1', label: 'Editó miembro' },
+  member_deactivated: { icon: Trash2, color: '#E11D48', label: 'Eliminó miembro' },
   permissions_updated: { icon: Shield, color: 'var(--primary-container)', label: 'Cambió permisos' },
   permissions_reset: { icon: RefreshCw, color: '#8b5cf6', label: 'Restauró permisos' },
 };
@@ -115,12 +115,12 @@ export default function TeamPanel() {
         }}>
           <div style={{
             padding: '40px 32px 28px', textAlign: 'center',
-            background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(59,130,246,0.08))',
+            background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(99, 102, 241,0.08))',
             borderBottom: '1px solid var(--glass-border)',
           }}>
             <div style={{
               width: 64, height: 64, borderRadius: 18,
-              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               margin: '0 auto 16px', boxShadow: '0 12px 32px rgba(99,102,241,0.4)',
             }}>
@@ -147,7 +147,7 @@ export default function TeamPanel() {
                 <button onClick={() => { setForm({ name: '', email: '', role: 'admin' }); setView('create'); }}
                   style={{
                     padding: '12px 24px', borderRadius: 12, border: 'none',
-                    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
                     color: 'var(--on-surface)', fontWeight: 700, fontSize: 14, cursor: 'pointer',
                     display: 'inline-flex', alignItems: 'center', gap: 8,
                     boxShadow: '0 8px 24px rgba(99,102,241,0.3)',
@@ -216,9 +216,9 @@ export default function TeamPanel() {
       }}>
         {[
           { label: 'Miembros', value: allMembers.length, icon: Users, color: '#8b5cf6', bg: 'rgba(139,92,246,0.08)' },
-          { label: 'Roles activos', value: Object.values(roleDistribution).filter(v => v > 0).length, icon: Target, color: '#3b82f6', bg: 'rgba(59,130,246,0.08)' },
-          { label: 'Permisos promedio', value: `${avgPermCoverage}%`, icon: Shield, color: '#10b981', bg: 'rgba(16,185,129,0.08)' },
-          { label: 'Actividad reciente', value: activityLog.length, icon: Activity, color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.08)' },
+          { label: 'Roles activos', value: Object.values(roleDistribution).filter(v => v > 0).length, icon: Target, color: '#6366f1', bg: 'rgba(99, 102, 241,0.08)' },
+          { label: 'Permisos promedio', value: `${avgPermCoverage}%`, icon: Shield, color: '#06B6D4', bg: 'rgba(16,185,129,0.08)' },
+          { label: 'Actividad reciente', value: activityLog.length, icon: Activity, color: 'var(--primary-container)', bg: 'rgba(6, 182, 212,0.08)' },
         ].map((s, i) => (
           <div key={i} style={{
             padding: '16px 18px', borderRadius: 14, background: 'var(--surface)',
@@ -357,7 +357,7 @@ export default function TeamPanel() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                         <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--on-surface)' }}>{m.name}</span>
                         {isCurrent && (
-                          <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 5, background: 'rgba(16,185,129,0.12)', color: '#10b981', letterSpacing: 0.5 }}>TÚ</span>
+                          <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 5, background: 'rgba(16,185,129,0.12)', color: '#06B6D4', letterSpacing: 0.5 }}>TÚ</span>
                         )}
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginTop: 2 }}>{m.email || 'Sin email'}</div>
@@ -366,7 +366,7 @@ export default function TeamPanel() {
                           <RoleIcon size={10} /> {role.label}
                         </span>
                         {hasCustom && (
-                          <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: 'rgba(245,158,11,0.1)', color: 'var(--primary-container)' }}>
+                          <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: 'rgba(6, 182, 212,0.1)', color: 'var(--primary-container)' }}>
                             Personalizado
                           </span>
                         )}
@@ -381,14 +381,14 @@ export default function TeamPanel() {
                         <Shield size={10} style={{ verticalAlign: 'middle', marginRight: 4 }} />
                         {permCount} de {TOTAL_PERMS} permisos
                       </span>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: permPct >= 80 ? '#10b981' : permPct >= 40 ? 'var(--primary-container)' : '#ef4444' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: permPct >= 80 ? '#06B6D4' : permPct >= 40 ? 'var(--primary-container)' : '#E11D48' }}>
                         {permPct}%
                       </span>
                     </div>
                     <div style={{ height: 4, borderRadius: 2, background: 'var(--glass-border)', overflow: 'hidden' }}>
                       <div style={{
                         height: '100%', width: `${permPct}%`, borderRadius: 2,
-                        background: permPct >= 80 ? 'linear-gradient(90deg, #10b981, #34d399)' : permPct >= 40 ? 'linear-gradient(90deg, var(--primary-container), #fbbf24)' : 'linear-gradient(90deg, #ef4444, #f87171)',
+                        background: permPct >= 80 ? 'linear-gradient(90deg, #06B6D4, #22d3ee)' : permPct >= 40 ? 'linear-gradient(90deg, var(--primary-container), #fbbf24)' : 'linear-gradient(90deg, #E11D48, #f87171)',
                         transition: 'width 0.3s',
                       }} />
                     </div>
@@ -569,7 +569,7 @@ function PermissionMatrix({ members, matrixFilter, setMatrixFilter }) {
                             border: has ? '1px solid rgba(16,185,129,0.2)' : '1px solid rgba(255,255,255,0.04)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                           }}>
-                            {has ? <Check size={12} color="#10b981" /> : <X size={10} color="rgba(255,255,255,0.15)" />}
+                            {has ? <Check size={12} color="#06B6D4" /> : <X size={10} color="rgba(255,255,255,0.15)" />}
                           </div>
                         </td>
                       );
@@ -721,7 +721,7 @@ function MemberDrawer({ member, onClose, onEdit, onDelete, canManage, isCurrent,
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--on-surface)' }}>{member.name}</h2>
-                  {isCurrent && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 5, background: 'rgba(16,185,129,0.12)', color: '#10b981' }}>TÚ</span>}
+                  {isCurrent && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 5, background: 'rgba(16,185,129,0.12)', color: '#06B6D4' }}>TÚ</span>}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginTop: 2 }}>{member.email || 'Sin email'}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
@@ -729,7 +729,7 @@ function MemberDrawer({ member, onClose, onEdit, onDelete, canManage, isCurrent,
                     <RoleIcon size={10} /> {role.label}
                   </span>
                   {hasCustom && (
-                    <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: 'rgba(245,158,11,0.1)', color: 'var(--primary-container)' }}>Permisos custom</span>
+                    <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: 'rgba(6, 182, 212,0.1)', color: 'var(--primary-container)' }}>Permisos custom</span>
                   )}
                 </div>
               </div>
@@ -752,7 +752,7 @@ function MemberDrawer({ member, onClose, onEdit, onDelete, canManage, isCurrent,
               {!isCurrent && (
                 <button onClick={onDelete} style={{
                   padding: '8px 14px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.2)',
-                  background: 'rgba(239,68,68,0.06)', color: '#ef4444', fontSize: 12, fontWeight: 600,
+                  background: 'rgba(239,68,68,0.06)', color: '#E11D48', fontSize: 12, fontWeight: 600,
                   cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                 }}>
                   <Trash2 size={13} /> Eliminar
@@ -774,11 +774,11 @@ function MemberDrawer({ member, onClose, onEdit, onDelete, canManage, isCurrent,
                 <div style={{ height: 6, borderRadius: 3, background: 'var(--glass-border)', overflow: 'hidden' }}>
                   <div style={{
                     height: '100%', width: `${permPct}%`, borderRadius: 3,
-                    background: permPct >= 80 ? 'linear-gradient(90deg, #10b981, #34d399)' : permPct >= 40 ? 'linear-gradient(90deg, var(--primary-container), #fbbf24)' : 'linear-gradient(90deg, #ef4444, #f87171)',
+                    background: permPct >= 80 ? 'linear-gradient(90deg, #06B6D4, #22d3ee)' : permPct >= 40 ? 'linear-gradient(90deg, var(--primary-container), #fbbf24)' : 'linear-gradient(90deg, #E11D48, #f87171)',
                   }} />
                 </div>
               </div>
-              <span style={{ fontSize: 13, fontWeight: 800, color: permPct >= 80 ? '#10b981' : permPct >= 40 ? 'var(--primary-container)' : '#ef4444', minWidth: 36, textAlign: 'right' }}>
+              <span style={{ fontSize: 13, fontWeight: 800, color: permPct >= 80 ? '#06B6D4' : permPct >= 40 ? 'var(--primary-container)' : '#E11D48', minWidth: 36, textAlign: 'right' }}>
                 {permCount}/{TOTAL_PERMS}
               </span>
             </div>
@@ -797,12 +797,12 @@ function MemberDrawer({ member, onClose, onEdit, onDelete, canManage, isCurrent,
                       <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: 4 }}>
                         <span>{catDef.icon}</span> {catDef.label}
                       </span>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: pct === 100 ? '#10b981' : pct > 0 ? 'var(--primary-container)' : 'var(--on-surface-variant)' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: pct === 100 ? '#06B6D4' : pct > 0 ? 'var(--primary-container)' : 'var(--on-surface-variant)' }}>
                         {data.enabled}/{data.total}
                       </span>
                     </div>
                     <div style={{ height: 3, borderRadius: 2, background: 'var(--border-subtle)', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${pct}%`, borderRadius: 2, background: pct === 100 ? '#10b981' : 'var(--primary-container)', transition: 'width 0.3s' }} />
+                      <div style={{ height: '100%', width: `${pct}%`, borderRadius: 2, background: pct === 100 ? '#06B6D4' : 'var(--primary-container)', transition: 'width 0.3s' }} />
                     </div>
                   </div>
                 );
@@ -956,7 +956,7 @@ function FormDrawer({ view, form, setForm, editingPerms, setEditingPerms, expand
                         <span style={{
                           fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 4,
                           background: allEnabled ? 'rgba(16,185,129,0.1)' : 'var(--glass-border)',
-                          color: allEnabled ? '#10b981' : 'var(--on-surface-variant)',
+                          color: allEnabled ? '#06B6D4' : 'var(--on-surface-variant)',
                         }}>{enabledCount}/{permsInCat.length}</span>
                       </div>
                       <button onClick={(e) => {
@@ -967,7 +967,7 @@ function FormDrawer({ view, form, setForm, editingPerms, setEditingPerms, expand
                       }} style={{
                         padding: '3px 8px', borderRadius: 5, border: 'none', fontSize: 9, fontWeight: 600, cursor: 'pointer',
                         background: allEnabled ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)',
-                        color: allEnabled ? '#ef4444' : '#10b981',
+                        color: allEnabled ? '#E11D48' : '#06B6D4',
                       }}>
                         {allEnabled ? 'Quitar' : 'Dar'}
                       </button>
@@ -986,12 +986,12 @@ function FormDrawer({ view, form, setForm, editingPerms, setEditingPerms, expand
                               display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'all 0.1s',
                             }}>
                               <div>
-                                <span style={{ fontSize: 11, fontWeight: 500, color: enabled ? '#10b981' : 'var(--on-surface)' }}>{permDef.label}</span>
+                                <span style={{ fontSize: 11, fontWeight: 500, color: enabled ? '#06B6D4' : 'var(--on-surface)' }}>{permDef.label}</span>
                                 <span style={{ fontSize: 10, color: 'var(--on-surface-variant)', marginLeft: 8 }}>{permDef.desc}</span>
                               </div>
                               <div style={{
                                 width: 18, height: 18, borderRadius: 5,
-                                background: enabled ? '#10b981' : 'var(--glass-border)',
+                                background: enabled ? '#06B6D4' : 'var(--glass-border)',
                                 border: enabled ? 'none' : '1px solid var(--border-medium)',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                               }}>
@@ -1053,7 +1053,7 @@ export function TeamMemberBadge() {
 
   if (!currentMember) return null;
   const ROLE_ICONS = { admin: '👑', ventas: '💰', taller: '⚙️', atencion_cliente: '🎧' };
-  const ROLE_COLORS = { admin: 'var(--primary-container)', ventas: '#10b981', taller: '#3b82f6', atencion_cliente: '#8b5cf6' };
+  const ROLE_COLORS = { admin: 'var(--primary-container)', ventas: '#06B6D4', taller: '#6366f1', atencion_cliente: '#8b5cf6' };
 
   return (
     <div ref={dropdownRef} style={{ position: 'relative', zIndex: 9999 }}>
@@ -1088,7 +1088,7 @@ export function TeamMemberBadge() {
           <div style={{ height: 1, background: 'var(--outline)', margin: '6px 0' }} />
           <button onClick={() => { setOpen(false); logout?.(); }} style={{
             width: '100%', padding: '8px 10px', borderRadius: 8, border: 'none',
-            background: 'rgba(239,68,68,0.08)', color: '#ef4444', cursor: 'pointer', fontSize: 12, fontWeight: 600
+            background: 'rgba(239,68,68,0.08)', color: '#E11D48', cursor: 'pointer', fontSize: 12, fontWeight: 600
           }}>
             Cerrar sesión
           </button>

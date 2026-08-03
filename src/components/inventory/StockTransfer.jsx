@@ -66,7 +66,7 @@ function ProductSearch({ products, locations, onSelect, sourceLocation }) {
                 <div style={{ fontSize: '13px', fontWeight: '600' }}>{p.name}</div>
                 <div style={{ fontSize: '10px', color: 'var(--on-surface-variant)' }}>{p.sku}</div>
               </div>
-              <span style={{ fontSize: '12px', fontWeight: '700', color: '#10b981', fontFamily: "'JetBrains Mono', monospace" }}>
+              <span style={{ fontSize: '12px', fontWeight: '700', color: '#06B6D4', fontFamily: "'JetBrains Mono', monospace" }}>
                 {p.total_stock || 0} disp.
               </span>
             </button>
@@ -97,7 +97,7 @@ function TransferItem({ item, locations, stock, onQuantityChange, onRemove }) {
           <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--on-surface)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.product?.name}</div>
           <div style={{ fontSize: '10px', color: 'var(--on-surface-variant)' }}>{item.product?.sku}</div>
         </div>
-        <button onClick={() => onRemove(item.id)} style={{ padding: '4px', borderRadius: '4px', border: 'none', background: 'transparent', color: '#ef4444', cursor: 'pointer' }}>
+        <button onClick={() => onRemove(item.id)} style={{ padding: '4px', borderRadius: '4px', border: 'none', background: 'transparent', color: '#E11D48', cursor: 'pointer' }}>
           <X size={14} />
         </button>
       </div>
@@ -176,8 +176,8 @@ export default function StockTransfer({ products, locations, stock, onTransfer, 
 
   const fromName = locations?.find((l) => l.id === fromLocation)?.name || fromLocation;
   const toName = locations?.find((l) => l.id === toLocation)?.name || toLocation;
-  const fromColor = locations?.find((l) => l.id === fromLocation)?.color || '#3b82f6';
-  const toColor = locations?.find((l) => l.id === toLocation)?.color || '#10b981';
+  const fromColor = locations?.find((l) => l.id === fromLocation)?.color || '#6366f1';
+  const toColor = locations?.find((l) => l.id === toLocation)?.color || '#06B6D4';
   const valid = items.length > 0 && fromLocation !== toLocation;
 
   return (
@@ -191,7 +191,7 @@ export default function StockTransfer({ products, locations, stock, onTransfer, 
           <div style={{
             position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)',
             padding: '10px 20px', borderRadius: '10px',
-            background: toast.type === 'success' ? 'rgba(16,185,129,0.95)' : toast.type === 'warning' ? 'rgba(245,158,11,0.95)' : 'rgba(239,68,68,0.95)',
+            background: toast.type === 'success' ? 'rgba(16,185,129,0.95)' : toast.type === 'warning' ? 'rgba(6, 182, 212,0.95)' : 'rgba(239,68,68,0.95)',
             color: 'var(--on-surface)', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px',
             boxShadow: '0 4px 20px rgba(0,0,0,0.3)', zIndex: 10,
           }}>
@@ -344,7 +344,7 @@ export default function StockTransfer({ products, locations, stock, onTransfer, 
               disabled={!valid || saving}
               style={{
                 padding: '12px 24px', borderRadius: '10px', border: 'none',
-                background: valid ? 'linear-gradient(135deg, #8b5cf6, #3b82f6)' : 'var(--surface-container, var(--border-subtle))',
+                background: valid ? 'linear-gradient(135deg, #8b5cf6, #6366f1)' : 'var(--surface-container, var(--border-subtle))',
                 color: valid ? '#fff' : 'var(--on-surface-variant)',
                 fontSize: '13px', fontWeight: '700',
                 cursor: valid && !saving ? 'pointer' : 'not-allowed',

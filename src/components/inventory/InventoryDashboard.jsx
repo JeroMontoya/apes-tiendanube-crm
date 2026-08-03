@@ -25,9 +25,9 @@ function timeAgo(dateStr) {
 }
 
 const MOVEMENT_TYPE_CONFIG = {
-  receive: { label: 'Entró', color: '#10b981', icon: TrendingUp },
-  dispatch: { label: 'Salió', color: '#ef4444', icon: TrendingDown },
-  transfer: { label: 'Se movió', color: '#3b82f6', icon: ArrowLeftRight },
+  receive: { label: 'Entró', color: '#06B6D4', icon: TrendingUp },
+  dispatch: { label: 'Salió', color: '#E11D48', icon: TrendingDown },
+  transfer: { label: 'Se movió', color: '#6366f1', icon: ArrowLeftRight },
   adjustment: { label: 'Ajuste', color: 'var(--primary-container)', icon: RefreshCw },
   return: { label: 'Devolución', color: 'var(--primary-container)', icon: RefreshCw },
   production_in: { label: 'Producción', color: '#06b6d4', icon: Package },
@@ -135,14 +135,14 @@ export default function InventoryDashboard({ summary, alerts, movements, locatio
         <StatCard
           label="Productos"
           value={stats.totalProducts}
-          color="#3b82f6"
+          color="#6366f1"
           icon={Package}
           onClick={() => onAction?.('view_products')}
         />
         <StatCard
           label="En inventario"
           value={formatCurrency(stats.totalStockValue)}
-          color="#10b981"
+          color="#06B6D4"
           icon={DollarSign}
         />
         <StatCard
@@ -155,7 +155,7 @@ export default function InventoryDashboard({ summary, alerts, movements, locatio
         <StatCard
           label="Alertas"
           value={stats.pendingAlerts}
-          color="#ef4444"
+          color="#E11D48"
           icon={Bell}
           onClick={() => onAction?.('alerts')}
         />
@@ -167,7 +167,7 @@ export default function InventoryDashboard({ summary, alerts, movements, locatio
       }}>
         {[
           { id: 'all', label: 'Todos', color: '#6366f1', icon: MapPin },
-          ...(locations || []).map(l => ({ id: l.id || l.code, label: l.name || l.code, color: l.color || '#3b82f6', icon: MapPin })),
+          ...(locations || []).map(l => ({ id: l.id || l.code, label: l.name || l.code, color: l.color || '#6366f1', icon: MapPin })),
         ].map(loc => {
           const isActive = activeLocation === loc.id;
           return (
@@ -201,8 +201,8 @@ export default function InventoryDashboard({ summary, alerts, movements, locatio
       {/* Quick Actions */}
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
         {[
-          { key: 'new_product', label: '+ Producto nuevo', color: '#3b82f6', icon: Plus },
-          { key: 'adjust', label: 'Sumar / Restar stock', color: '#10b981', icon: ArrowUpDown },
+          { key: 'new_product', label: '+ Producto nuevo', color: '#6366f1', icon: Plus },
+          { key: 'adjust', label: 'Sumar / Restar stock', color: '#06B6D4', icon: ArrowUpDown },
           { key: 'transfer', label: 'Mover entre locales', color: '#8b5cf6', icon: ArrowLeftRight },
           { key: 'sync_tn', label: 'Actualizar de TiendaNube', color: '#06b6d4', icon: RefreshCw },
         ].map(action => (
@@ -309,7 +309,7 @@ export default function InventoryDashboard({ summary, alerts, movements, locatio
                 <span style={{
                   fontSize: '11px', fontWeight: '700',
                   padding: '2px 8px', borderRadius: '10px',
-                  background: '#ef4444', color: 'var(--on-surface)',
+                  background: '#E11D48', color: 'var(--on-surface)',
                 }}>
                   {activeAlerts.length}
                 </span>
@@ -318,7 +318,7 @@ export default function InventoryDashboard({ summary, alerts, movements, locatio
           </div>
           {activeAlerts.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '24px', color: 'var(--on-surface-variant)' }}>
-              <CheckCircle size={28} style={{ opacity: 0.3, marginBottom: '6px', color: '#10b981' }} />
+              <CheckCircle size={28} style={{ opacity: 0.3, marginBottom: '6px', color: '#06B6D4' }} />
               <p style={{ margin: 0, fontSize: '13px', fontWeight: '600' }}>Todo tranquilo por acá</p>
             </div>
           ) : (
@@ -329,13 +329,13 @@ export default function InventoryDashboard({ summary, alerts, movements, locatio
                   <div key={alert.id || i} style={{
                     padding: '12px 14px',
                     borderRadius: '10px',
-                    background: isCrit ? 'rgba(239,68,68,0.08)' : 'rgba(245,158,11,0.08)',
-                    border: `1px solid ${isCrit ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)'}`,
+                    background: isCrit ? 'rgba(239,68,68,0.08)' : 'rgba(6, 182, 212,0.08)',
+                    border: `1px solid ${isCrit ? 'rgba(239,68,68,0.2)' : 'rgba(6, 182, 212,0.2)'}`,
                     display: 'flex',
                     alignItems: 'center',
                     gap: '10px',
                   }}>
-                    <AlertTriangle size={16} color={isCrit ? '#ef4444' : 'var(--primary-container)'} style={{ flexShrink: 0 }} />
+                    <AlertTriangle size={16} color={isCrit ? '#E11D48' : 'var(--primary-container)'} style={{ flexShrink: 0 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--on-surface)' }}>
                         {alert.message || alert.product_name || 'Alerta'}

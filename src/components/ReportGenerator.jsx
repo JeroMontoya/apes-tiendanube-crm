@@ -469,9 +469,9 @@ function ExecutiveSummary({ allData }) {
       <SectionDivider title="Resumen Ejecutivo" />
       <div style={{ padding: 20 }}>
         <div className="report-kpi-grid">
-          <KPICard label="Gasto Total" value={formatCurrency(totalSpend)} color="#ef4444" />
+          <KPICard label="Gasto Total" value={formatCurrency(totalSpend)} color="#E11D48" />
           <KPICard label="Conversiones" value={formatNumber(totalConversions)} color="#22c55e" />
-          <KPICard label="ROAS General" value={roas + 'x'} color="#3b82f6" />
+          <KPICard label="ROAS General" value={roas + 'x'} color="#6366f1" />
           <KPICard label="CPA Promedio" value={formatCurrency(cpa)} color="#8b5cf6" />
         </div>
       </div>
@@ -557,14 +557,14 @@ function GA4Section({ data }) {
       <SectionDivider title="Google Analytics 4" />
       <div style={{ padding: '24px' }}>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
-          <KPICard label="Sesiones" value={formatNumber(sessions)} color="#3b82f6" />
+          <KPICard label="Sesiones" value={formatNumber(sessions)} color="#6366f1" />
           <KPICard label="Usuarios Activos" value={formatNumber(users)} color="#22c55e" />
-          <KPICard label="Tasa de Rebote" value={formatPercent(bounceRate)} color="#ef4444" />
+          <KPICard label="Tasa de Rebote" value={formatPercent(bounceRate)} color="#E11D48" />
           <KPICard label="Tiempo Promedio" value={formatDuration(avgDuration)} color="var(--primary-container)" />
         </div>
         {totalRevenue > 0 && (
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
-            <KPICard label="Ingresos E-commerce" value={formatCurrency(totalRevenue)} color="#10b981" />
+            <KPICard label="Ingresos E-commerce" value={formatCurrency(totalRevenue)} color="#06B6D4" />
             <KPICard label="Compras" value={formatNumber(totalPurchases)} color="#8b5cf6" />
           </div>
         )}
@@ -592,7 +592,7 @@ function GSCSection({ data }) {
       <SectionDivider title="Search Console" />
       <div style={{ padding: '24px' }}>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
-          <KPICard label="Impresiones" value={formatNumber(data?.totalImpressions || 0)} color="#3b82f6" />
+          <KPICard label="Impresiones" value={formatNumber(data?.totalImpressions || 0)} color="#6366f1" />
           <KPICard label="Clics" value={formatNumber(data?.totalClicks || 0)} color="#22c55e" />
           <KPICard label="CTR" value={formatPercent(data?.avgCtr || 0)} color="var(--primary-container)" />
           <KPICard label="Posición Media" value={(data?.avgPosition || 0).toFixed(1)} color="#8b5cf6" />
@@ -640,7 +640,7 @@ function MCSection({ data }) {
       <SectionDivider title="Merchant Center" />
       <div style={{ padding: '24px' }}>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
-          <KPICard label="Total Productos" value={formatNumber(products.length)} color="#3b82f6" />
+          <KPICard label="Total Productos" value={formatNumber(products.length)} color="#6366f1" />
           <KPICard label="Activos" value={formatNumber(products.filter((p) => p.status === 'active' || p.availability === 'in_stock').length)} color="#22c55e" />
         </div>
         <DataTable

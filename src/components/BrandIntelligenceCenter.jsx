@@ -8,9 +8,9 @@ import {
 } from 'lucide-react';
 
 const COLORS = {
-  primary: '#6366F1', success: '#10B981', warning: 'var(--primary-container)',
-  danger: '#EF4444', info: '#0EA5E9', purple: '#8B5CF6',
-  pink: '#EC4899', teal: '#14B8A6',
+  primary: '#6366F1', success: '#06B6D4', warning: 'var(--primary-container)',
+  danger: '#E11D48', info: '#0EA5E9', purple: '#8B5CF6',
+  pink: '#8B5CF6', teal: '#14B8A6',
 };
 
 const gradeColors = {
@@ -67,7 +67,7 @@ function TrendIcon({ trend }) {
 function SeverityBadge({ severity }) {
   const styles = {
     critical: { bg: 'rgba(239,68,68,0.15)', color: COLORS.danger, icon: XCircle },
-    warning: { bg: 'rgba(245,158,11,0.15)', color: COLORS.warning, icon: AlertTriangle },
+    warning: { bg: 'rgba(6, 182, 212,0.15)', color: COLORS.warning, icon: AlertTriangle },
     info: { bg: 'rgba(14,165,233,0.15)', color: COLORS.info, icon: Lightbulb },
   };
   const s = styles[severity] || styles.info;
@@ -269,7 +269,7 @@ export default function BrandIntelligenceCenter({ session }) {
                   <p style={{ fontSize: 12, color: 'var(--on-surface-variant)', margin: 0, lineHeight: 1.5 }}>{o.description}</p>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 'auto' }}>
                     <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 4, background: 'rgba(16,185,129,0.1)', color: COLORS.success, fontWeight: 600 }}>💰 {o.estimatedImpact}</span>
-                    <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 4, background: o.effort === 'low' ? 'rgba(16,185,129,0.1)' : o.effort === 'medium' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)', color: o.effort === 'low' ? COLORS.success : o.effort === 'medium' ? COLORS.warning : COLORS.danger, fontWeight: 600 }}>Esfuerzo: {o.effort}</span>
+                    <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 4, background: o.effort === 'low' ? 'rgba(16,185,129,0.1)' : o.effort === 'medium' ? 'rgba(6, 182, 212,0.1)' : 'rgba(239,68,68,0.1)', color: o.effort === 'low' ? COLORS.success : o.effort === 'medium' ? COLORS.warning : COLORS.danger, fontWeight: 600 }}>Esfuerzo: {o.effort}</span>
                     {o.timeframe && <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 4, background: 'rgba(14,165,233,0.1)', color: COLORS.info, fontWeight: 600 }}>⏱ {o.timeframe}</span>}
                   </div>
                 </div>

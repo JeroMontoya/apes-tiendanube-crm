@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { ArrowUpRight } from 'lucide-react';
 
@@ -20,12 +20,20 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
+const RANGE_OPTIONS = [
+  { value: 7, label: '7 días' },
+  { value: 14, label: '14 días' },
+  { value: 30, label: '30 días' },
+];
+
 export default function ConversionsChartWidget({ rawOrders }) {
+  const [days, setDays] = useState(7);
+
   const data = useMemo(() => {
     const orders = rawOrders || [];
     const byDay = {};
     const now = new Date();
-    for (let i = 6; i >= 0; i--) {
+    for (let i = days - 1; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(d.getDate() - i);
       const key = d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
@@ -37,7 +45,7 @@ export default function ConversionsChartWidget({ rawOrders }) {
       if (byDay[key] !== undefined) byDay[key] += 1;
     });
     return Object.entries(byDay).map(([date, value]) => ({ date, value }));
-  }, [rawOrders]);
+  }, [rawOrders, days]);
   
   const totalConversions = data.reduce((s, d) => s + d.value, 0);
 
@@ -53,12 +61,17 @@ export default function ConversionsChartWidget({ rawOrders }) {
             <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--on-background)', letterSpacing: '-0.5px' }}>{totalConversions.toLocaleString('es-CO')}</span>
           </div>
         </div>
-        <select style={{
-          background: `${ACCENT}12`, border: `1px solid ${ACCENT}33`,
-          color: ACCENT, padding: '4px 8px', borderRadius: 6, fontSize: 11, cursor: 'pointer', outline: 'none'
-        }}>
-          <option value="7d">7 días</option>
-          <option value="30d">30 días</option>
+        <select
+          value={days}
+          onChange={(e) => setDays(Number(e.target.value))}
+          style={{
+            background: `${ACCENT}12`, border: `1px solid ${ACCENT}33`,
+            color: ACCENT, padding: '4px 8px', borderRadius: 6, fontSize: 11, cursor: 'pointer', outline: 'none'
+          }}
+        >
+          {RANGE_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
         </select>
       </div>
 
@@ -72,7 +85,8 @@ export default function ConversionsChartWidget({ rawOrders }) {
               </linearGradient>
             </defs>
             <XAxis dataKey="date" axisLine={false} tickLine={false}
-              tick={{ fontSize: 10, fill: 'var(--on-surface-variant)' }} dy={6} />
+              tick={{ fontSize: 10, fill: 'var(--on-surface-variant)' }} dy={6}
+              interval={days > 14 ? Math.floor(days / 7) - 1 : 0} />
             <YAxis axisLine={false} tickLine={false}
               tick={{ fontSize: 10, fill: 'var(--on-surface-variant)' }}
               tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(1)}K` : v} />

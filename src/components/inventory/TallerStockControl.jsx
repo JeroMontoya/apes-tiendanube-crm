@@ -6,9 +6,9 @@ import {
 } from 'lucide-react';
 
 const LOCATIONS = [
-  { code: 'R5', label: 'R5', color: '#3b82f6', desc: 'Local Principal' },
+  { code: 'R5', label: 'R5', color: '#6366f1', desc: 'Local Principal' },
   { code: 'APES', label: 'APES', color: '#8b5cf6', desc: 'Local Secundario' },
-  { code: 'WEB', label: 'WEB', color: '#10b981', desc: 'tiendaapes.com' },
+  { code: 'WEB', label: 'WEB', color: '#06B6D4', desc: 'tiendaapes.com' },
 ];
 
 export default function TallerStockControl({ session }) {
@@ -188,8 +188,8 @@ export default function TallerStockControl({ session }) {
   const getSyncIndicator = (productId) => {
     const status = syncStatus[productId];
     if (!status) return null;
-    if (status.success) return <CheckCircle size={14} color="#10b981" title="Sincronizado con TiendaNube" />;
-    if (status.error) return <AlertTriangle size={14} color="#ef4444" title={`Error: ${status.error}`} />;
+    if (status.success) return <CheckCircle size={14} color="#06B6D4" title="Sincronizado con TiendaNube" />;
+    if (status.error) return <AlertTriangle size={14} color="#E11D48" title={`Error: ${status.error}`} />;
     return null;
   };
 
@@ -206,7 +206,7 @@ export default function TallerStockControl({ session }) {
 
   const inputStyle = (isError = false) => ({
     width: '100%', height: '36px', borderRadius: '8px',
-    border: `1px solid ${isError ? '#ef4444' : 'var(--border-subtle)'}`,
+    border: `1px solid ${isError ? '#E11D48' : 'var(--border-subtle)'}`,
     background: 'var(--surface)', color: 'var(--on-surface)',
     fontSize: '14px', fontWeight: '600', textAlign: 'center',
     fontFamily: "'JetBrains Mono', monospace", outline: 'none',
@@ -228,7 +228,7 @@ export default function TallerStockControl({ session }) {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Factory size={20} color="#10b981" />
+            <Factory size={20} color="#06B6D4" />
           </div>
           <div>
             <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: 'var(--on-surface)' }}>Control de Stock - Taller</h2>
@@ -240,7 +240,7 @@ export default function TallerStockControl({ session }) {
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--on-surface-variant)', cursor: 'pointer' }}>
-            <input type="checkbox" checked={showOnlyMapped} onChange={e => setShowOnlyMapped(e.target.checked)} style={{ width: '16px', height: '16px', accentColor: '#10b981' }} />
+            <input type="checkbox" checked={showOnlyMapped} onChange={e => setShowOnlyMapped(e.target.checked)} style={{ width: '16px', height: '16px', accentColor: '#06B6D4' }} />
             Solo con TiendaNube
           </label>
           
@@ -268,7 +268,7 @@ export default function TallerStockControl({ session }) {
           <button
             onClick={fetchProducts}
             disabled={loading}
-            style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', background: '#3b82f6', color: 'var(--on-surface)', fontSize: '12px', fontWeight: '600', cursor: loading ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'inherit' }}
+            style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', background: '#6366f1', color: 'var(--on-surface)', fontSize: '12px', fontWeight: '600', cursor: loading ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'inherit' }}
           >
             <RefreshCw size={14} style={{ animation: loading ? 'spin 1s linear infinite' : '' }} />
             Actualizar
@@ -300,7 +300,7 @@ export default function TallerStockControl({ session }) {
                 <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: '700', color: 'var(--on-surface)', whiteSpace: 'nowrap', minWidth: '280px' }}>Producto</th>
                 <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '700', color: 'var(--on-surface)', whiteSpace: 'nowrap', width: '90px' }}>SKU</th>
                 
-                <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '700', color: '#3b82f6', whiteSpace: 'nowrap', width: '110px', position: 'relative' }}>
+                <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '700', color: '#6366f1', whiteSpace: 'nowrap', width: '110px', position: 'relative' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                     <MapPin size={12} />
                     R5
@@ -312,11 +312,11 @@ export default function TallerStockControl({ session }) {
                     APES
                   </div>
                 </th>
-                <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '700', color: '#10b981', whiteSpace: 'nowrap', width: '130px', position: 'relative' }}>
+                <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '700', color: '#06B6D4', whiteSpace: 'nowrap', width: '130px', position: 'relative' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                     <Zap size={12} />
                     WEB
-                    <Wifi size={10} color="#10b981" title="Sincroniza con TiendaNube" />
+                    <Wifi size={10} color="#06B6D4" title="Sincroniza con TiendaNube" />
                   </div>
                 </th>
                 <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '700', color: 'var(--on-surface)', whiteSpace: 'nowrap', width: '90px' }}>Total</th>
@@ -368,7 +368,7 @@ export default function TallerStockControl({ session }) {
                           <button
                             onClick={() => !isSaving(product.id, 'R5') && quickAdjust(product, 'R5', -1)}
                             disabled={isSaving(product.id, 'R5') || r5.available <= 0}
-                            style={btnStyle('#ef4444', isSaving(product.id, 'R5') || r5.available <= 0)}
+                            style={btnStyle('#E11D48', isSaving(product.id, 'R5') || r5.available <= 0)}
                             title="Restar 1"
                           ><Minus size={12} /></button>
                           
@@ -392,7 +392,7 @@ export default function TallerStockControl({ session }) {
                           <button
                             onClick={() => !isSaving(product.id, 'R5') && quickAdjust(product, 'R5', 1)}
                             disabled={isSaving(product.id, 'R5')}
-                            style={btnStyle('#10b981', isSaving(product.id, 'R5'))}
+                            style={btnStyle('#06B6D4', isSaving(product.id, 'R5'))}
                             title="Sumar 1"
                           ><Plus size={12} /></button>
                         </div>
@@ -409,7 +409,7 @@ export default function TallerStockControl({ session }) {
                           <button
                             onClick={() => !isSaving(product.id, 'APES') && quickAdjust(product, 'APES', -1)}
                             disabled={isSaving(product.id, 'APES') || apes.available <= 0}
-                            style={btnStyle('#ef4444', isSaving(product.id, 'APES') || apes.available <= 0)}
+                            style={btnStyle('#E11D48', isSaving(product.id, 'APES') || apes.available <= 0)}
                             title="Restar 1"
                           ><Minus size={12} /></button>
                           
@@ -433,7 +433,7 @@ export default function TallerStockControl({ session }) {
                           <button
                             onClick={() => !isSaving(product.id, 'APES') && quickAdjust(product, 'APES', 1)}
                             disabled={isSaving(product.id, 'APES')}
-                            style={btnStyle('#10b981', isSaving(product.id, 'APES'))}
+                            style={btnStyle('#06B6D4', isSaving(product.id, 'APES'))}
                             title="Sumar 1"
                           ><Plus size={12} /></button>
                         </div>
@@ -450,7 +450,7 @@ export default function TallerStockControl({ session }) {
                           <button
                             onClick={() => !isSaving(product.id, 'WEB') && quickAdjust(product, 'WEB', -1)}
                             disabled={isSaving(product.id, 'WEB') || web.available <= 0}
-                            style={btnStyle('#ef4444', isSaving(product.id, 'WEB') || web.available <= 0)}
+                            style={btnStyle('#E11D48', isSaving(product.id, 'WEB') || web.available <= 0)}
                             title="Restar 1 (sincroniza con TiendaNube)"
                           ><Minus size={12} /></button>
                           
@@ -474,7 +474,7 @@ export default function TallerStockControl({ session }) {
                           <button
                             onClick={() => !isSaving(product.id, 'WEB') && quickAdjust(product, 'WEB', 1)}
                             disabled={isSaving(product.id, 'WEB')}
-                            style={btnStyle('#10b981', isSaving(product.id, 'WEB'))}
+                            style={btnStyle('#06B6D4', isSaving(product.id, 'WEB'))}
                             title="Sumar 1 (sincroniza con TiendaNube)"
                           ><Plus size={12} /></button>
                         </div>

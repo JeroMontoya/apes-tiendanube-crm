@@ -28,8 +28,8 @@ class ErrorBoundary extends React.Component {
           justifyContent: 'center',
           minHeight: '100vh',
           padding: '20px',
-          background: '#0A0A0A',
-          color: '#e2e4e8',
+          background: 'var(--background, #050507)',
+          color: 'var(--on-background, #f8fafc)',
           fontFamily: 'Inter, sans-serif'
         }}>
           <h1 style={{ marginBottom: '16px', letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: '18px', fontWeight: 600 }}>Something went wrong</h1>
@@ -37,13 +37,13 @@ class ErrorBoundary extends React.Component {
             textAlign: 'left', 
             maxWidth: '800px', 
             overflow: 'auto',
-            background: '#111214',
+            background: 'var(--surface, #0b0d14)',
             padding: '16px',
             borderRadius: '6px',
             fontSize: '12px',
             whiteSpace: 'pre-wrap',
             border: '1px solid var(--border-subtle)',
-            color: '#6b7280'
+            color: 'var(--on-surface-variant, #8B9BB4)'
           }}>
             {this.state.error?.toString()}
             {'\n\n'}
@@ -54,7 +54,7 @@ class ErrorBoundary extends React.Component {
             style={{
               marginTop: '24px',
               padding: '12px 24px',
-              background: '#3d5a99',
+              background: 'var(--primary, #6366f1)',
               color: 'white',
               border: 'none',
               borderRadius: '6px',

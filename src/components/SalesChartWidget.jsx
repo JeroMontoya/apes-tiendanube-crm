@@ -1,10 +1,9 @@
-import React, { useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Info, ArrowUpRight } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { Info } from 'lucide-react';
 import MetricTooltip from './MetricTooltip';
 
-const ACCENT = '#10b981';
-const ACCENT_LIGHT = 'rgba(16,185,129,0.4)';
+const ACCENT = '#06B6D4';
 
 function formatCurrency(v) {
   if (v >= 1000000) return `$${(v / 1000000).toFixed(1)}M`;
@@ -27,12 +26,20 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
+const RANGE_OPTIONS = [
+  { value: 7, label: '7 días' },
+  { value: 14, label: '14 días' },
+  { value: 30, label: '30 días' },
+];
+
 export default function SalesChartWidget({ rawOrders }) {
+  const [days, setDays] = useState(7);
+
   const data = useMemo(() => {
     const orders = rawOrders || [];
     const byDay = {};
     const now = new Date();
-    for (let i = 6; i >= 0; i--) {
+    for (let i = days - 1; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(d.getDate() - i);
       const key = d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
@@ -44,17 +51,18 @@ export default function SalesChartWidget({ rawOrders }) {
       if (byDay[key] !== undefined) byDay[key] += parseFloat(o.total || o.amount || 0);
     });
     return Object.entries(byDay).map(([date, value]) => ({ date, value }));
-  }, [rawOrders]);
+  }, [rawOrders, days]);
 
   const total = data.reduce((s, d) => s + d.value, 0);
+  const rangeLabel = RANGE_OPTIONS.find(r => r.value === days)?.label || `${days} días`;
 
   return (
-    <div className="glass-card bento-span-5" style={{ display: 'flex', flexDirection: 'column', minHeight: 320 }}>
+    <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', minHeight: 320, height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
           <h3 style={{ fontSize: 13, fontWeight: 500, margin: 0, color: 'var(--on-surface-variant)', display: 'flex', alignItems: 'center', gap: 6 }}>
-            Ventas de la semana
-            <MetricTooltip text="Evolución de ingresos en los últimos 7 días.">
+            Ventas ({rangeLabel})
+            <MetricTooltip text={`Evolución de ingresos en los últimos ${days} días.`}>
               <Info size={12} color="var(--on-surface-variant)" style={{ opacity: 0.6 }} />
             </MetricTooltip>
           </h3>
@@ -64,32 +72,40 @@ export default function SalesChartWidget({ rawOrders }) {
             </span>
           </div>
         </div>
-        <select style={{
-          background: `${ACCENT}12`, border: `1px solid ${ACCENT}33`,
-          color: ACCENT, padding: '5px 10px', borderRadius: 6, fontSize: 12, cursor: 'pointer', outline: 'none'
-        }}>
-          <option value="7d">7 días</option>
-          <option value="30d">30 días</option>
+        <select
+          value={days}
+          onChange={(e) => setDays(Number(e.target.value))}
+          style={{
+            background: `${ACCENT}12`, border: `1px solid ${ACCENT}33`,
+            color: ACCENT, padding: '5px 10px', borderRadius: 6, fontSize: 12, cursor: 'pointer', outline: 'none'
+          }}
+        >
+          {RANGE_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
         </select>
       </div>
 
       <div style={{ flex: 1, width: '100%' }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 5, right: 0, left: -20, bottom: 0 }} barCategoryGap="25%">
+          <AreaChart data={data} margin={{ top: 10, right: 0, left: -15, bottom: 0 }}>
             <defs>
-              <linearGradient id="goldBar" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={ACCENT_LIGHT} stopOpacity={1}/>
-                <stop offset="100%" stopColor={ACCENT} stopOpacity={0.7}/>
+              <linearGradient id="salesArea" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={ACCENT} stopOpacity={0.4}/>
+                <stop offset="100%" stopColor={ACCENT} stopOpacity={0}/>
               </linearGradient>
             </defs>
             <XAxis dataKey="date" axisLine={false} tickLine={false}
-              tick={{ fontSize: 11, fill: 'var(--on-surface-variant)' }} dy={8} />
+              tick={{ fontSize: 11, fill: 'var(--on-surface-variant)' }} dy={8}
+              interval={days > 14 ? Math.floor(days / 7) - 1 : 0} />
             <YAxis axisLine={false} tickLine={false}
               tick={{ fontSize: 11, fill: 'var(--on-surface-variant)' }}
               tickFormatter={(val) => formatCurrency(val)} />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: `${ACCENT}08` }} />
-            <Bar dataKey="value" fill="url(#goldBar)" radius={[4, 4, 0, 0]} maxBarSize={40} />
-          </BarChart>
+            <Tooltip content={<CustomTooltip />} />
+            <Area type="monotone" dataKey="value" stroke={ACCENT} strokeWidth={3}
+              fillOpacity={1} fill="url(#salesArea)"
+              dot={false} activeDot={{ r: 6, fill: ACCENT, stroke: 'var(--background)', strokeWidth: 3 }} />
+          </AreaChart>
         </ResponsiveContainer>
       </div>
     </div>

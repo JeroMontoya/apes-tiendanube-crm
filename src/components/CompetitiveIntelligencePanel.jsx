@@ -28,18 +28,24 @@ const COMPETITORS = [
 const AdCard = ({ ad }) => {
   const isVideo = ad.format === 'reel' || ad.format === 'video';
   
-  // Generate stable mock data for the UI representation
-  const mockData = React.useMemo(() => {
-    const randomId = Math.floor(100000000000000 + Math.random() * 900000000000000).toString();
-    const hasMultiple = Math.random() > 0.5;
-    return {
-      libraryId: randomId,
-      startDate: '6 jul 2026', 
-      hasMultiple: hasMultiple,
-      advertiserName: ad.brand.charAt(0).toUpperCase() + ad.brand.slice(1),
-      title: 'Hasta 40% OFF',
-      subtitle: 'No te pierdas esta oportunidad'
-    };
+  // Derive display data from the real ad object
+  const adData = React.useMemo(() => {
+    const orig = ad.original_ad || {};
+    const libraryId = orig.id || ad.id || '—';
+    
+    let startDate = '—';
+    if (orig.ad_delivery_start_time) {
+      try {
+        startDate = new Date(orig.ad_delivery_start_time).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+      } catch { startDate = orig.ad_delivery_start_time; }
+    }
+    
+    const hasMultiple = !!(orig.ad_snapshot_url && orig.collation_count && orig.collation_count > 1);
+    const advertiserName = orig.page_name || ad.brand?.charAt(0).toUpperCase() + ad.brand?.slice(1) || 'Anunciante';
+    const title = orig.ad_creative_link_title || (ad.copy ? ad.copy.substring(0, 40) : 'Ver más');
+    const subtitle = orig.ad_creative_link_description || '';
+
+    return { libraryId, startDate, hasMultiple, advertiserName, title, subtitle };
   }, [ad]);
 
   return (
@@ -59,7 +65,7 @@ const AdCard = ({ ad }) => {
       {/* Top Header Section (Status, ID, Date, Platforms) */}
       <div style={{ padding: '12px 12px 10px', borderBottom: '1px solid var(--border-subtle)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#10b981', fontSize: 12, fontWeight: 700 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#06B6D4', fontSize: 12, fontWeight: 700 }}>
             <CheckCircle2 size={14} />
             Activo
           </div>
@@ -69,10 +75,10 @@ const AdCard = ({ ad }) => {
         </div>
         
         <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', marginBottom: 4 }}>
-          Identificador de la biblioteca: {mockData.libraryId}
+          Identificador de la biblioteca: {adData.libraryId}
         </div>
         <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', marginBottom: 4 }}>
-          En circulación desde el {mockData.startDate}
+          En circulación desde el {adData.startDate}
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--on-surface-variant)', marginBottom: 10 }}>
@@ -85,7 +91,7 @@ const AdCard = ({ ad }) => {
           </div>
         </div>
 
-        {mockData.hasMultiple && (
+        {adData.hasMultiple && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--on-surface-variant)', marginBottom: 10 }}>
             Este anuncio tiene varias versiones
             <Info size={14} />
@@ -104,7 +110,7 @@ const AdCard = ({ ad }) => {
             {ad.brand.substring(0, 3).toUpperCase()}
           </div>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.1, color: 'var(--on-surface)' }}>{mockData.advertiserName}</div>
+            <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.1, color: 'var(--on-surface)' }}>{adData.advertiserName}</div>
             <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', marginTop: 2 }}>Publicidad</div>
           </div>
         </div>
@@ -138,8 +144,8 @@ const AdCard = ({ ad }) => {
       <div style={{ padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-container-lowest)', borderTop: '1px solid var(--border-subtle)' }}>
         <div style={{ flex: 1, paddingRight: 8, overflow: 'hidden' }}>
           <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', textTransform: 'uppercase', marginBottom: 2 }}>{ad.brand}</div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--on-surface)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{mockData.title}</div>
-          <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{mockData.subtitle}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--on-surface)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{adData.title}</div>
+          <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{adData.subtitle}</div>
         </div>
         <button style={{ padding: '6px 12px', background: 'rgba(0,0,0,0.04)', border: 'none', borderRadius: 4, color: 'var(--on-surface)', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>
           Más info
@@ -254,7 +260,7 @@ export default function CompetitiveIntelligencePanel({ dateRange }) {
                     {comp.name}
                   </div>
                   {comp.badge && (
-                    <span style={{ fontSize: 10, fontWeight: 700, background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '2px 8px', borderRadius: 12 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, background: 'rgba(16, 185, 129, 0.1)', color: '#06B6D4', padding: '2px 8px', borderRadius: 12 }}>
                       {comp.badge}
                     </span>
                   )}
@@ -302,7 +308,7 @@ export default function CompetitiveIntelligencePanel({ dateRange }) {
           <div className="glass-card" style={{ padding: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(59,130,246,0.1)', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(99, 102, 241,0.1)', color: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <ShoppingBag size={20} />
                 </div>
                 <div>
@@ -317,8 +323,8 @@ export default function CompetitiveIntelligencePanel({ dateRange }) {
             <p style={{ fontSize: 13, color: 'var(--on-surface-variant)', margin: '0 0 16px 0' }}>
               Precios un {pricingData?.leaderGap}% por debajo del líder (Topara). {pricingData?.approvalRate}% de productos aprobados.
             </p>
-            <div style={{ height: 4, background: 'rgba(59,130,246,0.2)', borderRadius: 2 }}>
-               <div style={{ width: `${pricingData?.approvalRate}%`, height: '100%', background: '#3b82f6', borderRadius: 2 }}></div>
+            <div style={{ height: 4, background: 'rgba(99, 102, 241,0.2)', borderRadius: 2 }}>
+               <div style={{ width: `${pricingData?.approvalRate}%`, height: '100%', background: '#6366f1', borderRadius: 2 }}></div>
             </div>
           </div>
 
@@ -326,7 +332,7 @@ export default function CompetitiveIntelligencePanel({ dateRange }) {
           <div className="glass-card" style={{ padding: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(16,185,129,0.1)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(16,185,129,0.1)', color: '#06B6D4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Globe size={20} />
                 </div>
                 <div>
@@ -342,7 +348,7 @@ export default function CompetitiveIntelligencePanel({ dateRange }) {
               +{seoData?.clickGrowth}% clics orgánicos vs mes anterior. Oportunidad: {seoData?.opportunity}
             </p>
             <div style={{ height: 4, background: 'rgba(16,185,129,0.2)', borderRadius: 2 }}>
-               <div style={{ width: '75%', height: '100%', background: '#10b981', borderRadius: 2 }}></div>
+               <div style={{ width: '75%', height: '100%', background: '#06B6D4', borderRadius: 2 }}></div>
             </div>
           </div>
         </div>

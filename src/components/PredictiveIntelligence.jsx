@@ -49,11 +49,11 @@ export default function PredictiveIntelligence() {
   const totalRevenue30d = data.velocity.reduce((s, v) => s + (v.revenue_30d || 0), 0);
 
   return (
-    <div style={{ padding: '20px', minHeight: '100vh', background: '#0A0A0A' }}>
+    <div style={{ padding: '20px', minHeight: '100vh', background: '#090B0F' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
           <h1 style={{ color: '#E8E6E3', fontSize: '20px', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0 }}>
-            Predictive Intelligence — ONYX v16
+            Predictive Intelligence Â— ONYX v16
           </h1>
           <p style={{ color: '#8A8F98', fontSize: '12px', margin: '4px 0 0', fontFamily: 'Inter, sans-serif' }}>
             Velocidad de stock + Gobernanza de presupuesto + Proyeccion de quiebre
@@ -84,7 +84,7 @@ export default function PredictiveIntelligence() {
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             background: tab === t.id ? '#3D5A99' : '#111214',
             color: tab === t.id ? '#fff' : '#8A8F98',
-            border: `1px solid ${tab === t.id ? '#3D5A99' : '#222'}`,
+            border: `1px solid ${tab === t.id ? '#3D5A99' : '#1A1E2B'}`,
             padding: '8px 16px', borderRadius: '6px', cursor: 'pointer',
             fontFamily: 'Inter, sans-serif', fontSize: '12px', fontWeight: 600,
           }}>{t.label}</button>
@@ -122,7 +122,7 @@ function VelocityTable({ items }) {
     <div style={{ background: '#111214', border: '1px solid #1A1B1E', borderRadius: '8px', overflow: 'hidden' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Inter, sans-serif', fontSize: '12px' }}>
         <thead>
-          <tr style={{ borderBottom: '1px solid #222' }}>
+          <tr style={{ borderBottom: '1px solid #1A1E2B' }}>
             {['Variante', 'Stock Total', 'Vel 1d', 'Vel 7d', 'Vel 30d', 'Tendencia', 'Dias a Stockout', 'Revenue 7d', 'Riesgo'].map(h => (
               <th key={h} style={{ color: '#666', padding: '10px 12px', textAlign: 'left', fontWeight: 600, textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.05em' }}>{h}</th>
             ))}
@@ -163,7 +163,7 @@ function VelocityTable({ items }) {
                     <span style={{ color: RISK_COLORS[risk], fontWeight: 700, fontSize: '13px' }}>
                       {v.days_to_stockout.toFixed(1)}d
                     </span>
-                  ) : <span style={{ color: '#555' }}>—</span>}
+                  ) : <span style={{ color: '#555' }}>Â—</span>}
                   {v.projected_stockout_date && (
                     <div style={{ fontSize: '10px', color: '#555' }}>{new Date(v.projected_stockout_date).toLocaleDateString('es-CO')}</div>
                   )}
@@ -189,7 +189,7 @@ function PacingTable({ items }) {
     <div style={{ background: '#111214', border: '1px solid #1A1B1E', borderRadius: '8px', overflow: 'hidden' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Inter, sans-serif', fontSize: '12px' }}>
         <thead>
-          <tr style={{ borderBottom: '1px solid #222' }}>
+          <tr style={{ borderBottom: '1px solid #1A1E2B' }}>
             {['Ad Set', 'Presupuesto', 'Gastado', 'Pacing', 'ROAS', 'CPA', 'Conversiones', 'Riesgo Stock', 'Accion'].map(h => (
               <th key={h} style={{ color: '#666', padding: '10px 12px', textAlign: 'left', fontWeight: 600, textTransform: 'uppercase', fontSize: '10px' }}>{h}</th>
             ))}
@@ -217,7 +217,7 @@ function PacingTable({ items }) {
               <td style={{ padding: '10px 12px' }}>
                 {p.action_taken && p.action_taken !== 'none' ? (
                   <span style={{ color: '#A08240', fontSize: '11px', fontWeight: 600 }}>{p.action_taken.replace('_', ' ')}</span>
-                ) : <span style={{ color: '#444' }}>—</span>}
+                ) : <span style={{ color: '#444' }}>Â—</span>}
               </td>
             </tr>
           ))}
@@ -240,7 +240,7 @@ function AlertsList({ alerts, onAck }) {
               <span style={{ color: '#444', fontSize: '10px' }}>{new Date(a.created_at).toLocaleString('es-CO')}</span>
             </div>
             <p style={{ color: '#8A8F98', fontSize: '12px', margin: 0, fontFamily: 'Inter, sans-serif' }}>{a.message}</p>
-            {a.projected_days != null && <span style={{ color: '#555', fontSize: '10px' }}>Stock actual: {a.current_stock} — Proyectado: {a.projected_days?.toFixed(1)} dias</span>}
+            {a.projected_days != null && <span style={{ color: '#555', fontSize: '10px' }}>Stock actual: {a.current_stock} Â— Proyectado: {a.projected_days?.toFixed(1)} dias</span>}
           </div>
           <button onClick={() => onAck(a.id)} style={{ background: '#33333320', color: '#666', border: '1px solid #333', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontFamily: 'Inter, sans-serif', marginLeft: '12px' }}>OK</button>
         </div>

@@ -17,10 +17,10 @@ export default function ChurnRadar({ clients }) {
     <div className="glass-card" style={{ padding: 24, display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <AlertTriangle color="#ef4444" size={20} />
+          <AlertTriangle color="#E11D48" size={20} />
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--on-surface)' }}>Radar de Fuga (Churn)</h3>
           <MetricTooltip text="Clientes que llevan mucho tiempo sin comprar y podrían no volver. El % se calcula según frecuencia de compra y días desde la última compra.">
-            <AlertTriangle color="#ef4444" size={20} />
+            <AlertTriangle color="#E11D48" size={20} />
           </MetricTooltip>
         </div>
         <span style={{ fontSize: 12, color: 'var(--on-surface-variant)', fontWeight: 600 }}>Alto Riesgo</span>
@@ -46,10 +46,10 @@ export default function ChurnRadar({ clients }) {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                    <span style={{ fontSize: 14, fontWeight: 800, color: '#ef4444' }}>{client.churnRisk}%</span>
+                    <span style={{ fontSize: 14, fontWeight: 800, color: '#E11D48' }}>{client.churnRisk}%</span>
                     <span style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--on-surface-variant)', fontWeight: 600 }}>Riesgo</span>
                   </div>
-                  <TrendingDown size={16} color="#ef4444" />
+                  <TrendingDown size={16} color="#E11D48" />
                 </div>
               </div>
              );

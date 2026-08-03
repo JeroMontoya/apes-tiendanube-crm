@@ -312,11 +312,11 @@ export default function GoogleAdsPanel({ googleAdsData, workspace, dateRange, on
                       <td style={tableCellStyle}>
                         <span style={{
                           display: 'inline-flex', alignItems: 'center', gap: 5,
-                          background: c.status === 'ENABLED' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)',
-                          color: c.status === 'ENABLED' ? '#10b981' : 'var(--primary-container)',
+                          background: c.status === 'ENABLED' ? 'rgba(16,185,129,0.1)' : 'rgba(6, 182, 212,0.1)',
+                          color: c.status === 'ENABLED' ? '#06B6D4' : 'var(--primary-container)',
                           padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
                         }}>
-                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.status === 'ENABLED' ? '#10b981' : 'var(--primary-container)' }} />
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.status === 'ENABLED' ? '#06B6D4' : 'var(--primary-container)' }} />
                           {c.status === 'ENABLED' ? 'Activo' : 'Pausado'}
                         </span>
                       </td>
@@ -479,8 +479,8 @@ export default function GoogleAdsPanel({ googleAdsData, workspace, dateRange, on
                   <td style={tableCellStyle}>
                     <span style={{
                       fontSize: 11, padding: '3px 8px', borderRadius: 6,
-                      background: kw.matchType === 'EXACT' ? 'rgba(99,102,241,0.12)' : kw.matchType === 'PHRASE' ? 'rgba(245,158,11,0.12)' : 'rgba(107,114,128,0.12)',
-                      color: kw.matchType === 'EXACT' ? '#818cf8' : kw.matchType === 'PHRASE' ? 'var(--primary-container)' : '#9ca3af',
+                      background: kw.matchType === 'EXACT' ? 'rgba(99,102,241,0.12)' : kw.matchType === 'PHRASE' ? 'rgba(6, 182, 212,0.12)' : 'rgba(107,114,128,0.12)',
+                      color: kw.matchType === 'EXACT' ? '#818cf8' : kw.matchType === 'PHRASE' ? 'var(--primary-container)' : '#8B9BB4',
                       fontWeight: 600,
                     }}>
                       {kw.matchType || 'BROAD'}
@@ -496,8 +496,8 @@ export default function GoogleAdsPanel({ googleAdsData, workspace, dateRange, on
                       <span style={{
                         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                         width: 28, height: 28, borderRadius: 8,
-                        background: parseInt(kw.qualityScore) >= 7 ? 'rgba(16,185,129,0.12)' : parseInt(kw.qualityScore) >= 5 ? 'rgba(245,158,11,0.12)' : 'rgba(239,68,68,0.12)',
-                        color: parseInt(kw.qualityScore) >= 7 ? '#10b981' : parseInt(kw.qualityScore) >= 5 ? 'var(--primary-container)' : '#ef4444',
+                        background: parseInt(kw.qualityScore) >= 7 ? 'rgba(16,185,129,0.12)' : parseInt(kw.qualityScore) >= 5 ? 'rgba(6, 182, 212,0.12)' : 'rgba(239,68,68,0.12)',
+                        color: parseInt(kw.qualityScore) >= 7 ? '#06B6D4' : parseInt(kw.qualityScore) >= 5 ? 'var(--primary-container)' : '#E11D48',
                         fontWeight: 700, fontSize: 12,
                       }}>
                         {kw.qualityScore}
@@ -570,7 +570,7 @@ export default function GoogleAdsPanel({ googleAdsData, workspace, dateRange, on
                     style={{
                       width: '40%', maxWidth: 20, height: Math.max(convH, 2),
                       borderRadius: '4px 4px 0 0',
-                      background: 'linear-gradient(180deg, #10b981, #059669)',
+                      background: 'linear-gradient(180deg, #06B6D4, #0891b2)',
                       transition: 'height 0.4s ease',
                     }}
                   />
@@ -591,7 +591,7 @@ export default function GoogleAdsPanel({ googleAdsData, workspace, dateRange, on
             <div style={{ width: 10, height: 10, borderRadius: 3, background: '#6366f1' }} /> Gasto
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--on-surface-variant)' }}>
-            <div style={{ width: 10, height: 10, borderRadius: 3, background: '#10b981' }} /> Conversiones
+            <div style={{ width: 10, height: 10, borderRadius: 3, background: '#06B6D4' }} /> Conversiones
           </div>
         </div>
       </div>
@@ -635,7 +635,7 @@ export default function GoogleAdsPanel({ googleAdsData, workspace, dateRange, on
         {[
           { icon: DollarSign, label: 'Gasto Total', value: fmtMoney(totalSpend), delta: ((totalSpend - prevSpend) / prevSpend) * 100, iconBg: 'rgba(99,102,241,0.12)' },
           { icon: Target, label: 'Conversiones', value: fmtNum(totalConversions), delta: ((totalConversions - prevConversions) / (prevConversions || 1)) * 100, iconBg: 'rgba(16,185,129,0.12)' },
-          { icon: MousePointerClick, label: 'CPA', value: fmtMoney(avgCpa), delta: ((avgCpa - prevCpa) / (prevCpa || 1)) * 100, iconBg: 'rgba(245,158,11,0.12)', invertDelta: true },
+          { icon: MousePointerClick, label: 'CPA', value: fmtMoney(avgCpa), delta: ((avgCpa - prevCpa) / (prevCpa || 1)) * 100, iconBg: 'rgba(6, 182, 212,0.12)', invertDelta: true },
           { icon: Zap, label: 'ROAS', value: `${parseFloat(avgRoas || 0).toFixed(2)}x`, delta: ((avgRoas - prevRoas) / (prevRoas || 1)) * 100, iconBg: 'rgba(139,92,246,0.12)' },
         ].map((kpi) => (
           <div key={kpi.label} style={cardStyle}>

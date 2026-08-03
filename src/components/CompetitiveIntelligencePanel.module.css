@@ -291,7 +291,7 @@
 
 .badge.success {
   background: 'rgba(16,185,129,0.1)';
-  color: '#10b981';
+  color: '#06B6D4';
   border: '1px solid rgba(16,185,129,0.2)';
 }
 
@@ -303,7 +303,7 @@
 
 .badge.danger {
   background: 'rgba(239,68,68,0.1)';
-  color: '#ef4444';
+  color: '#E11D48';
   border: '1px solid rgba(239,68,68,0.2)';
 }
 
@@ -317,7 +317,7 @@
 
 .categoryBadge.direct {
   background: 'rgba(239,68,68,0.1)';
-  color: '#ef4444';
+  color: '#E11D48';
 }
 
 .categoryBadge.indirect {
@@ -337,7 +337,7 @@
 
 .categoryBadge.marketLeader {
   background: 'rgba(16,185,129,0.1)';
-  color: '#10b981';
+  color: '#06B6D4';
 }
 
 .actionButtons {

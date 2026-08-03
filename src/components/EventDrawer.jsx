@@ -79,9 +79,9 @@ const EventDrawer = ({ isOpen, onClose, onSave, selectedDate, existingEvent }) =
                </label>
                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {[
-                     { id: 'CAMPAIGN', label: 'Campaña Meta', color: '#10b981' },
+                     { id: 'CAMPAIGN', label: 'Campaña Meta', color: '#06B6D4' },
                      { id: 'PROMO', label: 'Promoción', color: '#8b5cf6' },
-                     { id: 'ACTIVITY', label: 'Actividad / Tarea', color: '#3b82f6' },
+                     { id: 'ACTIVITY', label: 'Actividad / Tarea', color: '#6366f1' },
                      { id: 'HOLIDAY', label: 'Fecha Importante', color: 'var(--primary-container)' }
                   ].map(cat => (
                      <div 

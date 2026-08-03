@@ -35,7 +35,7 @@ export default function SalesView({ products, clients }) {
     <div>
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <DollarSign size={22} color="#10b981" /> Panel de Ventas
+          <DollarSign size={22} color="#06B6D4" /> Panel de Ventas
         </h1>
         <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--on-surface-variant)' }}>Disponibilidad de productos y clientes</p>
       </div>
@@ -43,9 +43,9 @@ export default function SalesView({ products, clients }) {
       {/* ── KPIs Row ── */}
       <div className="responsive-grid-sm" style={{ marginBottom: 20 }}>
         {[
-          { label: 'Productos', value: stats.totalProducts, color: '#3b82f6', icon: Package },
-          { label: 'Disponibles', value: stats.totalProducts - stats.outOfStock, color: '#10b981', icon: ShoppingCart },
-          { label: 'Sin Stock', value: stats.outOfStock, color: '#ef4444', icon: AlertTriangle },
+          { label: 'Productos', value: stats.totalProducts, color: '#6366f1', icon: Package },
+          { label: 'Disponibles', value: stats.totalProducts - stats.outOfStock, color: '#06B6D4', icon: ShoppingCart },
+          { label: 'Sin Stock', value: stats.outOfStock, color: '#E11D48', icon: AlertTriangle },
           { label: 'Stock Bajo', value: stats.lowStock, color: 'var(--primary-container)', icon: TrendingUp },
         ].map((s, i) => (
           <div key={i} className="glass-card" style={{
@@ -92,7 +92,7 @@ export default function SalesView({ products, clients }) {
               <div key={p.id} style={{
                 padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                background: isOut ? 'rgba(239,68,68,0.05)' : isLow ? 'rgba(245,158,11,0.05)' : 'transparent',
+                background: isOut ? 'rgba(239,68,68,0.05)' : isLow ? 'rgba(6, 182, 212,0.05)' : 'transparent',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   {p.image?.src ? (
@@ -105,11 +105,11 @@ export default function SalesView({ products, clients }) {
                   <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--on-surface)' }}>{p.displayName}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  {isOut && <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 6, background: '#ef444420', color: '#ef4444' }}>NO VENDER</span>}
+                  {isOut && <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 6, background: '#E11D4820', color: '#E11D48' }}>NO VENDER</span>}
                   {isLow && <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 6, background: 'var(--primary-container)20', color: 'var(--primary-container)' }}>ÚLTIMAS UNIDADES</span>}
                   <span style={{
                     fontSize: 14, fontWeight: 700,
-                    color: isOut ? '#ef4444' : isLow ? 'var(--primary-container)' : p.hasInfinite ? '#06b6d4' : '#10b981',
+                    color: isOut ? '#E11D48' : isLow ? 'var(--primary-container)' : p.hasInfinite ? '#06b6d4' : '#06B6D4',
                   }}>
                     {p.hasInfinite ? '∞' : p.totalStock}
                   </span>

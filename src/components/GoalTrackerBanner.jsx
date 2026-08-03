@@ -76,7 +76,7 @@ const GoalTrackerBanner = ({ clients, dateRange }) => {
                   }}
                 />
                 <button onClick={handleSave} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }} title="Guardar">
-                  <Check size={16} color="#10b981" />
+                  <Check size={16} color="#06B6D4" />
                 </button>
                 <button onClick={handleCancel} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }} title="Cancelar">
                   <X size={16} color="#f43f5e" />
@@ -103,7 +103,7 @@ const GoalTrackerBanner = ({ clients, dateRange }) => {
             </MetricTooltip>
           </div>
           
-          <div style={{ fontSize: 12, color: '#94a3b8', fontWeight: 500 }}>
+          <div style={{ fontSize: 12, color: '#8B9BB4', fontWeight: 500 }}>
             Llevamos <strong style={{ color: 'var(--on-background)' }}>{formatter.format(totalRevenue)}</strong>. 
             {percentage >= 100 ? ' ¡Meta superada! 🚀' : ` Faltan ${formatter.format(remaining)}.`}
           </div>
@@ -117,7 +117,7 @@ const GoalTrackerBanner = ({ clients, dateRange }) => {
               position: 'absolute', 
               top: 0, left: 0, height: '100%', 
               width: `${percentage}%`, 
-              background: percentage >= 100 ? '#10b981' : 'linear-gradient(90deg, #60a5fa, #c084fc)',
+              background: percentage >= 100 ? '#06B6D4' : 'linear-gradient(90deg, #818cf8, #c084fc)',
               borderRadius: 5,
               transition: 'width 1.5s cubic-bezier(0.4, 0, 0.2, 1)'
             }} 
@@ -125,7 +125,7 @@ const GoalTrackerBanner = ({ clients, dateRange }) => {
             <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)', animation: 'shimmer 2s infinite' }} />
           </div>
         </div>
-        <div style={{ fontSize: 14, fontWeight: 800, color: percentage >= 100 ? '#10b981' : 'var(--on-surface)', width: 45, textAlign: 'right' }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: percentage >= 100 ? '#06B6D4' : 'var(--on-surface)', width: 45, textAlign: 'right' }}>
           {percentage}%
         </div>
       </div>

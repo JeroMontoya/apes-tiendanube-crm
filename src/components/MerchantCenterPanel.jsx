@@ -308,8 +308,8 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
                 Merchant Center Command
               </h1>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: isConfigured ? '#10b981' : 'var(--primary-container)', boxShadow: `0 0 10px ${isConfigured ? '#10b981' : 'var(--primary-container)'}` }}></span>
-                <span style={{ fontSize: 12, color: isConfigured ? '#10b981' : 'var(--primary-container)', fontWeight: 600, letterSpacing: '1px' }}>{isConfigured ? 'SYSTEM ONLINE' : 'DEMO MODE'}</span>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: isConfigured ? '#06B6D4' : 'var(--primary-container)', boxShadow: `0 0 10px ${isConfigured ? '#06B6D4' : 'var(--primary-container)'}` }}></span>
+                <span style={{ fontSize: 12, color: isConfigured ? '#06B6D4' : 'var(--primary-container)', fontWeight: 600, letterSpacing: '1px' }}>{isConfigured ? 'SYSTEM ONLINE' : 'DEMO MODE'}</span>
                 <span style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginLeft: 8 }}>Merchant ID: {isConfigured ? merchantId : 'N/A (demo)'}</span>
               </div>
             </div>
@@ -329,7 +329,7 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
       </div>
 
       {!isConfigured && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 18px', borderRadius: 12, background: 'linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.04) 100%)', border: '1px solid rgba(245,158,11,0.25)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 18px', borderRadius: 12, background: 'linear-gradient(135deg, rgba(6, 182, 212,0.12) 0%, rgba(6, 182, 212,0.04) 100%)', border: '1px solid rgba(6, 182, 212,0.25)' }}>
           <Info size={16} color="var(--primary-container)" />
           <span style={{ fontSize: 12, color: 'var(--primary-container)', fontWeight: 600 }}>Modo Demo</span>
           <span style={{ fontSize: 12, color: 'var(--on-surface-variant)' }}>— Configura Merchant ID y Service Account en Configuración para ver datos reales</span>
@@ -339,13 +339,13 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
       {/* Primary KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
         {/* Health Score */}
-        <div className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '18px 20px', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, transparent 100%)', borderLeft: '3px solid #10b981' }}>
+        <div className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '18px 20px', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, transparent 100%)', borderLeft: '3px solid #06B6D4' }}>
           <div style={{ position: 'relative', width: 52, height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="52" height="52" viewBox="0 0 100 100" style={{ position: 'absolute', transform: 'rotate(-90deg)' }}>
               <circle cx="50" cy="50" r="45" fill="none" stroke="var(--border-subtle)" strokeWidth="8" />
-              <circle cx="50" cy="50" r="45" fill="none" stroke="#10b981" strokeWidth="8" strokeDasharray="283" strokeDashoffset={283 - (283 * healthScore) / 100} style={{ transition: 'stroke-dashoffset 1s ease-out' }} />
+              <circle cx="50" cy="50" r="45" fill="none" stroke="#06B6D4" strokeWidth="8" strokeDasharray="283" strokeDashoffset={283 - (283 * healthScore) / 100} style={{ transition: 'stroke-dashoffset 1s ease-out' }} />
             </svg>
-            <span style={{ fontSize: 16, fontWeight: 800, color: '#10b981' }}>{healthScore}%</span>
+            <span style={{ fontSize: 16, fontWeight: 800, color: '#06B6D4' }}>{healthScore}%</span>
           </div>
           <div>
             <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 2 }}>Salud del Catálogo</div>
@@ -354,13 +354,13 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
         </div>
 
         {[
-          { label: 'En Stock', value: stats.inStock, icon: CheckCircle, color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
-          { label: 'Sin Stock', value: stats.outOfStock, icon: XCircle, color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
+          { label: 'En Stock', value: stats.inStock, icon: CheckCircle, color: '#06B6D4', bg: 'rgba(16,185,129,0.1)' },
+          { label: 'Sin Stock', value: stats.outOfStock, icon: XCircle, color: '#E11D48', bg: 'rgba(239,68,68,0.1)' },
           { label: 'CTR Promedio', value: `${(stats.avgCtr * 100).toFixed(2)}%`, icon: Target, color: '#06b6d4', bg: 'rgba(6,182,212,0.1)' },
           { label: 'Clics Totales', value: stats.totalClicks.toLocaleString(), icon: Activity, color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
-          { label: 'Conversiones', value: stats.totalConversions.toLocaleString(), icon: ShoppingCart, color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.1)' },
-          { label: 'ROAS', value: stats.roas > 0 ? stats.roas.toFixed(2) + 'x' : '—', icon: TrendingUp, color: stats.roas >= 3 ? '#10b981' : stats.roas >= 1 ? 'var(--primary-container)' : '#ef4444', bg: 'rgba(245,158,11,0.1)' },
-          { label: 'Sin Listar', value: `${unlistedRate}%`, icon: AlertCircle, color: unlistedRate > 30 ? '#ef4444' : '#10b981', bg: unlistedRate > 30 ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)' },
+          { label: 'Conversiones', value: stats.totalConversions.toLocaleString(), icon: ShoppingCart, color: 'var(--primary-container)', bg: 'rgba(6, 182, 212,0.1)' },
+          { label: 'ROAS', value: stats.roas > 0 ? stats.roas.toFixed(2) + 'x' : '—', icon: TrendingUp, color: stats.roas >= 3 ? '#06B6D4' : stats.roas >= 1 ? 'var(--primary-container)' : '#E11D48', bg: 'rgba(6, 182, 212,0.1)' },
+          { label: 'Sin Listar', value: `${unlistedRate}%`, icon: AlertCircle, color: unlistedRate > 30 ? '#E11D48' : '#06B6D4', bg: unlistedRate > 30 ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)' },
         ].map((kpi, i) => (
           <div key={i} className="glass-card" style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -439,13 +439,13 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
                   const convVal = parseFloat(r.metricValues?.[5]?.value || 0);
                   return (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'rgba(0,0,0,0.2)', borderRadius: 10, border: '1px solid var(--surface-container-low)' }}>
-                      <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(245,158,11,0.1)', color: 'var(--primary-container)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0 }}>{i + 1}</div>
+                      <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(6, 182, 212,0.1)', color: 'var(--primary-container)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0 }}>{i + 1}</div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--on-surface)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.dimensionValues?.[1]?.value || r.dimensionValues?.[0]?.value}</div>
                         <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', marginTop: 2 }}>{r.dimensionValues?.[2]?.value || 'Sin marca'}</div>
                       </div>
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 800, color: '#10b981' }}>{convs}</div>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: '#06B6D4' }}>{convs}</div>
                         <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--on-surface-variant)' }}>{formatCurrency(convVal)}</div>
                       </div>
                     </div>
@@ -465,7 +465,7 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
                   {feeds.map(f => (
                     <div key={f.id} style={{ padding: 14, background: 'rgba(0,0,0,0.2)', borderRadius: 10, border: '1px solid var(--surface-container-low)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: f.processingStatus === 'success' ? '#10b981' : 'var(--primary-container)', boxShadow: `0 0 8px ${f.processingStatus === 'success' ? '#10b981' : 'var(--primary-container)'}` }}></span>
+                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: f.processingStatus === 'success' ? '#06B6D4' : 'var(--primary-container)', boxShadow: `0 0 8px ${f.processingStatus === 'success' ? '#06B6D4' : 'var(--primary-container)'}` }}></span>
                         <div>
                           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--on-surface)' }}>{f.name || f.id}</div>
                           <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', marginTop: 2 }}>{f.lastUpdated ? new Date(f.lastUpdated).toLocaleDateString() : 'N/A'}</div>
@@ -488,9 +488,9 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {[
-                  { label: 'Productos aprobados y visibles', count: stats.inStock, total: stats.total, color: '#10b981' },
+                  { label: 'Productos aprobados y visibles', count: stats.inStock, total: stats.total, color: '#06B6D4' },
                   { label: 'Stock bajo / limitado', count: stats.limited, total: stats.total, color: 'var(--primary-container)' },
-                  { label: 'Fuera de stock / rechazados', count: stats.outOfStock, total: stats.total, color: '#ef4444' },
+                  { label: 'Fuera de stock / rechazados', count: stats.outOfStock, total: stats.total, color: '#E11D48' },
                   { label: 'Sin datos de pauta (no listados)', count: stats.productsWithoutPerf, total: stats.total, color: '#8b5cf6' },
                 ].map((d, i) => {
                   const pct = d.total > 0 ? Math.round((d.count / d.total) * 100) : 0;
@@ -569,21 +569,21 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
                             </div>
                           </div>
                         </td>
-                        <td style={{ padding: '12px 14px', fontSize: 12, fontWeight: 700, color: '#10b981', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '12px 14px', fontSize: 12, fontWeight: 700, color: '#06B6D4', whiteSpace: 'nowrap' }}>
                           {formatCurrency(p.price || 0)}
                         </td>
                         <td style={{ padding: '12px 14px' }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 12, fontSize: 10, fontWeight: 700,
-                            background: p.availability === 'in_stock' ? 'rgba(16,185,129,0.1)' : p.availability === 'limited_availability' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)',
-                            color: p.availability === 'in_stock' ? '#10b981' : p.availability === 'limited_availability' ? 'var(--primary-container)' : '#ef4444' }}>
+                            background: p.availability === 'in_stock' ? 'rgba(16,185,129,0.1)' : p.availability === 'limited_availability' ? 'rgba(6, 182, 212,0.1)' : 'rgba(239,68,68,0.1)',
+                            color: p.availability === 'in_stock' ? '#06B6D4' : p.availability === 'limited_availability' ? 'var(--primary-container)' : '#E11D48' }}>
                             {p.availability === 'in_stock' ? '✓ Online' : p.availability === 'limited_availability' ? '⚠ Low' : '✗ Offline'}
                           </span>
                         </td>
                         <td style={{ padding: '12px 14px', fontSize: 12, fontWeight: 700, color: 'var(--on-surface)', textAlign: 'right' }}>{clicks.toLocaleString()}</td>
                         <td style={{ padding: '12px 14px', fontSize: 12, color: 'var(--on-surface-variant)', textAlign: 'right' }}>{impr.toLocaleString()}</td>
-                        <td style={{ padding: '12px 14px', fontSize: 12, fontWeight: 600, textAlign: 'right', color: ctr > 0.02 ? '#10b981' : ctr > 0.01 ? 'var(--primary-container)' : '#ef4444' }}>{(ctr * 100).toFixed(2)}%</td>
-                        <td style={{ padding: '12px 14px', fontSize: 12, fontWeight: 700, textAlign: 'right', color: convs > 0 ? '#10b981' : 'var(--on-surface-variant)' }}>{convs}</td>
-                        <td style={{ padding: '12px 14px', fontSize: 12, fontWeight: 700, textAlign: 'right', color: roas >= 3 ? '#10b981' : roas >= 1 ? 'var(--primary-container)' : roas > 0 ? '#ef4444' : 'var(--on-surface-variant)' }}>
+                        <td style={{ padding: '12px 14px', fontSize: 12, fontWeight: 600, textAlign: 'right', color: ctr > 0.02 ? '#06B6D4' : ctr > 0.01 ? 'var(--primary-container)' : '#E11D48' }}>{(ctr * 100).toFixed(2)}%</td>
+                        <td style={{ padding: '12px 14px', fontSize: 12, fontWeight: 700, textAlign: 'right', color: convs > 0 ? '#06B6D4' : 'var(--on-surface-variant)' }}>{convs}</td>
+                        <td style={{ padding: '12px 14px', fontSize: 12, fontWeight: 700, textAlign: 'right', color: roas >= 3 ? '#06B6D4' : roas >= 1 ? 'var(--primary-container)' : roas > 0 ? '#E11D48' : 'var(--on-surface-variant)' }}>
                           {roas > 0 ? roas.toFixed(2) + 'x' : '—'}
                         </td>
                       </tr>
@@ -651,7 +651,7 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
                         <div style={{ display: 'flex', gap: 20, flexShrink: 0 }}>
                           <div style={{ textAlign: 'right', minWidth: 60 }}><div style={{ fontSize: 11, fontWeight: 700, color: '#06b6d4' }}>{clicks.toLocaleString()}</div><div style={{ fontSize: 9, color: 'var(--on-surface-variant)' }}>Clics</div></div>
                           <div style={{ textAlign: 'right', minWidth: 60 }}><div style={{ fontSize: 11, fontWeight: 700, color: 'var(--on-surface)' }}>{convs}</div><div style={{ fontSize: 9, color: 'var(--on-surface-variant)' }}>Conv.</div></div>
-                          <div style={{ textAlign: 'right', minWidth: 60 }}><div style={{ fontSize: 11, fontWeight: 700, color: roas >= 3 ? '#10b981' : 'var(--primary-container)' }}>{roas > 0 ? roas.toFixed(2) + 'x' : '—'}</div><div style={{ fontSize: 9, color: 'var(--on-surface-variant)' }}>ROAS</div></div>
+                          <div style={{ textAlign: 'right', minWidth: 60 }}><div style={{ fontSize: 11, fontWeight: 700, color: roas >= 3 ? '#06B6D4' : 'var(--primary-container)' }}>{roas > 0 ? roas.toFixed(2) + 'x' : '—'}</div><div style={{ fontSize: 9, color: 'var(--on-surface-variant)' }}>ROAS</div></div>
                           <div style={{ textAlign: 'right', minWidth: 80 }}><div style={{ fontSize: 11, fontWeight: 700, color: 'var(--on-surface)' }}>{formatCurrency(cost)}</div><div style={{ fontSize: 9, color: 'var(--on-surface-variant)' }}>Costo</div></div>
                         </div>
                       </div>
@@ -689,7 +689,7 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
                       <div style={{ display: 'flex', gap: 16 }}>
                         <span style={{ fontSize: 11, color: '#06b6d4', fontWeight: 600 }}>{b.clicks.toLocaleString()} clics</span>
                         <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>CTR {(b.ctr * 100).toFixed(2)}%</span>
-                        <span style={{ fontSize: 11, color: b.roas >= 3 ? '#10b981' : 'var(--primary-container)', fontWeight: 600 }}>ROAS {b.roas > 0 ? b.roas.toFixed(2) + 'x' : '—'}</span>
+                        <span style={{ fontSize: 11, color: b.roas >= 3 ? '#06B6D4' : 'var(--primary-container)', fontWeight: 600 }}>ROAS {b.roas > 0 ? b.roas.toFixed(2) + 'x' : '—'}</span>
                         <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>{b.conversions} conv.</span>
                       </div>
                     </div>
@@ -718,7 +718,7 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
                       <div style={{ display: 'flex', gap: 16 }}>
                         <span style={{ fontSize: 11, color: '#06b6d4', fontWeight: 600 }}>{c.clicks.toLocaleString()} clics</span>
                         <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>CTR {(c.ctr * 100).toFixed(2)}%</span>
-                        <span style={{ fontSize: 11, color: c.roas >= 3 ? '#10b981' : 'var(--primary-container)', fontWeight: 600 }}>ROAS {c.roas > 0 ? c.roas.toFixed(2) + 'x' : '—'}</span>
+                        <span style={{ fontSize: 11, color: c.roas >= 3 ? '#06B6D4' : 'var(--primary-container)', fontWeight: 600 }}>ROAS {c.roas > 0 ? c.roas.toFixed(2) + 'x' : '—'}</span>
                         <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>{c.conversions} conv.</span>
                       </div>
                     </div>
@@ -749,8 +749,8 @@ export default function MerchantCenterPanel({ workspaceData, dateRange, filtered
                     </div>
                   </div>
                   <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 10,
-                    color: f.processingStatus === 'success' ? '#10b981' : 'var(--primary-container)',
-                    background: f.processingStatus === 'success' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)' }}>
+                    color: f.processingStatus === 'success' ? '#06B6D4' : 'var(--primary-container)',
+                    background: f.processingStatus === 'success' ? 'rgba(16,185,129,0.1)' : 'rgba(6, 182, 212,0.1)' }}>
                     {f.processingStatus || 'UNKNOWN'}
                   </span>
                 </div>

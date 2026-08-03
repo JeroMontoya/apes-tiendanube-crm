@@ -3,16 +3,16 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { ShoppingBag, UserPlus, AlertTriangle, CheckCircle, Info, X, Bell, RefreshCw, Package, Zap, Check } from 'lucide-react';
 
 const TOAST_STYLES = {
-  order:   { accent: '#34D399', bg: 'rgba(52, 211, 153, 0.08)', icon: ShoppingBag, glow: 'rgba(52, 211, 153, 0.15)' },
-  client:  { accent: '#60A5FA', bg: 'rgba(96, 165, 250, 0.08)', icon: UserPlus, glow: 'rgba(96, 165, 250, 0.15)' },
+  order:   { accent: '#22d3ee', bg: 'rgba(52, 211, 153, 0.08)', icon: ShoppingBag, glow: 'rgba(52, 211, 153, 0.15)' },
+  client:  { accent: '#818cf8', bg: 'rgba(96, 165, 250, 0.08)', icon: UserPlus, glow: 'rgba(96, 165, 250, 0.15)' },
   pqr:     { accent: '#A78BFA', bg: 'rgba(167, 139, 250, 0.08)', icon: AlertTriangle, glow: 'rgba(167, 139, 250, 0.15)' },
-  sync:    { accent: '#34D399', bg: 'rgba(52, 211, 153, 0.08)', icon: RefreshCw, glow: 'rgba(52, 211, 153, 0.15)' },
-  success: { accent: '#34D399', bg: 'rgba(52, 211, 153, 0.08)', icon: Check, glow: 'rgba(52, 211, 153, 0.15)' },
+  sync:    { accent: '#22d3ee', bg: 'rgba(52, 211, 153, 0.08)', icon: RefreshCw, glow: 'rgba(52, 211, 153, 0.15)' },
+  success: { accent: '#22d3ee', bg: 'rgba(52, 211, 153, 0.08)', icon: Check, glow: 'rgba(52, 211, 153, 0.15)' },
   error:   { accent: '#F87171', bg: 'rgba(248, 113, 113, 0.08)', icon: AlertTriangle, glow: 'rgba(248, 113, 113, 0.15)' },
   warning: { accent: '#FBBF24', bg: 'rgba(251, 191, 36, 0.08)', icon: AlertTriangle, glow: 'rgba(251, 191, 36, 0.15)' },
   info:    { accent: '#818CF8', bg: 'rgba(129, 140, 248, 0.08)', icon: Info, glow: 'rgba(129, 140, 248, 0.15)' },
   product: { accent: '#22D3EE', bg: 'rgba(34, 211, 238, 0.08)', icon: Package, glow: 'rgba(34, 211, 238, 0.15)' },
-  system:  { accent: '#94A3B8', bg: 'rgba(148, 163, 184, 0.08)', icon: Zap, glow: 'rgba(148, 163, 184, 0.15)' },
+  system:  { accent: '#8B9BB4', bg: 'rgba(148, 163, 184, 0.08)', icon: Zap, glow: 'rgba(148, 163, 184, 0.15)' },
   calendar:{ accent: '#FBBF24', bg: 'rgba(251, 191, 36, 0.08)', icon: Bell, glow: 'rgba(251, 191, 36, 0.15)' },
 };
 
@@ -45,13 +45,28 @@ export default function ToastContainer() {
         const style = TOAST_STYLES[toast.type] || TOAST_STYLES.info;
         const Icon = toast.icon || style.icon;
 
+        // Sonner stacking logic
+        // Array appends to the end, so the newest is at length - 1
+        const total = toasts.length;
+        const pos = total - 1 - i; // 0 = newest (front), 1 = one behind, etc.
+        const isExiting = toast.exiting;
+        
+        // Dynamic styles for the stacked effect
+        const translateY = isExiting ? 0 : pos * -16;
+        const scale = isExiting ? 1 : 1 - pos * 0.05;
+        const opacity = isExiting ? 0 : pos >= 3 ? 0 : 1 - (pos * 0.1);
+        const zIndex = 1000 - pos;
+
         return (
           <div
             key={toast.id}
-            className={`toast-v2 ${toast.exiting ? 'toast-v2-exit' : ''}`}
+            className={`toast-v2 ${toast.exiting ? 'toast-v2-exit' : 'toast-v2-enter'}`}
             style={{
               '--toast-accent': style.accent,
               '--toast-glow': style.glow,
+              transform: `translateY(${translateY}px) scale(${scale})`,
+              opacity: opacity,
+              zIndex: zIndex,
             }}
           >
             <div className="toast-v2-accent" />

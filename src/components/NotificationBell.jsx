@@ -1,25 +1,25 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useNotifications } from '../contexts/NotificationContext';
-import { Bell, ShoppingBag, UserPlus, AlertTriangle, CheckCircle, Info, RefreshCw, Package, Zap, Calendar, CheckCheck, Trash2, X, ChevronRight, ChevronDown, Volume2, VolumeX } from 'lucide-react';
+import { Bell, ShoppingBag, UserPlus, AlertTriangle, CheckCircle, Info, RefreshCw, Package, Zap, Calendar, CheckCheck, Trash2, X, ChevronRight, ChevronDown, Volume2, VolumeX, Sparkles } from 'lucide-react';
 import MetricTooltip from './MetricTooltip';
 
 const TYPE_CONFIG = {
-  order:   { icon: ShoppingBag, color: '#10b981', label: 'Pedido' },
-  client:  { icon: UserPlus, color: '#3b82f6', label: 'Cliente' },
+  order:   { icon: ShoppingBag, color: '#06B6D4', label: 'Pedido' },
+  client:  { icon: UserPlus, color: '#6366f1', label: 'Cliente' },
   pqr:     { icon: AlertTriangle, color: '#8b5cf6', label: 'PQR' },
-  sync:    { icon: RefreshCw, color: '#10b981', label: 'Sync' },
-  success: { icon: CheckCircle, color: '#10b981', label: 'OK' },
-  error:   { icon: AlertTriangle, color: '#ef4444', label: 'Error' },
-  warning: { icon: AlertTriangle, color: '#f59e0b', label: 'Alerta' },
+  sync:    { icon: RefreshCw, color: '#06B6D4', label: 'Sync' },
+  success: { icon: CheckCircle, color: '#06B6D4', label: 'OK' },
+  error:   { icon: AlertTriangle, color: '#E11D48', label: 'Error' },
+  warning: { icon: AlertTriangle, color: '#06b6d4', label: 'Alerta' },
   info:    { icon: Info, color: '#6366f1', label: 'Info' },
   product: { icon: Package, color: '#06b6d4', label: 'Producto' },
-  system:  { icon: Zap, color: '#94a3b8', label: 'Sistema' },
-  calendar:{ icon: Calendar, color: '#f59e0b', label: 'Calendario' },
+  system:  { icon: Zap, color: '#8B9BB4', label: 'Sistema' },
+  calendar:{ icon: Calendar, color: '#06b6d4', label: 'Calendario' },
 };
 
 const URGENCY_MAP = {
-  urgent: { bg: 'rgba(239,68,68,0.06)', border: 'rgba(239,68,68,0.12)', dot: '#ef4444', glow: '0 0 20px rgba(239,68,68,0.15)' },
-  warning:{ bg: 'rgba(245,158,11,0.06)', border: 'rgba(245,158,11,0.12)', dot: '#f59e0b', glow: '0 0 20px rgba(245,158,11,0.15)' },
+  urgent: { bg: 'rgba(239,68,68,0.06)', border: 'rgba(239,68,68,0.12)', dot: '#E11D48', glow: '0 0 20px rgba(239,68,68,0.15)' },
+  warning:{ bg: 'rgba(6, 182, 212,0.06)', border: 'rgba(6, 182, 212,0.12)', dot: '#06b6d4', glow: '0 0 20px rgba(6, 182, 212,0.15)' },
   info:   { bg: 'rgba(99,102,241,0.06)', border: 'rgba(99,102,241,0.12)', dot: '#6366f1', glow: '0 0 20px rgba(99,102,241,0.15)' },
 };
 
@@ -135,13 +135,16 @@ export default function NotificationBell() {
       <button
         onClick={() => setOpen(!open)}
         className={`notif-bell-btn ${open ? 'notif-bell-active' : ''}`}
+        title="Notificaciones"
       >
-        <Bell size={17} strokeWidth={2} />
-        {unreadCount > 0 && (
-          <span className="notif-bell-badge">
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </span>
-        )}
+        <span className="notif-bell-icon">
+          <Bell size={17} strokeWidth={2} />
+          {unreadCount > 0 && (
+            <span className="notif-bell-badge">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </span>
       </button>
 
       {/* Panel */}
@@ -153,11 +156,14 @@ export default function NotificationBell() {
           {/* Header */}
           <div className="notif-panel-header">
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span className="notif-header-title">Notificaciones</span>
-              {unreadCount > 0 && (
-                <span className="notif-unread-badge">
-                  {unreadCount} nuevas
-                </span>
+              <span className="notif-header-title">
+                Notificaciones
+                {unreadCount > 0 && <span className="notif-live-dot" />}
+              </span>
+              {unreadCount > 0 ? (
+                <span className="notif-unread-badge">{unreadCount} nuevas</span>
+              ) : (
+                <span className="notif-unread-badge notif-unread-badge-idle">Al día</span>
               )}
             </div>
             <div style={{ display: 'flex', gap: 4 }}>
@@ -203,10 +209,12 @@ export default function NotificationBell() {
           <div className="notif-list">
             {filteredNotifs.length === 0 ? (
               <div className="notif-empty">
-                <div className="notif-empty-icon">
-                  <Bell size={28} strokeWidth={1.5} />
+                <div className="notif-empty-orb">
+                  <div className="notif-empty-icon">
+                    <Bell size={26} strokeWidth={1.5} />
+                  </div>
                 </div>
-                <div className="notif-empty-title">Sin notificaciones</div>
+                <div className="notif-empty-title">Todo despejado</div>
                 <div className="notif-empty-subtitle">Aparecerán aquí cuando haya actividad</div>
               </div>
             ) : (
@@ -228,10 +236,10 @@ export default function NotificationBell() {
                             onClick={() => markAsRead(n.id)}
                             style={{ 
                               animationDelay: `${idx * 30}ms`,
-                              borderLeft: `3px solid ${urg.dot}`
+                              '--accent': urg.dot
                             }}
                           >
-                            <div className="notif-item-icon" style={{ background: urg.bg, border: `1px solid ${urg.border}` }}>
+                            <div className="notif-item-icon notif-item-icon--calendar" style={{ background: `linear-gradient(135deg, ${urg.dot}26, ${urg.dot}0d)`, borderColor: `${urg.dot}26` }}>
                               <span style={{ fontSize: 15 }}>{n.emoji || '📅'}</span>
                             </div>
                             <div className="notif-item-body">
@@ -292,10 +300,10 @@ export default function NotificationBell() {
                           onClick={() => markAsRead(n.id)}
                           style={{ 
                             animationDelay: `${idx * 30}ms`,
-                            borderLeft: `3px solid ${cfg.color}`
+                            '--accent': cfg.color
                           }}
                         >
-                          <div className="notif-item-icon" style={{ color: cfg.color, background: `${cfg.color}12` }}>
+                          <div className="notif-item-icon" style={{ color: cfg.color, background: `linear-gradient(135deg, ${cfg.color}22, ${cfg.color}0d)`, borderColor: `${cfg.color}22`, boxShadow: `0 4px 12px ${cfg.color}14` }}>
                             <Icon size={15} strokeWidth={2} />
                           </div>
                           <div className="notif-item-body">
@@ -343,9 +351,10 @@ export default function NotificationBell() {
 
           {/* Footer */}
           <div className="notif-footer">
-            <div className="notif-footer-info">
+            <div className="notif-footer-chip">
               <Calendar size={13} />
               <span>Próximos 30 días · Colombia</span>
+              <Sparkles size={13} />
             </div>
           </div>
         </div>

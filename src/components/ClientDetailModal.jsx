@@ -12,11 +12,11 @@ const fmtDate = (d) => {
 };
 
 const BADGE = {
-  coupon:     { fg: '#60A5FA', icon: Ticket, text: 'Cupón' },
+  coupon:     { fg: '#818cf8', icon: Ticket, text: 'Cupón' },
   promo_auto: { fg: '#A78BFA', icon: Star, text: 'Promo' },
   promo_code: { fg: '#FBBF24', icon: Tag, text: 'Código' },
   manual:     { fg: '#F87171', icon: Edit3, text: 'Manual' },
-  normal:     { fg: '#9CA3AF', icon: CheckCircle2, text: 'Regular' },
+  normal:     { fg: '#8B9BB4', icon: CheckCircle2, text: 'Regular' },
 };
 
 export default function ClientDetailModal({ client, allClients = [], onClose }) {
@@ -149,7 +149,7 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
                   background: 'linear-gradient(135deg, var(--border-medium) 0%, rgba(255,255,255,0.02) 100%)',
                   border: '1px solid var(--border-medium)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 20, fontWeight: 600, color: '#E4E4E7',
+                  fontSize: 20, fontWeight: 600, color: '#E2E8F0',
                 }}>
                   {dc.name.charAt(0).toUpperCase()}
                 </div>
@@ -157,12 +157,12 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
                   onClick={onClose}
                   style={{
                     width: 28, height: 28, borderRadius: 6, background: 'transparent',
-                    border: 'none', color: '#71717A', cursor: 'pointer',
+                    border: 'none', color: '#475569', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     transition: 'all 0.2s'
                   }}
                   onMouseEnter={e => { e.currentTarget.style.color = '#FAFAFA'; e.currentTarget.style.background = 'var(--border-medium)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.color = '#71717A'; e.currentTarget.style.background = 'transparent'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = '#475569'; e.currentTarget.style.background = 'transparent'; }}
                 >
                   <X size={18} />
                 </button>
@@ -210,11 +210,11 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
               {/* Savings Breakdown */}
               {(a.couponSaved > 0 || a.promoSaved > 0) && (
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 500, color: '#71717A', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, fontWeight: 500, color: '#475569', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
                     Desglose de Ahorro
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {a.couponSaved > 0 && <SubMetric label="Cupones" value={fmt(a.couponSaved)} color="#60A5FA" />}
+                    {a.couponSaved > 0 && <SubMetric label="Cupones" value={fmt(a.couponSaved)} color="#818cf8" />}
                     {a.promoSaved > 0 && <SubMetric label="Promociones" value={fmt(a.promoSaved)} color="#A78BFA" />}
                   </div>
                 </div>
@@ -242,7 +242,7 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
               {/* Top Coupons Minimal Pills */}
               {a.coupons.length > 0 && (
                 <div style={{ marginBottom: 40 }}>
-                  <div style={{ fontSize: 11, fontWeight: 500, color: '#71717A', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, fontWeight: 500, color: '#475569', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>
                     Cupones Recurrentes
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -250,8 +250,8 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
                       <div key={i} className="linear-card" style={{
                         display: 'flex', alignItems: 'center', padding: '6px 12px', borderRadius: 8, gap: 8
                       }}>
-                        <Ticket size={12} color="#71717A" />
-                        <span style={{ fontSize: 12, color: '#E4E4E7', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.code}>
+                        <Ticket size={12} color="#475569" />
+                        <span style={{ fontSize: 12, color: '#E2E8F0', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.code}>
                           {c.code}
                         </span>
                         <div style={{ width: 1, height: 12, background: 'var(--border-medium)' }} />
@@ -265,7 +265,7 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
               {/* Promotions Applied */}
               {a.promos.length > 0 && (
                 <div style={{ marginBottom: 40 }}>
-                  <div style={{ fontSize: 11, fontWeight: 500, color: '#71717A', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, fontWeight: 500, color: '#475569', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>
                     Promociones Aplicadas
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -277,7 +277,7 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
                           <Star size={12} color="#A78BFA" style={{ flexShrink: 0 }} />
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: 12, color: '#E4E4E7', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.name}>
+                            <div style={{ fontSize: 12, color: '#E2E8F0', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.name}>
                               {p.name}
                             </div>
                             <div style={{ fontSize: 10, color: '#52525B', marginTop: 2 }}>
@@ -299,7 +299,7 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
 
               {/* Sleek Timeline */}
               <div>
-                <div style={{ fontSize: 11, fontWeight: 500, color: '#71717A', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 24 }}>
+                <div style={{ fontSize: 11, fontWeight: 500, color: '#475569', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 24 }}>
                   Línea de Tiempo
                 </div>
 
@@ -348,7 +348,7 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
                                 <div style={{ fontSize: 14, color: '#FAFAFA', fontWeight: 500, lineHeight: 1.5 }}>
                                   {p.product || 'Sin producto'}
                                   {p.productsArray && p.productsArray.length > 1 && (
-                                    <span style={{ fontSize: 12, color: '#71717A', marginLeft: 8 }}>
+                                    <span style={{ fontSize: 12, color: '#475569', marginLeft: 8 }}>
                                       +{p.productsArray.length - 1} más
                                     </span>
                                   )}
@@ -366,7 +366,7 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
                                         {p.coupon}
                                       </span>
                                     </div>
-                                    {cs > 0 && <span style={{ fontSize: 11, color: '#34D399' }}>Ahorró {fmt(cs)}</span>}
+                                    {cs > 0 && <span style={{ fontSize: 11, color: '#22d3ee' }}>Ahorró {fmt(cs)}</span>}
                                   </div>
                                 )}
                                 {p.promoName && (p.benefitType === 'promo_auto' || p.benefitType === 'promo_code') && (
@@ -394,10 +394,10 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
                                 <div style={{ fontSize: 16, fontWeight: 600, color: '#FAFAFA' }}>{fmt(p.amount)}</div>
                                 {hasAnyDiscount && (
                                   <div style={{ marginTop: 4 }}>
-                                    <div style={{ fontSize: 12, color: '#71717A', textDecoration: 'line-through', marginBottom: 2 }}>
+                                    <div style={{ fontSize: 12, color: '#475569', textDecoration: 'line-through', marginBottom: 2 }}>
                                       {fmt(original)}
                                     </div>
-                                    <div style={{ fontSize: 11, color: '#10B981', fontWeight: 500 }}>
+                                    <div style={{ fontSize: 11, color: '#06B6D4', fontWeight: 500 }}>
                                       -{((disc / original) * 100).toFixed(0)}%
                                     </div>
                                   </div>
@@ -414,8 +414,8 @@ export default function ClientDetailModal({ client, allClients = [], onClose }) 
                     <div style={{ width: 48, height: 48, borderRadius: 24, background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', border: '1px solid var(--border-subtle)' }}>
                       <Package size={20} color="#52525B" />
                     </div>
-                    <div style={{ fontSize: 14, color: '#E4E4E7', fontWeight: 500, marginBottom: 4 }}>Sin transacciones</div>
-                    <div style={{ fontSize: 13, color: '#71717A' }}>Este cliente no tiene compras registradas.</div>
+                    <div style={{ fontSize: 14, color: '#E2E8F0', fontWeight: 500, marginBottom: 4 }}>Sin transacciones</div>
+                    <div style={{ fontSize: 13, color: '#475569' }}>Este cliente no tiene compras registradas.</div>
                   </div>
                 )}
               </div>
@@ -433,7 +433,7 @@ function MetricBlock({ label, value, icon, highlight }) {
       padding: '16px', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' 
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: highlight ? '#FAFAFA' : '#A1A1AA' }}>
-        <div style={{ color: highlight ? '#FAFAFA' : '#71717A' }}>{icon}</div>
+        <div style={{ color: highlight ? '#FAFAFA' : '#475569' }}>{icon}</div>
         <span style={{ fontSize: 13, fontWeight: 500 }}>{label}</span>
       </div>
       <div style={{ fontSize: highlight ? 16 : 14, fontWeight: 600, color: '#FAFAFA' }}>
@@ -450,7 +450,7 @@ function SubMetric({ label, value, color }) {
         <div style={{ width: 6, height: 6, borderRadius: '50%', background: color }} />
         <span style={{ fontSize: 12, color: '#A1A1AA' }}>{label}</span>
       </div>
-      <span style={{ fontSize: 12, color: '#E4E4E7', fontWeight: 500 }}>{value}</span>
+      <span style={{ fontSize: 12, color: '#E2E8F0', fontWeight: 500 }}>{value}</span>
     </div>
   );
 }
@@ -460,7 +460,7 @@ function Badge({ segment }) {
   const isFiel = segment === 'regular' || segment === 'Fiel';
   
   const s = isVip ? { fg: '#FBBF24', label: 'VIP' }
-    : isFiel ? { fg: '#34D399', label: 'Fiel' }
+    : isFiel ? { fg: '#22d3ee', label: 'Fiel' }
     : { fg: '#F87171', label: 'Ocasional' };
   
   return (

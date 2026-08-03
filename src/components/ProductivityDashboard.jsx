@@ -52,8 +52,8 @@ export default function ProductivityDashboard() {
       {/* Stats */}
       <div className="responsive-grid-sm" style={{ marginBottom: 24 }}>
         {[
-          { label: 'Acciones Hoy', value: globalStats.todayCount, color: '#10b981', icon: TrendingUp },
-          { label: 'Esta Semana', value: globalStats.weekCount, color: '#3b82f6', icon: BarChart3 },
+          { label: 'Acciones Hoy', value: globalStats.todayCount, color: '#06B6D4', icon: TrendingUp },
+          { label: 'Esta Semana', value: globalStats.weekCount, color: '#6366f1', icon: BarChart3 },
           { label: 'Total Actividad', value: globalStats.totalCount, color: '#8b5cf6', icon: Clock },
         ].map((s, i) => (
           <div key={i} className="glass-card" style={{
@@ -95,7 +95,7 @@ export default function ProductivityDashboard() {
                 <div key={m.id} style={{ padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{
                     width: 28, height: 28, borderRadius: 8,
-                    background: i === 0 ? 'var(--primary-container)' : i === 1 ? '#94a3b8' : i === 2 ? '#cd7f32' : 'var(--outline)',
+                    background: i === 0 ? 'var(--primary-container)' : i === 1 ? '#8B9BB4' : i === 2 ? '#818cf8' : 'var(--outline)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 12, fontWeight: 700, color: i < 3 ? '#fff' : 'var(--on-surface-variant)',
                   }}>
@@ -121,7 +121,7 @@ export default function ProductivityDashboard() {
       {/* Detailed Member Table */}
       <div className="glass-card" style={{ padding: 0 }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Users size={16} color="#3b82f6" />
+          <Users size={16} color="#6366f1" />
           <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--on-surface)' }}>Detalle por Miembro</span>
         </div>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -149,8 +149,8 @@ export default function ProductivityDashboard() {
                 <td style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 700, color: 'var(--on-surface)' }}>{m.totalActions}</td>
                 <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                   <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                    {m.stockDelta >= 0 ? <ArrowUpCircle size={12} color="#10b981" /> : <ArrowDownCircle size={12} color="#ef4444" />}
-                    <span style={{ fontWeight: 600, color: m.stockDelta >= 0 ? '#10b981' : '#ef4444' }}>
+                    {m.stockDelta >= 0 ? <ArrowUpCircle size={12} color="#06B6D4" /> : <ArrowDownCircle size={12} color="#E11D48" />}
+                    <span style={{ fontWeight: 600, color: m.stockDelta >= 0 ? '#06B6D4' : '#E11D48' }}>
                       {m.stockDelta >= 0 ? '+' : ''}{m.stockDelta}
                     </span>
                   </span>

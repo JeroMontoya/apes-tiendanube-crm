@@ -1,18 +1,18 @@
 import React, { useMemo } from 'react';
 
-const ACCENT = '#f59e0b';
-const ACCENT_LIGHT = 'rgba(245,158,11,0.4)';
+const ACCENT = '#06b6d4';
+const ACCENT_LIGHT = 'rgba(6, 182, 212,0.4)';
 
 const CHANNEL_COLORS = {
-  'Organic Search': '#10b981',
-  'Direct': '#3b82f6',
+  'Organic Search': '#06B6D4',
+  'Direct': '#6366f1',
   'Social': '#8b5cf6',
-  'Referral': '#f59e0b',
-  'Email': '#ef4444',
+  'Referral': '#06b6d4',
+  'Email': '#E11D48',
   'Paid Search': '#06b6d4',
-  'Display': '#ec4899',
+  'Display': '#8B5CF6',
   'Affiliaries': '#14b8a6',
-  'Other': '#94a3b8',
+  'Other': '#8B9BB4',
 };
 
 const CHANNEL_LABELS = {
@@ -93,7 +93,7 @@ export default function TrafficSourcesDonut({ ga4Insights }) {
 
   if (sources.length === 0) {
     return (
-      <div className="glass-card bento-span-3" style={{ display: 'flex', flexDirection: 'column', minHeight: 280, alignItems: 'center', justifyContent: 'center' }}>
+      <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', minHeight: 280, height: '100%', alignItems: 'center', justifyContent: 'center' }}>
         <h3 style={{ fontSize: 13, fontWeight: 500, margin: '0 0 12px', color: 'var(--on-surface-variant)', display: 'flex', alignItems: 'center', gap: 6 }}>
           ¿De dónde vienen tus visitas?
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: ACCENT, display: 'inline-block' }} />
@@ -106,7 +106,7 @@ export default function TrafficSourcesDonut({ ga4Insights }) {
   }
 
   return (
-    <div className="glass-card bento-span-3" style={{ display: 'flex', flexDirection: 'column', minHeight: 280 }}>
+    <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', minHeight: 280, height: '100%' }}>
       <h3 style={{ fontSize: 13, fontWeight: 500, margin: '0 0 20px', color: 'var(--on-surface-variant)', display: 'flex', alignItems: 'center', gap: 6 }}>
         ¿De dónde vienen tus visitas?
         <span style={{ width: 6, height: 6, borderRadius: '50%', background: ACCENT, display: 'inline-block' }} />

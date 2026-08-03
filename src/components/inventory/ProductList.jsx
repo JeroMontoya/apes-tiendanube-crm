@@ -11,9 +11,9 @@ function formatCurrency(v) {
 }
 
 const STATUS_CONFIG = {
-  in_stock: { label: 'OK', color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
-  low_stock: { label: 'Bajo', color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.1)' },
-  out_of_stock: { label: 'Agotado', color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
+  in_stock: { label: 'OK', color: '#06B6D4', bg: 'rgba(16,185,129,0.1)' },
+  low_stock: { label: 'Bajo', color: 'var(--primary-container)', bg: 'rgba(6, 182, 212,0.1)' },
+  out_of_stock: { label: 'Agotado', color: '#E11D48', bg: 'rgba(239,68,68,0.1)' },
 };
 
 function useDebounce(value, delay = 300) {
@@ -133,7 +133,7 @@ function ProductModal({ product, locations, onSave, onClose, isNew }) {
           <button onClick={onClose} style={{ padding: '10px 20px', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'transparent', color: 'var(--on-surface)', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>
             Cancelar
           </button>
-          <button onClick={handleSave} disabled={saving || !form.name || !form.sku} style={{ padding: '10px 20px', borderRadius: '10px', border: 'none', background: '#3b82f6', color: 'var(--on-surface)', fontSize: '13px', fontWeight: '700', cursor: saving ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: !form.name || !form.sku ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button onClick={handleSave} disabled={saving || !form.name || !form.sku} style={{ padding: '10px 20px', borderRadius: '10px', border: 'none', background: '#6366f1', color: 'var(--on-surface)', fontSize: '13px', fontWeight: '700', cursor: saving ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: !form.name || !form.sku ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
             {saving ? <RefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={14} />}
             {isNew ? 'Crear' : 'Guardar'}
           </button>
@@ -218,7 +218,7 @@ function ProductDetailModal({ product, locations, stock, onClose, onEdit, onAdju
                   <span style={{ fontSize: '10px', fontWeight: '700', padding: '3px 8px', borderRadius: '6px', background: sc.bg, color: sc.color }}>
                     {sc.label}
                   </span>
-                  <button onClick={() => onAdjust?.(product, loc.id)} style={{ padding: '6px', borderRadius: '6px', border: 'none', background: 'rgba(59,130,246,0.1)', color: '#3b82f6', cursor: 'pointer' }}>
+                  <button onClick={() => onAdjust?.(product, loc.id)} style={{ padding: '6px', borderRadius: '6px', border: 'none', background: 'rgba(99, 102, 241,0.1)', color: '#6366f1', cursor: 'pointer' }}>
                     <ArrowUpDown size={14} />
                   </button>
                 </div>
@@ -354,7 +354,7 @@ export default function ProductList({ products, locations, stock, onAdjust, onTr
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
         <div style={{ position: 'relative', flex: '1 1 240px', minWidth: '200px' }}>
           {searchMode === 'semantic' ? (
-            <Sparkles size={16} color="#3b82f6" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+            <Sparkles size={16} color="#6366f1" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
           ) : (
             <Search size={16} color="var(--on-surface-variant)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
           )}
@@ -365,15 +365,15 @@ export default function ProductList({ products, locations, stock, onAdjust, onTr
             placeholder={searchMode === 'semantic' ? 'Buscar con IA: "campera azul"' : 'Buscar por nombre, SKU...'}
           />
           {searchMode === 'semantic' && semanticLoading && (
-            <RefreshCw size={14} color="#3b82f6" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', animation: 'spin 1s linear infinite' }} />
+            <RefreshCw size={14} color="#6366f1" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', animation: 'spin 1s linear infinite' }} />
           )}
         </div>
         {aiSearch && (
           <div style={{ display: 'flex', gap: '4px', border: '1px solid var(--border-subtle)', borderRadius: '10px', overflow: 'hidden' }}>
-            <button onClick={() => setSearchMode('text')} style={{ ...selectStyle, borderRadius: '9px', background: searchMode === 'text' ? '#3b82f6' : 'transparent', color: searchMode === 'text' ? '#fff' : 'var(--on-surface-variant)', border: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <button onClick={() => setSearchMode('text')} style={{ ...selectStyle, borderRadius: '9px', background: searchMode === 'text' ? '#6366f1' : 'transparent', color: searchMode === 'text' ? '#fff' : 'var(--on-surface-variant)', border: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <Search size={12} /> Texto
             </button>
-            <button onClick={() => setSearchMode('semantic')} style={{ ...selectStyle, borderRadius: '9px', background: searchMode === 'semantic' ? '#3b82f6' : 'transparent', color: searchMode === 'semantic' ? '#fff' : 'var(--on-surface-variant)', border: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <button onClick={() => setSearchMode('semantic')} style={{ ...selectStyle, borderRadius: '9px', background: searchMode === 'semantic' ? '#6366f1' : 'transparent', color: searchMode === 'semantic' ? '#fff' : 'var(--on-surface-variant)', border: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <Sparkles size={12} /> IA
             </button>
           </div>
@@ -392,10 +392,10 @@ export default function ProductList({ products, locations, stock, onAdjust, onTr
           <option value="value">Valor</option>
         </select>
         <div style={{ display: 'flex', gap: '4px', border: '1px solid var(--border-subtle)', borderRadius: '10px', overflow: 'hidden' }}>
-          <button onClick={() => setViewMode('table')} style={{ padding: '7px 10px', border: 'none', background: viewMode === 'table' ? '#3b82f6' : 'transparent', color: viewMode === 'table' ? '#fff' : 'var(--on-surface-variant)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          <button onClick={() => setViewMode('table')} style={{ padding: '7px 10px', border: 'none', background: viewMode === 'table' ? '#6366f1' : 'transparent', color: viewMode === 'table' ? '#fff' : 'var(--on-surface-variant)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
             <List size={14} />
           </button>
-          <button onClick={() => setViewMode('grid')} style={{ padding: '7px 10px', border: 'none', background: viewMode === 'grid' ? '#3b82f6' : 'transparent', color: viewMode === 'grid' ? '#fff' : 'var(--on-surface-variant)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          <button onClick={() => setViewMode('grid')} style={{ padding: '7px 10px', border: 'none', background: viewMode === 'grid' ? '#6366f1' : 'transparent', color: viewMode === 'grid' ? '#fff' : 'var(--on-surface-variant)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
             <Grid size={14} />
           </button>
         </div>
@@ -408,14 +408,14 @@ export default function ProductList({ products, locations, stock, onAdjust, onTr
         </span>
         <div style={{ display: 'flex', gap: '8px' }}>
           {onOpenAIScan && (
-            <button onClick={onOpenAIScan} style={{ padding: '8px 14px', borderRadius: '10px', border: '1px solid #3b82f630', background: '#3b82f610', color: '#3b82f6', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button onClick={onOpenAIScan} style={{ padding: '8px 14px', borderRadius: '10px', border: '1px solid #6366f130', background: '#6366f110', color: '#6366f1', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Camera size={13} /> Escanear con IA
             </button>
           )}
           <button onClick={onRefresh} style={{ padding: '8px 14px', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--surface)', color: 'var(--on-surface)', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <RefreshCw size={13} />
           </button>
-          <button onClick={() => setShowCreateModal(true)} style={{ padding: '8px 14px', borderRadius: '10px', border: 'none', background: '#3b82f6', color: 'var(--on-surface)', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <button onClick={() => setShowCreateModal(true)} style={{ padding: '8px 14px', borderRadius: '10px', border: 'none', background: '#6366f1', color: 'var(--on-surface)', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Plus size={13} /> Nuevo
           </button>
         </div>
@@ -476,14 +476,14 @@ export default function ProductList({ products, locations, stock, onAdjust, onTr
                   <span style={{ fontSize: '11px', color: 'var(--on-surface-variant)' }}>{product.sku}</span>
                   <span style={{ fontSize: '11px', color: 'var(--on-surface-variant)' }}>{product.category}</span>
                   {(locations || []).map(l => (
-                    <div key={l.id} style={{ textAlign: 'center', fontWeight: '700', color: locStock[l.id] > 0 ? 'var(--on-surface)' : '#ef4444', fontSize: '12px' }}>
+                    <div key={l.id} style={{ textAlign: 'center', fontWeight: '700', color: locStock[l.id] > 0 ? 'var(--on-surface)' : '#E11D48', fontSize: '12px' }}>
                       {locStock[l.id] || 0}
                     </div>
                   ))}
                   <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--on-surface)' }}>{formatCurrency(value)}</span>
                   <div style={{ display: 'flex', gap: '2px' }}>
                     <button onClick={e => { e.stopPropagation(); setEditingProduct(product); }} style={{ padding: '4px', borderRadius: '4px', border: 'none', background: 'transparent', color: 'var(--on-surface-variant)', cursor: 'pointer' }} title="Editar"><Edit3 size={14} /></button>
-                    <button onClick={e => { e.stopPropagation(); onAdjust?.(product); }} style={{ padding: '4px', borderRadius: '4px', border: 'none', background: 'transparent', color: '#3b82f6', cursor: 'pointer' }} title="Ajustar stock"><ArrowUpDown size={14} /></button>
+                    <button onClick={e => { e.stopPropagation(); onAdjust?.(product); }} style={{ padding: '4px', borderRadius: '4px', border: 'none', background: 'transparent', color: '#6366f1', cursor: 'pointer' }} title="Ajustar stock"><ArrowUpDown size={14} /></button>
                   </div>
                 </div>
               );
@@ -521,7 +521,7 @@ export default function ProductList({ products, locations, stock, onAdjust, onTr
                     background: 'var(--surface)', overflow: 'hidden', cursor: 'pointer',
                     transition: 'all 0.15s',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#6366f1'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.transform = 'none'; }}
                 >
                   {product.image_url ? (
@@ -555,7 +555,7 @@ export default function ProductList({ products, locations, stock, onAdjust, onTr
                       </span>
                       <div style={{ display: 'flex', gap: '2px' }}>
                         <button onClick={e => { e.stopPropagation(); setEditingProduct(product); }} style={{ padding: '4px', borderRadius: '4px', border: 'none', background: 'transparent', color: 'var(--on-surface-variant)', cursor: 'pointer' }}><Edit3 size={12} /></button>
-                        <button onClick={e => { e.stopPropagation(); onAdjust?.(product); }} style={{ padding: '4px', borderRadius: '4px', border: 'none', background: 'transparent', color: '#3b82f6', cursor: 'pointer' }}><ArrowUpDown size={12} /></button>
+                        <button onClick={e => { e.stopPropagation(); onAdjust?.(product); }} style={{ padding: '4px', borderRadius: '4px', border: 'none', background: 'transparent', color: '#6366f1', cursor: 'pointer' }}><ArrowUpDown size={12} /></button>
                       </div>
                     </div>
                   </div>

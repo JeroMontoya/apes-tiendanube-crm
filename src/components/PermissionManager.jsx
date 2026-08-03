@@ -164,8 +164,8 @@ export default function PermissionManager() {
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={handleReset} style={{
-                    padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(245,158,11,0.3)',
-                    background: 'rgba(245,158,11,0.08)', color: 'var(--primary-container)', fontSize: 11, fontWeight: 600,
+                    padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(6, 182, 212,0.3)',
+                    background: 'rgba(6, 182, 212,0.08)', color: 'var(--primary-container)', fontSize: 11, fontWeight: 600,
                     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
                   }}>
                     <RotateCcw size={12} /> Restaurar Rol
@@ -208,7 +208,7 @@ export default function PermissionManager() {
                           <span style={{
                             fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 4,
                             background: allEnabled ? 'rgba(16,185,129,0.1)' : 'var(--glass-border)',
-                            color: allEnabled ? '#10b981' : 'var(--on-surface-variant)',
+                            color: allEnabled ? '#06B6D4' : 'var(--on-surface-variant)',
                           }}>
                             {enabledCount}/{permsInCat.length}
                           </span>
@@ -216,7 +216,7 @@ export default function PermissionManager() {
                         <button onClick={(e) => { e.stopPropagation(); toggleCat(cat); }} style={{
                           padding: '4px 8px', borderRadius: 6, border: 'none',
                           background: allEnabled ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)',
-                          color: allEnabled ? '#ef4444' : '#10b981', fontSize: 10, fontWeight: 600, cursor: 'pointer',
+                          color: allEnabled ? '#E11D48' : '#06B6D4', fontSize: 10, fontWeight: 600, cursor: 'pointer',
                         }}>
                           {allEnabled ? 'Quitar Todos' : 'Dar Todos'}
                         </button>
@@ -239,12 +239,12 @@ export default function PermissionManager() {
                               onMouseLeave={e => e.currentTarget.style.borderColor = enabled ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)'}
                               >
                                 <div>
-                                  <div style={{ fontSize: 12, fontWeight: 600, color: enabled ? '#10b981' : 'var(--on-surface)' }}>{permDef.label}</div>
+                                  <div style={{ fontSize: 12, fontWeight: 600, color: enabled ? '#06B6D4' : 'var(--on-surface)' }}>{permDef.label}</div>
                                   <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', marginTop: 1 }}>{permDef.desc}</div>
                                 </div>
                                 <div style={{
                                   width: 20, height: 20, borderRadius: 6,
-                                  background: enabled ? '#10b981' : 'var(--glass-border)',
+                                  background: enabled ? '#06B6D4' : 'var(--glass-border)',
                                   border: enabled ? 'none' : '1px solid var(--border-medium)',
                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                                   transition: 'all 0.15s', flexShrink: 0,

@@ -74,9 +74,9 @@ function SidebarNav({ activeTab, onTabChange, alerts, connected, sidebarOpen, on
           <div style={{
             width: '24px', height: '24px', borderRadius: '6px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: connected ? '#10b98118' : '#ef444418',
+            background: connected ? '#06B6D418' : '#E11D4818',
           }}>
-            {connected ? <Wifi size={12} color="#10b981" /> : <WifiOff size={12} color="#ef4444" />}
+            {connected ? <Wifi size={12} color="#06B6D4" /> : <WifiOff size={12} color="#E11D48" />}
           </div>
         </div>
         <div style={{ flex: 1, padding: '6px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -93,8 +93,8 @@ function SidebarNav({ activeTab, onTabChange, alerts, connected, sidebarOpen, on
                   padding: sidebarOpen ? '10px 12px' : '10px',
                   justifyContent: sidebarOpen ? 'flex-start' : 'center',
                   borderRadius: '10px', border: 'none', cursor: 'pointer',
-                  background: isActive ? '#3b82f618' : 'transparent',
-                  color: isActive ? '#3b82f6' : 'var(--on-surface-variant)',
+                  background: isActive ? '#6366f118' : 'transparent',
+                  color: isActive ? '#6366f1' : 'var(--on-surface-variant)',
                   fontSize: '13px', fontWeight: isActive ? 600 : 400,
                   position: 'relative', transition: 'all 0.15s',
                   whiteSpace: 'nowrap', overflow: 'hidden',
@@ -106,7 +106,7 @@ function SidebarNav({ activeTab, onTabChange, alerts, connected, sidebarOpen, on
                   <span style={{
                     position: 'absolute', top: '6px', right: sidebarOpen ? '8px' : '6px',
                     width: '8px', height: '8px', borderRadius: '50%',
-                    background: '#ef4444',
+                    background: '#E11D48',
                   }} />
                 )}
               </button>
@@ -126,8 +126,8 @@ function SidebarNav({ activeTab, onTabChange, alerts, connected, sidebarOpen, on
                     style={{
                       display: 'flex', alignItems: 'center', gap: '10px',
                       padding: '10px 12px', borderRadius: '10px', border: 'none', cursor: 'pointer',
-                      background: isActive ? '#3b82f618' : 'transparent',
-                      color: isActive ? '#3b82f6' : 'var(--on-surface-variant)',
+                      background: isActive ? '#6366f118' : 'transparent',
+                      color: isActive ? '#6366f1' : 'var(--on-surface-variant)',
                       fontSize: '13px', fontWeight: isActive ? 600 : 400,
                       transition: 'all 0.15s', whiteSpace: 'nowrap',
                     }}
@@ -165,8 +165,8 @@ function MobileTabBar({ activeTab, onTabChange, alerts }) {
             style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
               padding: '6px 14px', borderRadius: '10px', border: 'none', cursor: 'pointer',
-              background: isActive ? '#3b82f618' : 'transparent',
-              color: isActive ? '#3b82f6' : 'var(--on-surface-variant)',
+              background: isActive ? '#6366f118' : 'transparent',
+              color: isActive ? '#6366f1' : 'var(--on-surface-variant)',
               fontSize: '10px', fontWeight: isActive ? 600 : 400,
               position: 'relative',
             }}
@@ -177,7 +177,7 @@ function MobileTabBar({ activeTab, onTabChange, alerts }) {
               <span style={{
                 position: 'absolute', top: '2px', right: '6px',
                 width: '16px', height: '16px', borderRadius: '50%',
-                background: '#ef4444', color: 'var(--on-surface)', fontSize: '9px',
+                background: '#E11D48', color: 'var(--on-surface)', fontSize: '9px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontWeight: 700,
               }}>
@@ -392,11 +392,11 @@ const handleAdjust = useCallback(async (data) => {
                 onClick={() => setStockSubTab('adjust')}
                 style={{
                   padding: '10px 20px', borderRadius: '10px', border: 'none',
-                  background: stockSubTab === 'adjust' ? '#3b82f6' : 'var(--surface)',
+                  background: stockSubTab === 'adjust' ? '#6366f1' : 'var(--surface)',
                   color: stockSubTab === 'adjust' ? '#fff' : 'var(--on-surface)',
                   fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                   display: 'flex', alignItems: 'center', gap: '8px',
-                  boxShadow: stockSubTab === 'adjust' ? '0 2px 8px rgba(59,130,246,0.3)' : 'none',
+                  boxShadow: stockSubTab === 'adjust' ? '0 2px 8px rgba(99, 102, 241,0.3)' : 'none',
                 }}
               >
                 <ArrowUpDown size={16} /> Sumar / Restar
@@ -418,7 +418,7 @@ const handleAdjust = useCallback(async (data) => {
                 onClick={() => setStockSubTab('taller')}
                 style={{
                   padding: '10px 20px', borderRadius: '10px', border: 'none',
-                  background: stockSubTab === 'taller' ? '#10b981' : 'var(--surface)',
+                  background: stockSubTab === 'taller' ? '#06B6D4' : 'var(--surface)',
                   color: stockSubTab === 'taller' ? '#fff' : 'var(--on-surface)',
                   fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                   display: 'flex', alignItems: 'center', gap: '8px',
@@ -553,8 +553,8 @@ const handleAdjust = useCallback(async (data) => {
                 style={{
                   display: 'flex', alignItems: 'center', gap: '6px',
                   padding: '6px 12px', borderRadius: '8px',
-                  background: '#ef444418', border: '1px solid #ef444438',
-                  color: '#ef4444', cursor: 'pointer', fontSize: '12px', fontWeight: 600,
+                  background: '#E11D4818', border: '1px solid #E11D4838',
+                  color: '#E11D48', cursor: 'pointer', fontSize: '12px', fontWeight: 600,
                 }}
               >
                 <Bell size={14} />

@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from './lib/supabase';
 import { useRealtimeSync } from './hooks/useRealtimeSync';
 
-import Sidebar from './components/Sidebar';
+import Sidebar, { SidebarProfile } from './components/Sidebar';
+import SyncIndicator from './components/SyncIndicator';
 import StatsCards from './components/StatsCards';
 import MasterTable from './components/MasterTable';
 import ClassificationTree from './components/ClassificationTree';
@@ -53,8 +54,12 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 // Team System
 import { TeamProvider, useTeam } from './contexts/TeamContext';
+
+// Workspace System (Multi-Brand Isolation)
+import { WorkspaceProvider, useWorkspace } from './contexts/WorkspaceContext';
 import ActivityLog from './components/ActivityLog';
 import ProductivityDashboard from './components/ProductivityDashboard';
+import RimuOrganizer from './components/RimuOrganizer';
 
 import TeamPanel from './components/TeamPanel';
 
@@ -92,15 +97,12 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
 
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState(() => localStorage.getItem('onyx_active_workspace') || 'default');
+
   // Theme State
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('theme');
-    // Force light theme initially as requested by user if they had dark saved
-    if (saved === 'dark') {
-      localStorage.setItem('theme', 'light');
-      return 'light';
-    }
-    return saved || 'light';
+    return saved || 'dark';
   });
 
   useEffect(() => {
@@ -138,26 +140,37 @@ export default function App() {
   const [budgetGovernanceAlerts, setBudgetGovernanceAlerts] = useState([]);
   
   useEffect(() => {
-    if (!session) return;
+    if (!session || !activeWorkspaceId) return;
     
     // Fetch initial data
     const fetchPredictiveData = async () => {
+      let velQuery = supabase.from('stock_velocity').select('*').order('updated_at', { ascending: false });
+      let govQuery = supabase.from('ad_budget_governance').select('*').order('created_at', { ascending: false });
+      
+      if (activeWorkspaceId !== 'default') {
+        velQuery = velQuery.eq('workspace_id', activeWorkspaceId);
+        govQuery = govQuery.eq('workspace_id', activeWorkspaceId);
+      }
+      
       const [{ data: velData }, { data: govData }] = await Promise.all([
-        supabase.from('stock_velocity').select('*').order('updated_at', { ascending: false }),
-        supabase.from('ad_budget_governance').select('*').order('created_at', { ascending: false })
+        velQuery,
+        govQuery
       ]);
       if (velData) setStockVelocity(velData);
+      else setStockVelocity([]);
+      
       if (govData) setBudgetGovernanceAlerts(govData);
+      else setBudgetGovernanceAlerts([]);
     };
     
     fetchPredictiveData();
     
     // Realtime subscriptions
-    const velSub = supabase.channel('stock_velocity_changes')
+    const velSub = supabase.channel(`stock_velocity_changes_${activeWorkspaceId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'stock_velocity' }, fetchPredictiveData)
       .subscribe();
       
-    const govSub = supabase.channel('ad_budget_governance_changes')
+    const govSub = supabase.channel(`ad_budget_governance_changes_${activeWorkspaceId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'ad_budget_governance' }, fetchPredictiveData)
       .subscribe();
       
@@ -165,7 +178,7 @@ export default function App() {
       supabase.removeChannel(velSub);
       supabase.removeChannel(govSub);
     };
-  }, [session]);
+  }, [session, activeWorkspaceId]);
   const [aiInsights, setAiInsights] = useState(null);
   const [isFetchingAI, setIsFetchingAI] = useState(false);
   const [workspaceData, setWorkspaceData] = useState(null);
@@ -179,10 +192,10 @@ export default function App() {
   const preloadRef = useRef(new Set());
 
   // Global Date State
-  const initialDates = calculateDates('30d');
+  const initialDates = calculateDates('maximum');
   const [dateRange, setDateRange] = useState({
-    preset: '30d',
-    metaPreset: 'last_30d',
+    preset: 'maximum',
+    metaPreset: 'maximum',
     startDate: initialDates.start,
     endDate: initialDates.end
   });
@@ -204,8 +217,7 @@ export default function App() {
     if (!storeId) return;
     setIsRefreshingStock(true);
     try {
-      const { data: sysCfg } = await supabase.from('system_config').select('tiendanube_access_token').eq('id', 'main').single();
-      const token = sysCfg?.tiendanube_access_token || workspaceData?.tiendanube_access_token;
+      const token = workspaceData?.tiendanube_access_token;
       console.log('[StockRefresh] token found:', !!token);
       if (!token) return;
       const api = new TiendanubeAPI(storeId, token);
@@ -255,6 +267,16 @@ export default function App() {
     };
   }, []);
 
+  // ── -1. Auto-Rename Workspace to Apes ──────────────────
+  useEffect(() => {
+    if (session?.user?.id && activeWorkspaceId && activeWorkspaceId !== 'default') {
+      supabase.from('workspaces').update({ name: 'Apes' }).eq('id', activeWorkspaceId)
+        .then(({ error }) => {
+          if (!error) console.log('✅ Workspace renamed to Apes via UI auth bypass.');
+        });
+    }
+  }, [session, activeWorkspaceId]);
+
   // ── 0. Inicialización de Nexo & Event Listeners ────────────────
   useEffect(() => {
     try {
@@ -274,11 +296,29 @@ export default function App() {
     };
     window.addEventListener('navigate-sidebar', handleNavigation);
     window.addEventListener('navigate', handleNavigation);
+    
+    const handleWorkspaceChange = (e) => {
+      const wsId = e.detail?.id || 'default';
+      setActiveWorkspaceId(wsId);
+    };
+    window.addEventListener('workspace-changed', handleWorkspaceChange);
+    
     return () => {
       window.removeEventListener('navigate-sidebar', handleNavigation);
       window.removeEventListener('navigate', handleNavigation);
+      window.removeEventListener('workspace-changed', handleWorkspaceChange);
     };
   }, []);
+
+  // ── Helper: get active workspace ID for API headers (reads from localStorage
+  // since App() renders ABOVE WorkspaceProvider) ──────────────────────────
+  const getWorkspaceId = useCallback(() => {
+    return activeWorkspaceId;
+  }, [activeWorkspaceId]);
+
+  const getWsHeaders = useCallback((overrideId) => {
+    return { 'X-Workspace-Id': overrideId || getWorkspaceId() };
+  }, [getWorkspaceId]);
 
   // ── 1. Carga de Caché y Sincronización ────────────────
   useEffect(() => {
@@ -293,46 +333,57 @@ export default function App() {
           loadFromCache('last_sync'),
         ]);
         if (cachedClients) { setUnifiedClients(cachedClients); console.log('[App] Restored', cachedClients.length, 'clients from cache'); }
+        else { setUnifiedClients([]); }
         if (cachedOrders) { setRawOrders(cachedOrders); console.log('[App] Restored', cachedOrders.length, 'orders from cache'); }
-        if (cachedLastSync) setLastSync(new Date(cachedLastSync));
+        else { setRawOrders([]); }
+        if (cachedLastSync) { setLastSync(new Date(cachedLastSync)); }
+        else { setLastSync(null); }
       } catch (err) { console.warn('No se pudo cargar datos desde caché local', err); }
 
       setIsSyncing(true);
 
-      // 1. Load credentials from Supabase (parallel)
-      const [cfgResult, wsResult] = await Promise.all([
-        supabase.from('system_config').select('*').eq('id', 'main').single(),
-        supabase.from('workspaces')
-          .select('tiendanube_store_id, tiendanube_access_token, meta_ad_account_id, meta_access_token, n8n_webhook_url, merchant_center_merchant_id, merchant_center_credentials_json, search_console_site_url, search_console_credentials_json, google_ads_customer_id, google_ads_client_id, google_ads_client_secret, google_ads_refresh_token, google_ads_developer_token, tiktok_advertiser_id, tiktok_access_token, tiktok_app_secret')
-          .eq('user_id', session.user.id)
-          .single(),
-      ]);
-      const systemConfig = cfgResult.data;
-      const userWorkspace = wsResult.data;
-      if (wsResult.error) console.warn('[Workspace] Query warning:', wsResult.error.message);
+      // 1. Load credentials from Supabase workspaces table (workspace-scoped)
+      let currentWorkspaceId = getWorkspaceId();
+      let wsQuery = supabase.from('workspaces').select('*');
+      if (currentWorkspaceId && currentWorkspaceId !== 'default') {
+        wsQuery = wsQuery.eq('id', currentWorkspaceId).limit(1);
+      } else {
+        wsQuery = wsQuery.or(`owner_id.eq.${session.user.id},user_id.eq.${session.user.id}`).order('created_at', { ascending: true }).limit(1);
+      }
+      
+      const { data: wsData, error: wsError } = await wsQuery;
+      const userWorkspace = wsData && wsData.length > 0 ? wsData[0] : null;
+
+      if (currentWorkspaceId === 'default' && userWorkspace) {
+        currentWorkspaceId = userWorkspace.id;
+        setActiveWorkspaceId(currentWorkspaceId);
+        localStorage.setItem('onyx_active_workspace', currentWorkspaceId);
+      }
+
+      if (wsError) console.warn('[Workspace] Query warning:', wsError.message);
 
       const workspace = {
-        tiendanube_store_id: import.meta.env.VITE_TIENDANUBE_STORE_ID || systemConfig?.tiendanube_store_id || userWorkspace?.tiendanube_store_id,
-        tiendanube_access_token: import.meta.env.VITE_TIENDANUBE_TOKEN || systemConfig?.tiendanube_access_token || userWorkspace?.tiendanube_access_token,
-        meta_ad_account_id: import.meta.env.VITE_META_AD_ACCOUNT_ID || systemConfig?.meta_ad_account_id || userWorkspace?.meta_ad_account_id,
-        meta_access_token: import.meta.env.VITE_META_ACCESS_TOKEN || systemConfig?.meta_access_token || userWorkspace?.meta_access_token,
-        ga4_property_id: import.meta.env.VITE_GA4_PROPERTY_ID || systemConfig?.ga4_property_id || '',
-        ga4_credentials_json: import.meta.env.VITE_GA4_CREDENTIALS || systemConfig?.ga4_credentials_json || '',
-        n8n_webhook_url: import.meta.env.VITE_N8N_WEBHOOK_URL || systemConfig?.n8n_webhook_url || userWorkspace?.n8n_webhook_url,
-        merchant_center_merchant_id: import.meta.env.VITE_MERCHANT_CENTER_MERCHANT_ID || systemConfig?.merchant_center_merchant_id || userWorkspace?.merchant_center_merchant_id,
-        merchant_center_credentials_json: import.meta.env.VITE_MERCHANT_CENTER_CREDENTIALS || systemConfig?.merchant_center_credentials_json || userWorkspace?.merchant_center_credentials_json,
-        search_console_site_url: import.meta.env.VITE_SEARCH_CONSOLE_SITE_URL || systemConfig?.search_console_site_url || userWorkspace?.search_console_site_url,
-        search_console_credentials_json: import.meta.env.VITE_SEARCH_CONSOLE_CREDENTIALS || systemConfig?.search_console_credentials_json || userWorkspace?.search_console_credentials_json,
-        google_ads_customer_id: import.meta.env.VITE_GOOGLE_ADS_CUSTOMER_ID || systemConfig?.google_ads_customer_id || userWorkspace?.google_ads_customer_id,
-        google_ads_client_id: import.meta.env.VITE_GOOGLE_ADS_CLIENT_ID || systemConfig?.google_ads_client_id || userWorkspace?.google_ads_client_id,
-        google_ads_client_secret: import.meta.env.VITE_GOOGLE_ADS_CLIENT_SECRET || systemConfig?.google_ads_client_secret || userWorkspace?.google_ads_client_secret,
-        google_ads_refresh_token: import.meta.env.VITE_GOOGLE_ADS_REFRESH_TOKEN || systemConfig?.google_ads_refresh_token || userWorkspace?.google_ads_refresh_token,
-        google_ads_developer_token: import.meta.env.VITE_GOOGLE_ADS_DEVELOPER_TOKEN || systemConfig?.google_ads_developer_token || userWorkspace?.google_ads_developer_token,
-        tiktok_advertiser_id: import.meta.env.VITE_TIKTOK_ADS_ADVERTISER_ID || systemConfig?.tiktok_advertiser_id || userWorkspace?.tiktok_advertiser_id,
-        tiktok_access_token: import.meta.env.VITE_TIKTOK_ADS_ACCESS_TOKEN || systemConfig?.tiktok_access_token || userWorkspace?.tiktok_access_token,
-        tiktok_app_secret: import.meta.env.VITE_TIKTOK_ADS_APP_SECRET || systemConfig?.tiktok_app_secret || userWorkspace?.tiktok_app_secret,
-        auto_sync_enabled: systemConfig?.auto_sync_enabled !== false,
-        sync_interval_seconds: systemConfig?.sync_interval_seconds || 90,
+        tiendanube_store_id: import.meta.env.VITE_TIENDANUBE_STORE_ID || userWorkspace?.tiendanube_store_id,
+        tiendanube_access_token: import.meta.env.VITE_TIENDANUBE_TOKEN || userWorkspace?.tiendanube_access_token,
+        meta_ad_account_id: import.meta.env.VITE_META_AD_ACCOUNT_ID || userWorkspace?.meta_ad_account_id,
+        meta_access_token: import.meta.env.VITE_META_ACCESS_TOKEN || userWorkspace?.meta_access_token,
+        ga4_property_id: import.meta.env.VITE_GA4_PROPERTY_ID || userWorkspace?.ga4_property_id || '',
+        ga4_credentials_json: import.meta.env.VITE_GA4_CREDENTIALS || userWorkspace?.ga4_credentials_json || '',
+        n8n_webhook_url: import.meta.env.VITE_N8N_WEBHOOK_URL || userWorkspace?.n8n_webhook_url,
+        merchant_center_merchant_id: import.meta.env.VITE_MERCHANT_CENTER_MERCHANT_ID || userWorkspace?.merchant_center_merchant_id,
+        merchant_center_credentials_json: import.meta.env.VITE_MERCHANT_CENTER_CREDENTIALS || userWorkspace?.merchant_center_credentials_json,
+        search_console_site_url: import.meta.env.VITE_SEARCH_CONSOLE_SITE_URL || userWorkspace?.search_console_site_url,
+        search_console_credentials_json: import.meta.env.VITE_SEARCH_CONSOLE_CREDENTIALS || userWorkspace?.search_console_credentials_json,
+        google_ads_customer_id: import.meta.env.VITE_GOOGLE_ADS_CUSTOMER_ID || userWorkspace?.google_ads_customer_id,
+        google_ads_client_id: import.meta.env.VITE_GOOGLE_ADS_CLIENT_ID || userWorkspace?.google_ads_client_id,
+        google_ads_client_secret: import.meta.env.VITE_GOOGLE_ADS_CLIENT_SECRET || userWorkspace?.google_ads_client_secret,
+        google_ads_refresh_token: import.meta.env.VITE_GOOGLE_ADS_REFRESH_TOKEN || userWorkspace?.google_ads_refresh_token,
+        google_ads_developer_token: import.meta.env.VITE_GOOGLE_ADS_DEVELOPER_TOKEN || userWorkspace?.google_ads_developer_token,
+        tiktok_advertiser_id: import.meta.env.VITE_TIKTOK_ADS_ADVERTISER_ID || userWorkspace?.tiktok_advertiser_id,
+        tiktok_access_token: import.meta.env.VITE_TIKTOK_ADS_ACCESS_TOKEN || userWorkspace?.tiktok_access_token,
+        tiktok_app_secret: import.meta.env.VITE_TIKTOK_ADS_APP_SECRET || userWorkspace?.tiktok_app_secret,
+        auto_sync_enabled: userWorkspace?.auto_sync_enabled !== false,
+        sync_interval_seconds: userWorkspace?.sync_interval_seconds || 90,
       };
       setWorkspaceData(workspace);
 
@@ -353,26 +404,24 @@ export default function App() {
         }
       }
 
-      // Auto-seed if credentials missing
-      const needsSeed = !systemConfig?.ga4_property_id || !systemConfig?.meta_access_token || !systemConfig?.merchant_center_merchant_id || !currentToken;
+      // Auto-seed if credentials missing (workspace-scoped)
+      const needsSeed = !workspace?.ga4_property_id || !workspace?.meta_access_token || !workspace?.merchant_center_merchant_id || !currentToken;
       if (needsSeed) {
         try {
           const { data: { session: authSession } } = await supabase.auth.getSession();
           if (authSession?.access_token) {
-            const seedRes = await fetch('/api/seed/credentials', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authSession.access_token}` }, body: JSON.stringify({}) });
+            const seedRes = await fetch('/api/seed/credentials', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authSession.access_token}`, ...getWsHeaders(currentWorkspaceId) }, body: JSON.stringify({}) });
             const seedData = await seedRes.json();
             console.log('[Seed]', seedData);
             if (seedData.saved) {
-              const [newCfg, newWs] = await Promise.all([
-                supabase.from('system_config').select('*').eq('id', 'main').single(),
-                supabase.from('workspaces').select('*').eq('user_id', session.user.id).single(),
-              ]);
-              const merged = { ...newCfg.data, ...newWs.data };
-              setWorkspaceData(prev => ({ ...prev, ...merged }));
-              if (merged?.tiendanube_store_id && merged?.tiendanube_access_token) {
-                setStoreId(merged.tiendanube_store_id);
-                currentStore = merged.tiendanube_store_id;
-                currentToken = merged.tiendanube_access_token;
+              const { data: newWs } = await supabase.from('workspaces').select('*').eq('id', userWorkspace?.id || currentWorkspaceId).single();
+              if (newWs) {
+                setWorkspaceData(prev => ({ ...prev, ...newWs }));
+                if (newWs?.tiendanube_store_id && newWs?.tiendanube_access_token) {
+                  setStoreId(newWs.tiendanube_store_id);
+                  currentStore = newWs.tiendanube_store_id;
+                  currentToken = newWs.tiendanube_access_token;
+                }
               }
             }
           }
@@ -380,17 +429,14 @@ export default function App() {
       }
 
       // ════════════════════════════════════════════════════════════════════
-      // MAIN LOAD: Read from server cache snapshot (instant!) unless manual
+      // MAIN LOAD: Read from server cache snapshot (workspace-scoped)
       // ════════════════════════════════════════════════════════════════════
       try {
-        if (options?.isManual) {
-          throw new Error('Manual sync forces live data');
-        }
-        const snapshotRes = await fetch('/api/data/snapshot');
+        const snapshotRes = await fetch('/api/data/snapshot', { headers: getWsHeaders(currentWorkspaceId) });
         const snapshot = await snapshotRes.json();
 
         if (snapshot.ready && snapshot.data) {
-          console.log(`[Snapshot] Loaded from server cache. Last sync: ${snapshot.lastSync} (${snapshot.syncDuration}ms)`);
+          console.log(`[Snapshot] Loaded from server cache (workspace: ${getWorkspaceId()}). Last sync: ${snapshot.lastSync} (${snapshot.syncDuration}ms)`);
           
           // Set all data from cache instantly
           setUnifiedClients(snapshot.data.unifiedClients || []);
@@ -415,11 +461,11 @@ export default function App() {
           saveToCache('tiendanube_products', snapshot.data.products || []);
           saveToCache('last_sync', snapshot.lastSync);
 
-          // If cache is >5 min old, trigger background refresh
+          // If cache is >5 min old, trigger background refresh (workspace-scoped)
           const cacheAge = Date.now() - new Date(snapshot.lastSync).getTime();
           if (cacheAge > 5 * 60 * 1000) {
             console.log(`[Snapshot] Cache is ${Math.round(cacheAge / 60000)}min old, triggering background refresh`);
-            fetch('/api/cron/sync').catch(() => {});
+            fetch('/api/cron/sync', { headers: getWsHeaders() }).catch(() => {});
           }
 
           return; // Done! No need for live API calls
@@ -431,16 +477,19 @@ export default function App() {
       // ════════════════════════════════════════════════════════════════════
       // FALLBACK: Live sync if server cache not ready
       // ════════════════════════════════════════════════════════════════════
+      console.log('[Fallback] Checking credentials. currentStore:', currentStore, 'currentToken:', currentToken ? '***' : 'missing');
       if (currentStore && currentToken) {
         setStoreId(currentStore);
         await fetchRealData(currentStore, currentToken);
+      } else {
+        console.warn('[Fallback] Missing Tiendanube credentials, cannot perform live sync.');
       }
 
       setIsSyncing(false);
     };
 
     loadData();
-  }, [session, authLoading]);
+  }, [session, authLoading, activeWorkspaceId]);
 
   // ── Centralized Meta Insights fetcher with deduplication ────────────────
   const fetchMetaInsights = useCallback(async (signal) => {
@@ -461,7 +510,7 @@ export default function App() {
   // ── Centralized snapshot refresher (used by AppContent realtime/polling) ──
   const refreshSnapshot = useCallback(async () => {
     try {
-      const snapshotRes = await fetch('/api/data/snapshot');
+      const snapshotRes = await fetch('/api/data/snapshot', { headers: getWsHeaders() });
       const snapshot = await snapshotRes.json();
       if (snapshot.ready && snapshot.data) {
         setUnifiedClients(snapshot.data.unifiedClients || []);
@@ -481,7 +530,7 @@ export default function App() {
         saveToCache('last_sync', snapshot.lastSync);
       }
     } catch (err) { console.warn('[Snapshot] Refresh failed:', err.message); }
-  }, []);
+  }, [getWsHeaders]);
 
   // ── Fetch Insights when dateRange or workspace changes ────────────────
   const insightsFetchedRef = useRef(false);
@@ -621,7 +670,7 @@ export default function App() {
     const POLL_INTERVAL = 2 * 60 * 1000;
     const interval = setInterval(async () => {
       try {
-        const snapshotRes = await fetch('/api/data/snapshot');
+        const snapshotRes = await fetch('/api/data/snapshot', { headers: getWsHeaders() });
         const snapshot = await snapshotRes.json();
         if (snapshot.ready && snapshot.data) {
           setUnifiedClients(snapshot.data.unifiedClients || []);
@@ -642,7 +691,7 @@ export default function App() {
       } catch (e) { console.warn('[Poll] Snapshot refresh failed:', e.message); }
     }, POLL_INTERVAL);
     return () => clearInterval(interval);
-  }, [storeId, connectionStatus]);
+  }, [storeId, connectionStatus, getWsHeaders]);
 
   // Manual sync: fetch directly from Tiendanube via frontend API bypass server cache
   const handleManualSync = useCallback(async () => {
@@ -991,7 +1040,7 @@ setConnectionStatus('connected');
 
   if (authLoading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#091c35', color: 'white' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#090B0F', color: 'white' }}>
         <h2>Cargando...</h2>
       </div>
     );
@@ -1007,6 +1056,7 @@ setConnectionStatus('connected');
 
   return (
     <ErrorBoundary>
+      <WorkspaceProvider session={session}>
       <NotificationProvider>
       <TeamProvider session={session}>
       <AppContent
@@ -1064,6 +1114,7 @@ setConnectionStatus('connected');
 </TeamProvider>
       <ToastContainer />
       </NotificationProvider>
+      </WorkspaceProvider>
       </ErrorBoundary>
     );
   }
@@ -1081,7 +1132,7 @@ function AppContent({
   onRefreshCompetitive, onAddCompetitor, onAnalyzeCompetitor, onRemoveCompetitor,
   fetchMetaInsights, setWorkspaceData, handleManualSync, refreshSnapshot,
 }) {
-  const { currentMember, ROLE_LABELS, ROLE_COLORS, ROLE_ICONS } = useTeam();
+  const { currentMember, ROLE_LABELS, ROLE_COLORS, ROLE_ICONS, logout } = useTeam();
   const { notify } = useNotifications();
 
   const snapshotRefreshTimerRef = useRef(null);
@@ -1094,10 +1145,11 @@ function AppContent({
 
   // Real-time sync: SSE + Supabase Realtime + Broadcast
   const handleRealtimeEvent = useCallback((data) => {
-    if (data.type === 'config-changed' || data.table === 'system_config') {
+    if (data.type === 'config-changed' || data.table === 'workspaces') {
       const loadConfig = async () => {
-        const { data: config } = await supabase.from('system_config').select('*').eq('id', 'main').single();
-        if (config) setWorkspaceData(prev => ({ ...prev, ...config }));
+        if (!workspaceData?.id) return;
+        const { data: wsData } = await supabase.from('workspaces').select('*').eq('id', workspaceData.id).single();
+        if (wsData) setWorkspaceData(prev => ({ ...prev, ...wsData }));
       };
       loadConfig();
     }
@@ -1154,8 +1206,9 @@ function AppContent({
         }
         if (data.type === 'config-changed') {
           const loadConfig = async () => {
-            const { data: config } = await supabase.from('system_config').select('*').eq('id', 'main').single();
-            if (config) setWorkspaceData(prev => ({ ...prev, ...config }));
+            if (!workspaceData?.id) return;
+            const { data: wsData } = await supabase.from('workspaces').select('*').eq('id', workspaceData.id).single();
+            if (wsData) setWorkspaceData(prev => ({ ...prev, ...wsData }));
           };
           loadConfig();
         }
@@ -1260,24 +1313,18 @@ function AppContent({
             </div>
           )}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 6, background: syncConnected ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', fontSize: 11, fontWeight: 600 }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: syncConnected ? '#10b981' : '#ef4444', animation: syncConnected ? 'pulse 2s infinite' : 'none' }} />
-              <span style={{ color: syncConnected ? '#10b981' : '#ef4444' }}>{syncConnected ? 'Sync' : 'Offline'}</span>
-            </div>
+            <SyncIndicator connected={syncConnected} lastEvent={lastEvent} lastSync={lastSync} />
             <NotificationBell />
-            {currentMember && (
-              <div
-                title={currentMember.name || currentMember.email}
-                style={{
-                  width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
-                  background: 'var(--primary-container)', border: '1px solid var(--primary)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 13, fontWeight: 800, color: 'var(--primary)', cursor: 'default',
-                }}
-              >
-                {(currentMember.name || currentMember.email || '?').charAt(0).toUpperCase()}
-              </div>
-            )}
+            <SidebarProfile
+              currentMember={currentMember}
+              logout={logout}
+              ROLE_COLORS={ROLE_COLORS}
+              ROLE_ICONS={ROLE_ICONS}
+              ROLE_LABELS={ROLE_LABELS}
+              collapsed={true}
+              isMobile={false}
+              onNavigate={(id) => setActiveView(id)}
+            />
           </div>
         </div>
         
@@ -1378,11 +1425,11 @@ function AppViewRenderer(props) {
                 Dashboard
                 <span className="live-dot" />
               </h1>
-              <p style={{ margin: '4px 0 0', color: '#a89f88', fontSize: 14 }}>Bienvenido de vuelta{currentMember?.name ? `, ${currentMember.name.split(' ')[0]}` : ''}. Así va tu tienda hoy.</p>
+              <p style={{ margin: '4px 0 0', color: '#8B9BB4', fontSize: 14 }}>Bienvenido de vuelta{currentMember?.name ? `, ${currentMember.name.split(' ')[0]}` : ''}. Así va tu tienda hoy.</p>
             </div>
             {lastSync && (
               <div style={{ 
-                fontSize: 12, color: '#a89f88', 
+                fontSize: 12, color: '#8B9BB4', 
                 background: 'rgba(99,102,241,0.06)', 
                 padding: '8px 16px', borderRadius: 20, 
                 border: '1px solid rgba(99,102,241,0.12)',
@@ -1429,7 +1476,7 @@ function AppViewRenderer(props) {
               <ConversionsChartWidget rawOrders={rawOrders} />
             </div>
             <div className="bento-span-8" style={{ display: 'flex', flexDirection: 'column' }}>
-              <TopProductsTable rawOrders={rawOrders} clients={filteredClients} />
+              <TopProductsTable rawOrders={rawOrders} clients={filteredClients} dateRange={dateRange} />
             </div>
             <div className="bento-span-4" style={{ display: 'flex', flexDirection: 'column' }}>
               <QuickStatsPanel clients={filteredClients} ga4Insights={ga4Insights} />
@@ -1454,7 +1501,7 @@ function AppViewRenderer(props) {
 
           <div className="bento-grid mt-md">
             <div className="bento-span-8" style={{ display: 'flex', flexDirection: 'column' }}>
-              <CohortRetentionChart clients={filteredClients} />
+              <CohortRetentionChart clients={historicClients} />
             </div>
             <div className="bento-span-4" style={{ display: 'flex', flexDirection: 'column' }}>
               <ChurnRadar clients={filteredClients} />
@@ -1599,8 +1646,7 @@ function AppViewRenderer(props) {
           }}
           onStockUpdate={async (productId, variantId, newStock) => {
             if (!storeId) return;
-            const { data: sysCfg } = await supabase.from('system_config').select('tiendanube_access_token').eq('id', 'main').single();
-            const token = sysCfg?.tiendanube_access_token || workspaceData?.tiendanube_access_token;
+            const token = workspaceData?.tiendanube_access_token;
             if (!token) return;
             const api = new TiendanubeAPI(storeId, token);
             await api.updateVariantStock(productId, variantId, newStock);
@@ -1661,8 +1707,7 @@ function AppViewRenderer(props) {
           }}
           onStockUpdate={async (productId, variantId, newStock) => {
             if (!storeId) return;
-            const { data: sysCfg } = await supabase.from('system_config').select('tiendanube_access_token').eq('id', 'main').single();
-            const token = sysCfg?.tiendanube_access_token || workspaceData?.tiendanube_access_token;
+            const token = workspaceData?.tiendanube_access_token;
             if (!token) return;
             const api = new TiendanubeAPI(storeId, token);
             await api.updateVariantStock(productId, variantId, newStock);
@@ -1694,7 +1739,7 @@ function AppViewRenderer(props) {
         <TallerStockControl session={session} />
       );
     case 'cro_analyzer':
-      return <CRODashboard session={session} />;
+      return <CRODashboard session={session} ga4Insights={ga4Insights} />;
     case 'hot_leads':
       return <HotLeads session={session} />;
     case 'equipo':
@@ -1703,6 +1748,8 @@ function AppViewRenderer(props) {
       return <ActivityLog />;
     case 'rendimiento':
       return <ProductivityDashboard />;
+    case 'organizador':
+      return <RimuOrganizer session={session} />;
     case 'configuracion':
       return <SettingsPanel onConnect={handleConnect} connectionStatus={connectionStatus} session={session} workspaceData={workspaceData} onSaveWorkspace={async (fields) => {
         if (!session?.user?.id) return;
@@ -1715,11 +1762,6 @@ function AppViewRenderer(props) {
           throw new Error('Error al guardar: ' + error.message);
         }
         setWorkspaceData(prev => ({ ...prev, ...fields }));
-        // Reload system_config to pick up GA4 changes
-        try {
-          const { data: sc } = await supabase.from('system_config').select('*').eq('id', 'main').single();
-          if (sc) setWorkspaceData(prev => ({ ...prev, ...fields, ga4_property_id: sc.ga4_property_id || prev.ga4_property_id, ga4_credentials_json: sc.ga4_credentials_json || prev.ga4_credentials_json }));
-        } catch {}
         console.log('[Settings] Guardado OK.');
       }} />;
     case 'reportes':

@@ -18,9 +18,9 @@ import {
 } from 'lucide-react';
 
 const LOCATIONS = [
-  { id: 'r5', name: 'R5', type: 'physical', address: 'Local Principal', color: '#3b82f6', icon: Store, manager: 'Responsable R5' },
+  { id: 'r5', name: 'R5', type: 'physical', address: 'Local Principal', color: '#6366f1', icon: Store, manager: 'Responsable R5' },
   { id: 'apes', name: 'APES', type: 'physical', address: 'Local Secundario', color: '#8b5cf6', icon: Building2, manager: 'Responsable APES' },
-  { id: 'web', name: 'WEB (TiendaNube)', type: 'online', platform: 'TiendaNube', color: '#10b981', icon: Globe, manager: 'Sincronización Auto', sync: true },
+  { id: 'web', name: 'WEB (TiendaNube)', type: 'online', platform: 'TiendaNube', color: '#06B6D4', icon: Globe, manager: 'Sincronización Auto', sync: true },
 ];
 
 const STOCK_STATUS = {
@@ -33,18 +33,18 @@ const STOCK_STATUS = {
 };
 
 const MOVEMENT_TYPES = [
-  { id: 'receive', label: 'Recepción', icon: '⬇️', color: '#10b981', desc: 'Ingreso de mercadería' },
-  { id: 'dispatch', label: 'Despacho', icon: '🚚', color: '#3b82f6', desc: 'Envío a cliente' },
+  { id: 'receive', label: 'Recepción', icon: '⬇️', color: '#06B6D4', desc: 'Ingreso de mercadería' },
+  { id: 'dispatch', label: 'Despacho', icon: '🚚', color: '#6366f1', desc: 'Envío a cliente' },
   { id: 'transfer', label: 'Transferencia', icon: '↔️', color: '#8b5cf6', desc: 'Entre ubicaciones' },
   { id: 'production_in', label: 'Producción', icon: '🔄', color: 'var(--primary-container)', desc: 'Ingreso de taller' },
   { id: 'return', label: 'Devolución', icon: '🔄', color: 'var(--primary-container)', desc: 'Cliente devuelve' },
-  { id: 'adjustment', label: 'Ajuste', icon: '⚠️', color: '#ef4444', desc: 'Corrección manual' },
+  { id: 'adjustment', label: 'Ajuste', icon: '⚠️', color: '#E11D48', desc: 'Corrección manual' },
 ];
 
 const PRIORITY = {
-  urgente: { label: 'Urgente', color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
-  alta: { label: 'Alta', color: 'var(--primary-container)', bg: 'rgba(245,158,11,0.1)' },
-  normal: { label: 'Normal', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
+  urgente: { label: 'Urgente', color: '#E11D48', bg: 'rgba(239,68,68,0.1)' },
+  alta: { label: 'Alta', color: 'var(--primary-container)', bg: 'rgba(6, 182, 212,0.1)' },
+  normal: { label: 'Normal', color: '#6366f1', bg: 'rgba(99, 102, 241,0.1)' },
   baja: { label: 'Baja', color: '#64748b', bg: 'rgba(100,116,139,0.1)' },
 };
 
@@ -81,7 +81,7 @@ function ProductPickerModal({ products, fromLocation, onSelect, onClose }) {
       <div style={{ width: '600px', maxHeight: '85vh', overflow: 'auto', borderRadius: '20px', background: 'var(--surface)', border: '1px solid var(--glass-border)', boxShadow: '0 24px 80px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>
         <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Plus size={18} color="#fff" /></div>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Plus size={18} color="#fff" /></div>
             <div><h3 style={{ margin: '0 0 4px', fontSize: '16px', fontWeight: '700', color: 'var(--on-surface)' }}>Seleccionar Producto</h3><p style={{ margin: 0, fontSize: '11px', color: 'var(--on-surface-variant)' }}>Ubicación: {LOCATIONS.find(l => l.id === fromLocation)?.name}</p></div>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--on-surface-variant)', cursor: 'pointer' }}><X size={18} /></button>
@@ -109,7 +109,7 @@ function ProductPickerModal({ products, fromLocation, onSelect, onClose }) {
                     </div>
                   </div>
                   <div style={{ textAlign: 'right', minWidth: '100px' }}>
-                    <div style={{ fontSize: '13px', fontWeight: '700', fontFamily: "'JetBrains Mono', monospace", color: '#10b981' }}>{item.currentStock === null ? '∞' : item.currentStock} und.</div>
+                    <div style={{ fontSize: '13px', fontWeight: '700', fontFamily: "'JetBrains Mono', monospace", color: '#06B6D4' }}>{item.currentStock === null ? '∞' : item.currentStock} und.</div>
                     <div style={{ fontSize: '10px', color: 'var(--on-surface-variant)' }}>Disponibles</div>
                   </div>
                 </button>
@@ -183,9 +183,8 @@ export default function InventoryHub({
         let storeId = workspaceData.tiendanube_store_id;
         
         if (!token) {
-          const { data: sysCfg } = await supabase.from('system_config').select('tiendanube_access_token, tiendanube_store_id').eq('id', 'main').single();
-          token = sysCfg?.tiendanube_access_token;
-          storeId = sysCfg?.tiendanube_store_id;
+          // Token is strictly tied to workspace now
+          console.warn('[InventoryHub] No TiendaNube token found in workspace data.');
         }
         
         if (token && storeId && mounted) {
@@ -544,7 +543,7 @@ export default function InventoryHub({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h1 style={{ margin: '0 0 8px', fontSize: '28px', fontWeight: '800', color: 'var(--on-surface)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg, #3b82f6, #10b981)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(16,185,129,0.3)' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg, #6366f1, #06B6D4)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(16,185,129,0.3)' }}>
               <Warehouse size={26} color="#fff" />
             </div>
             Inventario Unificado R5 + APES + WEB
@@ -565,7 +564,7 @@ export default function InventoryHub({
           <button style={{ padding: '10px 18px', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--surface)', color: 'var(--on-surface)', cursor: 'pointer', fontSize: '13px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Download size={14} /> Exportar
           </button>
-          <button style={{ padding: '10px 18px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #3b82f6, #10b981)', color: 'var(--on-surface)', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button style={{ padding: '10px 18px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #6366f1, #06B6D4)', color: 'var(--on-surface)', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Plus size={14} /> Nueva Variante
           </button>
         </div>
@@ -580,7 +579,7 @@ export default function InventoryHub({
             {loc.sync && (
               <span style={{ 
                 width: '8px', height: '8px', borderRadius: '50%', 
-                background: syncStatus.web === 'synced' ? '#10b981' : syncStatus.web === 'syncing' ? 'var(--primary-container)' : '#ef4444',
+                background: syncStatus.web === 'synced' ? '#06B6D4' : syncStatus.web === 'syncing' ? 'var(--primary-container)' : '#E11D48',
                 animation: syncStatus.web === 'syncing' ? 'pulse 1s infinite' : 'none'
               }} />
             )}
@@ -617,12 +616,12 @@ export default function InventoryHub({
 
       {/* Stats Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        <StatCard label="Productos Únicos" value={stats.totalProducts} sub={`${stats.totalVariants} variantes`} color='#3b82f6' icon={<Box size={20} />} />
-        <StatCard label="Stock Total" value={formatNumber(stats.totalStock)} color='#10b981' icon={<Package size={20} />} />
+        <StatCard label="Productos Únicos" value={stats.totalProducts} sub={`${stats.totalVariants} variantes`} color='#6366f1' icon={<Box size={20} />} />
+        <StatCard label="Stock Total" value={formatNumber(stats.totalStock)} color='#06B6D4' icon={<Package size={20} />} />
         <StatCard label="Valor Inventario" value={formatCurrency(stats.totalValue)} color='#8b5cf6' icon={<TrendingUp size={20} />} />
         <StatCard label="En Producción" value={stats.inProduction} color='var(--primary-container)' icon={<RotateCcw size={20} />} />
         <StatCard label="Stock Bajo" value={stats.lowStock} color='var(--primary-container)' icon={<AlertTriangle size={20} />} />
-        <StatCard label="Sin Stock" value={stats.outOfStock} color='#ef4444' icon={<Package size={20} />} />
+        <StatCard label="Sin Stock" value={stats.outOfStock} color='#E11D48' icon={<Package size={20} />} />
         <StatCard label="Ilimitados" value={stats.unlimited} color='#06b6d4' icon={<Sparkles size={20} />} />
         <StatCard label="Valor Total" value={formatCurrency(stats.totalValue)} color='#6366f1' icon={<TrendingUp size={20} />} />
       </div>
@@ -646,7 +645,7 @@ export default function InventoryHub({
                   <div style={{ fontSize: '10px', color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Stock</div>
                 </div>
                 <div style={{ padding: '8px', borderRadius: '8px', background: 'var(--surface-container-low)' }}>
-                  <div style={{ fontSize: '18px', fontWeight: '800', color: '#ef4444', fontFamily: "'JetBrains Mono', monospace" }}>{d.out}</div>
+                  <div style={{ fontSize: '18px', fontWeight: '800', color: '#E11D48', fontFamily: "'JetBrains Mono', monospace" }}>{d.out}</div>
                   <div style={{ fontSize: '10px', color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Sin Stock</div>
                 </div>
                 <div style={{ padding: '8px', borderRadius: '8px', background: 'var(--surface-container-low)' }}>
@@ -654,7 +653,7 @@ export default function InventoryHub({
                   <div style={{ fontSize: '10px', color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Bajo</div>
                 </div>
                 <div style={{ padding: '8px', borderRadius: '8px', background: 'var(--surface-container-low)' }}>
-                  <div style={{ fontSize: '18px', fontWeight: '800', color: '#3b82f6', fontFamily: "'JetBrains Mono', monospace" }}>{d.total}</div>
+                  <div style={{ fontSize: '18px', fontWeight: '800', color: '#6366f1', fontFamily: "'JetBrains Mono', monospace" }}>{d.total}</div>
                   <div style={{ fontSize: '10px', color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Variantes</div>
                 </div>
               </div>
@@ -815,7 +814,7 @@ function ProductRow({ product, index, onTransfer, onAdjust, selected, onSelect }
       
       <div style={{ textAlign: 'center' }}>
         {product.totalIncoming > 0 ? (
-          <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: '600' }}>+{formatNumber(product.totalIncoming)} entr.</span>
+          <span style={{ fontSize: '11px', color: '#6366f1', fontWeight: '600' }}>+{formatNumber(product.totalIncoming)} entr.</span>
         ) : (
           <span style={{ fontSize: '11px', color: 'var(--on-surface-variant)', opacity: 0.5 }}>—</span>
         )}

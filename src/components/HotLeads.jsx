@@ -73,7 +73,7 @@ export default function HotLeads() {
   const newCount = leads.filter(l => l.status === 'NEW').length;
 
   return (
-    <div style={{ padding: '20px', minHeight: '100vh', background: '#0A0A0A' }}>
+    <div style={{ padding: '20px', minHeight: '100vh', background: '#090B0F' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
@@ -104,7 +104,7 @@ export default function HotLeads() {
           <button key={f} onClick={() => setFilter(f)} style={{
             background: filter === f ? '#3D5A99' : '#111214',
             color: filter === f ? '#fff' : '#8A8F98',
-            border: `1px solid ${filter === f ? '#3D5A99' : '#222'}`,
+            border: `1px solid ${filter === f ? '#3D5A99' : '#1A1E2B'}`,
             padding: '6px 14px', borderRadius: '6px', cursor: 'pointer',
             fontFamily: 'Inter, sans-serif', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em',
           }}>

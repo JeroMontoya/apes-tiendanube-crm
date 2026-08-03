@@ -3,10 +3,10 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from 'lucid
 import EventDrawer from './EventDrawer';
 
 const CATEGORY_COLORS = {
-  CAMPAIGN: { bg: 'rgba(16,185,129,0.15)', border: '#10b981', text: '#10b981' },
+  CAMPAIGN: { bg: 'rgba(16,185,129,0.15)', border: '#06B6D4', text: '#06B6D4' },
   PROMO: { bg: 'rgba(139,92,246,0.15)', border: '#8b5cf6', text: '#8b5cf6' },
-  ACTIVITY: { bg: 'rgba(59,130,246,0.15)', border: '#3b82f6', text: '#3b82f6' },
-  HOLIDAY: { bg: 'rgba(245,158,11,0.15)', border: 'var(--primary-container)', text: 'var(--primary-container)' },
+  ACTIVITY: { bg: 'rgba(99, 102, 241,0.15)', border: '#6366f1', text: '#6366f1' },
+  HOLIDAY: { bg: 'rgba(6, 182, 212,0.15)', border: 'var(--primary-container)', text: 'var(--primary-container)' },
 };
 
 const getDaysInMonth = (year, month) => {

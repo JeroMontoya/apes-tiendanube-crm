@@ -58,15 +58,12 @@ export default function SettingsPanel({ connectionStatus, session, workspaceData
     setSaving(true);
     setSaveMsg('');
     try {
-      // Save GA4 settings to system_config (which has the columns)
+      // Save to workspace (including GA4)
       const finalGa4Creds = ga4ReuseMC ? mcCredentials.trim() : ga4Credentials.trim();
-      const { error: ga4Err } = await supabase
-        .from('system_config')
-        .upsert({ id: 'main', ga4_property_id: ga4PropertyId.trim(), ga4_credentials_json: finalGa4Creds }, { onConflict: 'id' });
-      if (ga4Err) console.warn('[Settings] GA4 save warning:', ga4Err.message);
 
-      // Save the rest to workspace
       await onSaveWorkspace({
+        ga4_property_id: ga4PropertyId.trim(),
+        ga4_credentials_json: finalGa4Creds,
         merchant_center_merchant_id: mcMerchantId.trim(),
         merchant_center_credentials_json: mcCredentials.trim(),
         search_console_site_url: scSiteUrl.trim(),
@@ -119,7 +116,7 @@ export default function SettingsPanel({ connectionStatus, session, workspaceData
           <span style={{
             fontSize: 9, padding: '2px 7px', borderRadius: 10,
             background: status === 'active' ? 'rgba(16,185,129,0.1)' : 'var(--border-medium)',
-            color: status === 'active' ? '#10b981' : 'var(--on-surface-variant)',
+            color: status === 'active' ? '#06B6D4' : 'var(--on-surface-variant)',
             textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 700
           }}>
             {status === 'active' ? 'Activo' : 'Inactivo'}
@@ -255,7 +252,7 @@ export default function SettingsPanel({ connectionStatus, session, workspaceData
             />
           </div>
         )}
-        <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', background: 'rgba(245,158,11,0.05)', padding: '10px 14px', borderRadius: 8, border: '1px solid rgba(245,158,11,0.1)' }}>
+        <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', background: 'rgba(6, 182, 212,0.05)', padding: '10px 14px', borderRadius: 8, border: '1px solid rgba(6, 182, 212,0.1)' }}>
           <strong style={{ color: 'var(--primary-container)' }}>Instrucciones:</strong> El Property ID es un número que encuentras en GA4 → Administrador → Detalles del Flujo de Datos → Stream Web. El Service Account debe tener permisos de <code style={{ background: 'rgba(0,0,0,0.3)', padding: '1px 4px', borderRadius: 3 }}>Lector</code> en tu propiedad GA4.
         </div>
       </div>
@@ -361,7 +358,7 @@ export default function SettingsPanel({ connectionStatus, session, workspaceData
 
       {/* Save Button */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-        <div style={{ fontSize: 13, color: saveMsg.includes('Error') ? '#ef4444' : '#10b981', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ fontSize: 13, color: saveMsg.includes('Error') ? '#E11D48' : '#06B6D4', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
           {saveMsg && (saveMsg.includes('Error') ? <AlertCircle size={16} /> : <CheckCircle size={16} />)}
           {saveMsg}
         </div>
@@ -380,11 +377,11 @@ export default function SettingsPanel({ connectionStatus, session, workspaceData
       </div>
 
       {/* Info Card */}
-      <div className="glass-card" style={{ padding: '16px 20px', background: 'rgba(59, 130, 246, 0.03)', borderColor: 'rgba(59, 130, 246, 0.15)' }}>
+      <div className="glass-card" style={{ padding: '16px 20px', background: 'rgba(99, 102, 241, 0.03)', borderColor: 'rgba(99, 102, 241, 0.15)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 20 }}>🛡️</span>
           <div>
-            <strong style={{ fontSize: 12, color: '#60a5fa' }}>Infraestructura Segura</strong>
+            <strong style={{ fontSize: 12, color: '#818cf8' }}>Infraestructura Segura</strong>
             <p style={{ fontSize: 11, color: 'var(--on-surface-variant)', margin: '2px 0 0', lineHeight: 1.5 }}>
               Las credenciales se almacenan de forma segura en Supabase. Puedes configurar Merchant Center y Search Console también via Environment Variables (VITE_MERCHANT_CENTER_MERCHANT_ID, etc.) que tienen prioridad.
             </p>
@@ -399,7 +396,7 @@ export default function SettingsPanel({ connectionStatus, session, workspaceData
           onClick={async () => { await logout(); window.location.reload(); }}
           style={{
             background: 'transparent', border: '1px solid rgba(239, 68, 68, 0.3)',
-            color: '#ef4444', padding: '10px 20px', borderRadius: 8, cursor: 'pointer',
+            color: '#E11D48', padding: '10px 20px', borderRadius: 8, cursor: 'pointer',
             fontSize: 12, fontWeight: 600, transition: 'all 0.2s',
           }}
           onMouseOver={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}

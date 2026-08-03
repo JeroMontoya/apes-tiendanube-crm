@@ -80,12 +80,12 @@ export default function SyncProgressOverlay({
             strokeDashoffset={376.99 * (1 - overallProgress / 100)}
             style={{ 
               transition: 'stroke-dashoffset 0.5s ease',
-              filter: 'drop-shadow(0 0 8px rgba(59,130,246,0.6))'
+              filter: 'drop-shadow(0 0 8px rgba(99, 102, 241,0.6))'
             }}
           />
           <defs>
             <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="0%" stopColor="#6366f1" />
               <stop offset="100%" stopColor="#06b6d4" />
             </linearGradient>
           </defs>
@@ -115,7 +115,7 @@ export default function SyncProgressOverlay({
         marginBottom: 16
       }}>
         {error ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#ef4444', fontSize: 14, fontWeight: 500 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#E11D48', fontSize: 14, fontWeight: 500 }}>
             <AlertCircle size={18} style={{ animation: 'pulse 1s ease-in-out infinite' }} />
             {statusMessage || 'Error en la sincronización'}
           </div>
@@ -130,7 +130,7 @@ export default function SyncProgressOverlay({
             maxWidth: 400,
             textAlign: 'center'
           }}>
-            <Loader2 size={20} color="#3b82f6" style={{ animation: 'spin 1s linear infinite' }} />
+            <Loader2 size={20} color="#6366f1" style={{ animation: 'spin 1s linear infinite' }} />
             <span>{statusMessage || (currentStepData ? `Procesando: ${currentStepData.label}` : 'Iniciando...')}</span>
           </div>
         )}
@@ -173,16 +173,16 @@ export default function SyncProgressOverlay({
                     borderRadius: '50%',
                     border: isCompleted ? 'none' : '2px solid var(--border-subtle)',
                     background: isCompleted 
-                      ? 'linear-gradient(135deg, #10b981, #059669)' 
+                      ? 'linear-gradient(135deg, #06B6D4, #0891b2)' 
                       : isCurrent 
-                        ? 'linear-gradient(135deg, #3b82f6, #06b6d4)' 
+                        ? 'linear-gradient(135deg, #6366f1, #06b6d4)' 
                         : 'transparent',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     flexShrink: 0,
                     zIndex: 2,
-                    boxShadow: isCurrent ? '0 0 0 4px rgba(59,130,246,0.3), 0 0 12px rgba(59,130,246,0.4)' : 'none',
+                    boxShadow: isCurrent ? '0 0 0 4px rgba(99, 102, 241,0.3), 0 0 12px rgba(99, 102, 241,0.4)' : 'none',
                     transition: 'all 0.4s cubic-bezier(0.4,0,0.2,1)'
                   }}>
                     {isCompleted && <CheckCircle size={14} color="#fff" />}
@@ -194,7 +194,7 @@ export default function SyncProgressOverlay({
                     flex: 1, 
                     width: 2, 
                     background: index < SYNC_STEPS.length - 1 
-                      ? (isCompleted ? 'linear-gradient(180deg, #10b981, #059669)' : 'var(--border-subtle)') 
+                      ? (isCompleted ? 'linear-gradient(180deg, #06B6D4, #0891b2)' : 'var(--border-subtle)') 
                       : 'transparent',
                     marginTop: 4,
                     transition: 'background 0.4s ease'
@@ -211,22 +211,22 @@ export default function SyncProgressOverlay({
                       background: isCompleted 
                         ? 'rgba(16,185,129,0.15)' 
                         : isCurrent 
-                          ? 'rgba(59,130,246,0.15)' 
+                          ? 'rgba(99, 102, 241,0.15)' 
                           : 'var(--surface-container-low)',
-                      border: isCompleted ? '1px solid rgba(16,185,129,0.3)' : isCurrent ? '1px solid rgba(59,130,246,0.3)' : '1px solid var(--border-subtle)',
+                      border: isCompleted ? '1px solid rgba(16,185,129,0.3)' : isCurrent ? '1px solid rgba(99, 102, 241,0.3)' : '1px solid var(--border-subtle)',
                       display: 'flex', 
                       alignItems: 'center', 
                       justifyContent: 'center',
                       flexShrink: 0,
                       transition: 'all 0.3s ease'
                     }}>
-                      <step.icon size={16} color={isCompleted ? '#10b981' : isCurrent ? '#3b82f6' : 'var(--on-surface-variant)'} />
+                      <step.icon size={16} color={isCompleted ? '#06B6D4' : isCurrent ? '#6366f1' : 'var(--on-surface-variant)'} />
                     </div>
                     <div style={{ minWidth: 0 }}>
                       <div style={{ 
                         fontWeight: isCompleted || isCurrent ? 700 : 500, 
                         fontSize: 13, 
-                        color: isCompleted ? '#10b981' : isCurrent ? 'var(--on-surface)' : 'var(--on-surface-variant)',
+                        color: isCompleted ? '#06B6D4' : isCurrent ? 'var(--on-surface)' : 'var(--on-surface-variant)',
                         transition: 'color 0.3s ease'
                       }}>
                         {step.label}
@@ -243,10 +243,10 @@ export default function SyncProgressOverlay({
                       <div style={{ 
                         height: '100%', 
                         width: `${stepProgress}%`, 
-                        background: 'linear-gradient(90deg, #3b82f6, #06b6d4)', 
+                        background: 'linear-gradient(90deg, #6366f1, #06b6d4)', 
                         borderRadius: 2,
                         transition: 'width 0.3s ease',
-                        boxShadow: '0 0 8px rgba(59,130,246,0.4)'
+                        boxShadow: '0 0 8px rgba(99, 102, 241,0.4)'
                       }} />
                     </div>
                   )}
@@ -269,13 +269,13 @@ export default function SyncProgressOverlay({
             fontSize: 14,
             fontWeight: 600,
             cursor: 'pointer',
-            background: error ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'linear-gradient(135deg, #3b82f6, #06b6d4)',
+            background: error ? 'linear-gradient(135deg, #E11D48, #be123c)' : 'linear-gradient(135deg, #6366f1, #06b6d4)',
             color: 'var(--on-surface)',
-            boxShadow: '0 4px 20px rgba(59,130,246,0.4)',
+            boxShadow: '0 4px 20px rgba(99, 102, 241,0.4)',
             transition: 'all 0.2s ease'
           }}
-          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 24px rgba(59,130,246,0.5)'; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(59,130,246,0.4)'; }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 24px rgba(99, 102, 241,0.5)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(99, 102, 241,0.4)'; }}
         >
           {error ? 'Reintentar' : 'Continuar al Dashboard'}
         </button>

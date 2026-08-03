@@ -12,15 +12,15 @@ function OCRResultCard({ item, index }) {
   return (
     <div style={{
       padding: '12px', borderRadius: '10px',
-      border: `1px solid ${hasMatch ? '#10b98130' : 'var(--primary-container)30'}`,
-      background: hasMatch ? '#10b98108' : 'var(--primary-container)08',
+      border: `1px solid ${hasMatch ? '#06B6D430' : 'var(--primary-container)30'}`,
+      background: hasMatch ? '#06B6D408' : 'var(--primary-container)08',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
         <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--on-surface-variant)' }}>
           #{index + 1}
         </span>
         {hasMatch ? (
-          <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', background: '#10b98118', color: '#10b981' }}>
+          <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', background: '#06B6D418', color: '#06B6D4' }}>
             <CheckCircle size={10} style={{ marginRight: '3px', verticalAlign: 'middle' }} />
             Coincidencia
           </span>
@@ -40,7 +40,7 @@ function OCRResultCard({ item, index }) {
         {item.price && <span>Precio: <b>${item.price}</b></span>}
       </div>
       {hasMatch && (
-        <div style={{ marginTop: '6px', fontSize: '11px', color: '#10b981' }}>
+        <div style={{ marginTop: '6px', fontSize: '11px', color: '#06B6D4' }}>
           → {item.matched.name} ({item.matched.sku})
         </div>
       )}
@@ -54,18 +54,18 @@ function VisionResultCard({ data, onApply }) {
   return (
     <div style={{
       padding: '16px', borderRadius: '12px',
-      border: '1px solid #3b82f630', background: '#3b82f608',
+      border: '1px solid #6366f130', background: '#6366f108',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-        <Sparkles size={16} color="#3b82f6" />
+        <Sparkles size={16} color="#6366f1" />
         <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--on-surface)' }}>
           Producto Identificado
         </span>
         {v.confidence && (
           <span style={{
             fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px',
-            background: v.confidence > 0.7 ? '#10b98118' : 'var(--primary-container)18',
-            color: v.confidence > 0.7 ? '#10b9811' : 'var(--primary-container)',
+            background: v.confidence > 0.7 ? '#06B6D418' : 'var(--primary-container)18',
+            color: v.confidence > 0.7 ? '#06B6D41' : 'var(--primary-container)',
           }}>
             {Math.round(v.confidence * 100)}% confianza
           </span>
@@ -94,9 +94,9 @@ function VisionResultCard({ data, onApply }) {
       {data.hasMatch && (
         <div style={{
           marginTop: '12px', padding: '10px', borderRadius: '8px',
-          background: '#10b98110', border: '1px solid #10b98130',
+          background: '#06B6D410', border: '1px solid #06B6D430',
         }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: '#10b981', marginBottom: '4px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 700, color: '#06B6D4', marginBottom: '4px' }}>
             Producto encontrado en catálogo
           </div>
           <div style={{ fontSize: '12px', color: 'var(--on-surface)' }}>
@@ -199,7 +199,7 @@ export default function AIScanTab({ onAdjust, products }) {
 
   const tabBtnStyle = (active) => ({
     padding: '8px 16px', borderRadius: '8px', border: 'none',
-    background: active ? '#3b82f6' : 'transparent',
+    background: active ? '#6366f1' : 'transparent',
     color: active ? '#fff' : 'var(--on-surface-variant)',
     fontSize: '13px', fontWeight: active ? 700 : 500,
     cursor: 'pointer', fontFamily: 'inherit',
@@ -231,7 +231,7 @@ export default function AIScanTab({ onAdjust, products }) {
         <div
           style={dropZoneStyle}
           onClick={() => fileInputRef.current?.click()}
-          onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = '#3b82f6'; }}
+          onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = '#6366f1'; }}
           onDragLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}
           onDrop={(e) => {
             e.preventDefault();
@@ -330,7 +330,7 @@ export default function AIScanTab({ onAdjust, products }) {
           disabled={loading}
           style={{
             width: '100%', padding: '12px', borderRadius: '10px',
-            border: 'none', background: loading ? '#3b82f680' : '#3b82f6',
+            border: 'none', background: loading ? '#6366f180' : '#6366f1',
             color: 'var(--on-surface)', fontSize: '14px', fontWeight: 700,
             cursor: loading ? 'wait' : 'pointer', fontFamily: 'inherit',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
@@ -353,8 +353,8 @@ export default function AIScanTab({ onAdjust, products }) {
       {error && (
         <div style={{
           padding: '12px', borderRadius: '10px',
-          background: '#ef444410', border: '1px solid #ef444430',
-          fontSize: '13px', color: '#ef4444',
+          background: '#E11D4810', border: '1px solid #E11D4830',
+          fontSize: '13px', color: '#E11D48',
           display: 'flex', alignItems: 'center', gap: '8px',
         }}>
           <AlertTriangle size={16} />

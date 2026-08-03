@@ -114,7 +114,7 @@ export default function AIInsightsWidget({ clients, storeId }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                 <h4 style={{ margin: 0, fontSize: 13, color: 'var(--on-surface)' }}>Email Abandono</h4>
                 <button onClick={() => copyToClipboard(data.copyEmailAbandonado, 'email')} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', padding: 0 }}>
-                  {copied === 'email' ? <CheckCircle2 size={16} color="#10b981" /> : <Copy size={16} />}
+                  {copied === 'email' ? <CheckCircle2 size={16} color="#06B6D4" /> : <Copy size={16} />}
                 </button>
               </div>
               <pre style={{ margin: 0, fontSize: 12, color: 'var(--on-surface-variant)', whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
@@ -126,7 +126,7 @@ export default function AIInsightsWidget({ clients, storeId }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                 <h4 style={{ margin: 0, fontSize: 13, color: 'var(--on-surface)' }}>WhatsApp VIP</h4>
                 <button onClick={() => copyToClipboard(data.copyWhatsAppVIP, 'wa')} style={{ background: 'none', border: 'none', color: '#25D366', cursor: 'pointer', padding: 0 }}>
-                  {copied === 'wa' ? <CheckCircle2 size={16} color="#10b981" /> : <Copy size={16} />}
+                  {copied === 'wa' ? <CheckCircle2 size={16} color="#06B6D4" /> : <Copy size={16} />}
                 </button>
               </div>
               <pre style={{ margin: 0, fontSize: 12, color: 'var(--on-surface-variant)', whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>

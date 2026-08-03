@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { useWorkspace } from './WorkspaceContext';
 
 const TeamContext = createContext(null);
 
@@ -92,8 +93,8 @@ const ROLE_LABELS = {
 const ROLE_COLORS = {
   admin: '#8b5cf6',
   taller: 'var(--primary-container)',
-  ventas: '#10b981',
-  atencion_cliente: '#3b82f6',
+  ventas: '#06B6D4',
+  atencion_cliente: '#6366f1',
 };
 
 const ROLE_ICONS = {
@@ -117,6 +118,7 @@ export const PERMISSION_CATEGORIES = {
 // ── Context ─────────────────────────────────────────────────────────
 
 export function TeamProvider({ children, session }) {
+  const { activeWorkspace } = useWorkspace();
   const [currentMember, setCurrentMember] = useState(null);
   const [allMembers, setAllMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -153,83 +155,67 @@ export function TeamProvider({ children, session }) {
   }, [currentMember, effectivePermissions]);
 
   // ── Load members ─────────────────────────────────────────────
-  const loadMembers = async () => {
+  const loadMembers = useCallback(async () => {
+    if (!activeWorkspace?.id) return;
     const { data, error } = await supabase
       .from('team_members')
       .select('*')
+      .eq('workspace_id', activeWorkspace.id)
       .eq('is_active', true)
       .order('created_at', { ascending: false });
     if (!error && data) setAllMembers(data);
-  };
+  }, [activeWorkspace?.id]);
 
-  const loadActivity = async () => {
+  const loadActivity = useCallback(async () => {
+    if (!activeWorkspace?.id) return;
     const { data, error } = await supabase
       .from('activity_log')
       .select('*')
+      .eq('workspace_id', activeWorkspace.id)
       .order('created_at', { ascending: false })
       .limit(200);
     if (!error && data) setActivityLog(data);
-  };
+  }, [activeWorkspace?.id]);
 
   useEffect(() => {
     const init = async () => {
+      if (!activeWorkspace?.id) {
+        setAllMembers([]);
+        setCurrentMember(null);
+        setActivityLog([]);
+        setLoading(false);
+        return;
+      }
+      
       setLoading(true);
       await Promise.all([loadMembers(), loadActivity()]);
 
-      // Auto-identify current member from Supabase session
+      // Auto-identify current member from Supabase session in this workspace
       if (session?.user?.id) {
         const { data: myMember } = await supabase
           .from('team_members')
           .select('*')
+          .eq('workspace_id', activeWorkspace.id)
           .eq('user_id', session.user.id)
           .eq('is_active', true)
           .single();
 
         if (myMember) {
           setCurrentMember(myMember);
-          localStorage.setItem('current_team_member', myMember.id);
-        } else if (!allMembers.length) {
-          // No members exist yet — auto-create this user as admin
-          const { data: newAdmin } = await supabase
-            .from('team_members')
-            .insert({
-              name: session.user.email?.split('@')[0] || 'Admin',
-              email: session.user.email || '',
-              role: 'admin',
-              user_id: session.user.id,
-              is_active: true,
-            })
-            .select()
-            .single();
-          if (newAdmin) {
-            setCurrentMember(newAdmin);
-            setAllMembers([newAdmin]);
-            localStorage.setItem('current_team_member', newAdmin.id);
-          }
+          localStorage.setItem(`current_team_member_${activeWorkspace.id}`, myMember.id);
         } else {
-          // Members exist but none has this user's auth ID — this user is the admin
-          // Find the admin-level member closest to their email, or create one
-          const adminMember = allMembers.find(m =>
-            m.role === 'admin' && m.email === session.user.email
-          ) || allMembers.find(m => m.role === 'admin');
+          // Verify if members exist for THIS workspace
+          const { count } = await supabase
+            .from('team_members')
+            .select('*', { count: 'exact', head: true })
+            .eq('workspace_id', activeWorkspace.id);
 
-          if (adminMember) {
-            // Link this member to the current auth user
-            const { data: linked } = await supabase
-              .from('team_members')
-              .update({ user_id: session.user.id })
-              .eq('id', adminMember.id)
-              .select()
-              .single();
-            if (linked) {
-              setCurrentMember(linked);
-              localStorage.setItem('current_team_member', linked.id);
-            }
-          } else {
-            // No admin found — create one linked to this auth user
+          if (count === 0) {
+            // No members exist yet in this workspace — auto-create this user as admin
             const { data: newAdmin } = await supabase
               .from('team_members')
               .insert({
+                workspace_id: activeWorkspace.id,
                 name: session.user.email?.split('@')[0] || 'Admin',
                 email: session.user.email || '',
                 role: 'admin',
@@ -240,7 +226,8 @@ export function TeamProvider({ children, session }) {
               .single();
             if (newAdmin) {
               setCurrentMember(newAdmin);
-              localStorage.setItem('current_team_member', newAdmin.id);
+              setAllMembers([newAdmin]);
+              localStorage.setItem(`current_team_member_${activeWorkspace.id}`, newAdmin.id);
             }
           }
         }
@@ -248,13 +235,15 @@ export function TeamProvider({ children, session }) {
 
       setLoading(false);
     };
+
     if (session) init();
-  }, [session]);
+  }, [session, activeWorkspace?.id, loadMembers, loadActivity]);
 
   // ── Activity logging ─────────────────────────────────────────
   const logActivity = async (action, targetType, targetId, targetName, details = {}) => {
-    if (!currentMember) return;
+    if (!currentMember || !activeWorkspace?.id) return;
     const entry = {
+      workspace_id: activeWorkspace.id,
       member_id: currentMember.id,
       member_name: currentMember.name,
       action,
@@ -275,9 +264,10 @@ export function TeamProvider({ children, session }) {
 
   // ── Member CRUD ──────────────────────────────────────────────
   const createMember = async (name, email, role) => {
+    if (!activeWorkspace?.id) return { success: false, error: 'No workspace' };
     const { data, error } = await supabase
       .from('team_members')
-      .insert({ name, email, role })
+      .insert({ workspace_id: activeWorkspace.id, name, email, role })
       .select()
       .single();
     if (!error && data) {
@@ -364,13 +354,15 @@ export function TeamProvider({ children, session }) {
       return;
     }
     setCurrentMember(member);
-    localStorage.setItem('current_team_member', member?.id || '');
+    if (activeWorkspace?.id) {
+      localStorage.setItem(`current_team_member_${activeWorkspace.id}`, member?.id || '');
+    }
   };
 
-  // Restore last selected member — ONLY if it belongs to the same Supabase user
+  // Restore last selected member for this workspace — ONLY if it belongs to the same Supabase user
   useEffect(() => {
-    if (allMembers.length > 0 && !currentMember) {
-      const savedId = localStorage.getItem('current_team_member');
+    if (activeWorkspace?.id && allMembers.length > 0 && !currentMember) {
+      const savedId = localStorage.getItem(`current_team_member_${activeWorkspace.id}`);
       if (savedId) {
         const found = allMembers.find(m => m.id === savedId);
         if (found && found.user_id === session?.user?.id) {
@@ -378,7 +370,7 @@ export function TeamProvider({ children, session }) {
         }
       }
     }
-  }, [allMembers]);
+  }, [allMembers, activeWorkspace?.id, currentMember, session?.user?.id]);
 
   const value = {
     currentMember,
@@ -404,7 +396,11 @@ export function TeamProvider({ children, session }) {
     loadMembers,
     loadActivity,
     logout: async () => {
-      localStorage.removeItem('current_team_member');
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('current_team_member')) {
+          localStorage.removeItem(key);
+        }
+      });
       await supabase.auth.signOut();
     },
   };

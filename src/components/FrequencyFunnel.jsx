@@ -71,7 +71,7 @@ export default function FrequencyFunnel({ clients, onSelectClient }) {
       };
     });
   }, [clients]);
-  const TIER_COLORS = ['#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#f43f5e'];
+  const TIER_COLORS = ['#6366f1', '#6366f1', '#06B6D4', '#06b6d4', '#f43f5e'];
 
   const formatCurrency = (v) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v);
 
