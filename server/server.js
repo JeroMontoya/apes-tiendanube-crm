@@ -382,7 +382,13 @@ function proxyToExternal(targetHost, pathRewrite) {
     });
 
     if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
-      req.pipe(proxyReq);
+      const hasParsedBody = req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0;
+      if (hasParsedBody) {
+        proxyReq.write(JSON.stringify(req.body));
+        proxyReq.end();
+      } else {
+        req.pipe(proxyReq);
+      }
     } else {
       proxyReq.end();
     }
